@@ -21,8 +21,9 @@ def _worker(remote, parent_remote, env_fn_wrapper):
             cmd, data = remote.recv()
             if cmd == 'step':
                 some_actions = env.act(env.get_observations())     # 得到其他智能体的 action
-                whole_actions = some_actions.insert(env.training_agent, data)   # 当前训练的 agent 的动作也加进来
-                whole_obs, whole_rew, done, info = env.step(whole_actions)       # 得到所有 agent 的四元组
+                data = list(data)                  # data 本来是 numpy ndarray
+                some_actions.insert(env.training_agent, data)   # 当前训练的 agent 的动作也加进来
+                whole_obs, whole_rew, done, info = env.step(some_actions)       # 得到所有 agent 的四元组
 
                 obs = featurize(whole_obs, env.training_agent)    # 对训练智能体的 observation 提取特征
                 rew = whole_rew[env.training_agent]               # 训练智能体的 reward
@@ -121,9 +122,13 @@ class SubprocVecEnv(VecEnv):
 
         self.remotes[0].send(('get_spaces', None))
         observation_space, action_space = self.remotes[0].recv()
-        """设置 space"""
+
+        """
+        对 observation_space 仅修改了 shape
+        action_space 重新定义为 gym.spaces.MultiDiscrete([6, 8, 8]) 类型
+        """
         observation_space.shape = get_feature_shape()
-        # action_space = get_action_space()
+        action_space = get_action_space()
 
         VecEnv.__init__(self, len(env_fns), observation_space, action_space)
 

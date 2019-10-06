@@ -2,14 +2,214 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b73852a1-d3de-4c6c-bca6-b466ae5a75cc" name="Default Changelist" comment="添加一些注释，此后版本开始分单智能体和多智能体版本">
-      <change afterPath="$PROJECT_DIR$/huang_test/paper_list.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/huang_test/state.odt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/huang_test/simple_ffa_run.py" beforeDir="false" afterPath="$PROJECT_DIR$/huang_test/simple_ffa_run.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/my_subproc_vec_env.py" beforeDir="false" afterPath="$PROJECT_DIR$/my_subproc_vec_env.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run.py" beforeDir="false" afterPath="$PROJECT_DIR$/run.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/stable_baselines/a2c/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/stable_baselines/a2c/utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/my_pmm.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/huang_test/.~lock.state.odt#" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/huang_test/paper_list.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/huang_test/simple_ffa_run.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/huang_test/source_code_reading" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/huang_test/state.odt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/my_cmd_utils.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/my_policy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/my_subproc_vec_env.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/agents/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/agents/base_agent.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/agents/docker_agent.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/agents/http_agent.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/agents/player_agent.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/agents/player_agent_blocking.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/agents/random_agent.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/agents/simple_agent.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/agents/tensorforce_agent.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/characters.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/cli/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/cli/run_battle.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/cli/train_with_tensorforce.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/configs.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/constants.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/envs/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/envs/v0.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/envs/v1.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/envs/v2.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/forward_model.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/graphics.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/helpers/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/network/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/network/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/network/client/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/network/client/constants.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/network/client/network.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/network/server/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/network/server/constants.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/network/server/match.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/network/server/network.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Agent0-No-Background.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Agent0-Team-No-Background.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Agent0-Team.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Agent0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Agent1-No-Background.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Agent1-Team-No-Background.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Agent1-Team.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Agent1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Agent2-No-Background.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Agent2-Team-No-Background.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Agent2-Team.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Agent2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Agent3-No-Background.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Agent3-Team-No-Background.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Agent3-Team.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Agent3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/AgentDummy-No-Background.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/AgentDummy.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Bomb-1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Bomb-10.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Bomb-2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Bomb-3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Bomb-4.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Bomb-5.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Bomb-6.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Bomb-7.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Bomb-8.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Bomb-9.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Bomb.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Cousine-Regular.ttf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/ExtraBomb.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Flames.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Fog.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/IncrRange.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Kick.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Passage.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Rigid.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Skull.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/Wood.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/resources/X-No-Background.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/runner/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/runner/docker_agent_runner.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pommerman/utility.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/preprocessing.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/run.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/a2c/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/a2c/a2c.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/a2c/run_atari.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/a2c/utils.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/acer/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/acer/acer_simple.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/acer/buffer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/acer/run_atari.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/acktr/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/acktr/acktr_cont.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/acktr/acktr_disc.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/acktr/kfac.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/acktr/kfac_utils.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/acktr/policies.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/acktr/run_atari.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/acktr/run_mujoco.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/acktr/utils.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/acktr/value_functions.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/bench/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/bench/benchmarks.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/bench/monitor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/atari_wrappers.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/base_class.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/bit_flipping_env.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/cg.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/cmd_util.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/console_util.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/dataset.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/distributions.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/filters.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/identity_env.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/input.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/math_util.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/misc_util.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/mpi_adam.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/mpi_fork.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/mpi_moments.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/mpi_running_mean_std.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/noise.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/policies.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/runners.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/running_mean_std.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/running_stat.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/save_util.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/schedules.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/segment_tree.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/tf_util.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/tile_images.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/vec_env/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/vec_env/base_vec_env.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/vec_env/dummy_vec_env.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/vec_env/subproc_vec_env.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/vec_env/util.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/vec_env/vec_check_nan.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/vec_env/vec_frame_stack.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/vec_env/vec_normalize.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/common/vec_env/vec_video_recorder.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/ddpg/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/ddpg/ddpg.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/ddpg/main.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/ddpg/noise.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/ddpg/policies.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/deepq/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/deepq/build_graph.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/deepq/dqn.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/deepq/experiments/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/deepq/experiments/custom_cartpole.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/deepq/experiments/enjoy_cartpole.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/deepq/experiments/enjoy_mountaincar.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/deepq/experiments/enjoy_pong.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/deepq/experiments/run_atari.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/deepq/experiments/train_cartpole.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/deepq/experiments/train_mountaincar.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/deepq/policies.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/deepq/replay_buffer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/gail/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/gail/adversary.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/gail/dataset/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/gail/dataset/dataset.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/gail/dataset/expert_cartpole.npz" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/gail/dataset/expert_pendulum.npz" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/gail/dataset/record_expert.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/gail/model.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/her/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/her/her.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/her/replay_buffer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/her/utils.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/logger.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/ppo1/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/ppo1/experiments/train_cartpole.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/ppo1/pposgd_simple.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/ppo1/run_atari.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/ppo1/run_humanoid.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/ppo1/run_mujoco.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/ppo1/run_robotics.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/ppo2/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/ppo2/ppo2.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/ppo2/run_atari.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/ppo2/run_mujoco.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/results_plotter.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/sac/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/sac/policies.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/sac/sac.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/td3/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/td3/policies.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/td3/td3.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/trpo_mpi/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/trpo_mpi/run_atari.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/trpo_mpi/run_mujoco.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/trpo_mpi/trpo_mpi.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stable_baselines/trpo_mpi/utils.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -34,7 +234,8 @@
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../old_pmm/subproc_vec_env.py" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/run.py" />
+    <property name="restartRequiresConfirmation" value="false" />
     <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
     <property name="two.files.diff.last.used.file" value="$PROJECT_DIR$/../old_pmm/subproc_vec_env.py" />
   </component>
@@ -56,8 +257,8 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.test">
-    <configuration name="simple_ffa_run" type="PythonConfigurationType" factoryName="Python" temporary="true">
+  <component name="RunManager" selected="Python.n_env_12">
+    <configuration name="my_subproc_vec_env" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="my_pmm" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -70,7 +271,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/huang_test/simple_ffa_run.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/my_subproc_vec_env.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -79,7 +280,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="test" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="n_env_1" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="my_pmm" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -101,21 +302,21 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="utils" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="n_env_12" type="PythonConfigurationType" factoryName="Python">
       <module name="my_pmm" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
-      <option name="SDK_HOME" value="" />
+      <option name="SDK_HOME" value="$PROJECT_DIR$/../anaconda3/envs/pmm/bin/python" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
+      <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/utils.py" />
-      <option name="PARAMETERS" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/run.py" />
+      <option name="PARAMETERS" value="--alg=a2c --num_timesteps=1e5" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -124,15 +325,14 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.simple_ffa_run" />
-      <item itemvalue="Python.test" />
-      <item itemvalue="Python.utils" />
+      <item itemvalue="Python.n_env_12" />
+      <item itemvalue="Python.n_env_1" />
+      <item itemvalue="Python.my_subproc_vec_env" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.test" />
-        <item itemvalue="Python.simple_ffa_run" />
-        <item itemvalue="Python.utils" />
+        <item itemvalue="Python.n_env_1" />
+        <item itemvalue="Python.my_subproc_vec_env" />
       </list>
     </recent_temporary>
   </component>
@@ -150,7 +350,7 @@
       <workItem from="1569656287382" duration="17163000" />
       <workItem from="1569748210016" duration="32000" />
       <workItem from="1569763230898" duration="24518000" />
-      <workItem from="1570346111210" duration="25660000" />
+      <workItem from="1570346111210" duration="31453000" />
     </task>
     <task id="LOCAL-00001" summary="添加一些注释，此后版本开始分单智能体和多智能体版本">
       <created>1570343564191</created>
@@ -184,8 +384,10 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/my_pmm$training.coverage" NAME="test Coverage Results" MODIFIED="1569832924638" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/my_pmm$test.coverage" NAME="test Coverage Results" MODIFIED="1570376952172" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/my_pmm$my_subproc_vec_env.coverage" NAME="my_subproc_vec_env Coverage Results" MODIFIED="1570382973514" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/my_pmm$test.coverage" NAME="n_env_1 Coverage Results" MODIFIED="1570383583707" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/my_pmm$utils.coverage" NAME="utils Coverage Results" MODIFIED="1570367868207" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/my_pmm$n_env_12.coverage" NAME="n_env_12 Coverage Results" MODIFIED="1570385473105" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/my_pmm$simple_ffa_run.coverage" NAME="simple_ffa_run Coverage Results" MODIFIED="1570375230047" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

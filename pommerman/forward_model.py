@@ -1,4 +1,5 @@
 '''Module to manage and advanced game state'''
+"""修改了 act 函数里 is_communicative 的默认值，False->True"""
 from collections import defaultdict
 
 import numpy as np
@@ -82,7 +83,7 @@ class ForwardModel(object):
         return steps, board, agents, bombs, items, flames, done, info
 
     @staticmethod
-    def act(agents, obs, action_space, is_communicative=False):
+    def act(agents, obs, action_space, is_communicative=True):
         """Returns actions for each agent in this list.
 
         Args:

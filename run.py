@@ -1,6 +1,5 @@
 import pommerman
 from pommerman import agents
-import gym
 
 import sys
 import os
@@ -8,11 +7,10 @@ from importlib import import_module
 import multiprocessing
 
 import tensorflow as tf
-import numpy as np
 
 from my_cmd_utils import my_arg_parser
 from my_subproc_vec_env import SubprocVecEnv
-# from stable_baselines.common.vec_env.subproc_vec_env import SubprocVecEnv
+
 
 # TODO：加seed
 def make_envs(env_id):
