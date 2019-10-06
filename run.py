@@ -15,24 +15,24 @@ from my_subproc_vec_env import SubprocVecEnv
 # from stable_baselines.common.vec_env.subproc_vec_env import SubprocVecEnv
 
 # TODO：加seed
-# def make_envs(env_id):
-#     def _thunk():
-#         agent_list = [
-#             agents.SimpleAgent(),
-#             agents.BaseAgent(),
-#             agents.SimpleAgent(),
-#             agents.SimpleAgent()
-#         ]
-#         env = pommerman.make(env_id, agent_list)
-#         return env
-#     return _thunk
-
-
 def make_envs(env_id):
     def _thunk():
-        env = gym.make(env_id)
+        agent_list = [
+            agents.SimpleAgent(),
+            agents.BaseAgent(),
+            agents.SimpleAgent(),
+            agents.SimpleAgent()
+        ]
+        env = pommerman.make(env_id, agent_list)
         return env
     return _thunk
+
+
+# def make_envs(env_id):
+#     def _thunk():
+#         env = gym.make(env_id)
+#         return env
+#     return _thunk
 
 
 def train(args):
@@ -40,10 +40,13 @@ def train(args):
     env_id = args.env
 
     # 多线程设置
-    config = tf.ConfigProto()
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-    config.gpu_options.allow_growth = True
-    num_envs = args.num_env or multiprocessing.cpu_count()
+    if args.num_env:
+        num_envs = args.num_env
+    else:
+        config = tf.ConfigProto()
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+        config.gpu_options.allow_growth = True
+        num_envs = args.num_env or multiprocessing.cpu_count()
     envs = [make_envs(env_id) for _ in range(num_envs)]
     env = SubprocVecEnv(envs)
 

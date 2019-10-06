@@ -1,27 +1,55 @@
 import multiprocessing
 from collections import OrderedDict
 
-import gym
+from gym import spaces
+from pommerman import *
+
 import numpy as np
+
 from stable_baselines.common.vec_env import VecEnv, CloudpickleWrapper
 from stable_baselines.common.tile_images import tile_images
+
+from utils import featurize, get_feature_shape, get_action_space
+
 
 def _worker(remote, parent_remote, env_fn_wrapper):
     parent_remote.close()
     env = env_fn_wrapper.var()
+    env.set_training_agent(1)  # 设置训练的 agent 的 index
     while True:
         try:
             cmd, data = remote.recv()
             if cmd == 'step':
-                observation, reward, done, info = env.step(data)
+                some_actions = env.act(env.get_observations())     # 得到其他智能体的 action
+                whole_actions = some_actions.insert(env.training_agent, data)   # 当前训练的 agent 的动作也加进来
+                whole_obs, whole_rew, done, info = env.step(whole_actions)       # 得到所有 agent 的四元组
+
+                obs = featurize(whole_obs, env.training_agent)    # 对训练智能体的 observation 提取特征
+                rew = whole_rew[env.training_agent]               # 训练智能体的 reward
+
+                # 在多人条件下，如果我训练的智能体死了，那么就需要提前结束游戏
+                is_dead = False
+                if not done and not env._agents[env.training_agent].is_alive:
+                    is_dead = True   # 训练的智能体已死的标志
+                    done = True
+
                 if done:
-                    # save final observation where user can get it, then reset
-                    info['terminal_observation'] = observation
-                    observation = env.reset()
-                remote.send((observation, reward, done, info))
+                    info['terminal_observation'] = whole_obs    # 保存终结的 observation，否则 reset 后将丢失
+                    whole_obs = env.reset()
+                    obs = featurize(whole_obs, env.training_agent)   # reset 后的 obs 会被返回
+
+                    if is_dead:
+                        rew = -1
+                    else:
+                        rew = whole_rew[env.training_agent]
+
+                remote.send((obs, rew, done, info))
+
             elif cmd == 'reset':
-                observation = env.reset()
-                remote.send(observation)
+                whole_obs = env.reset()
+                obs = featurize(whole_obs, env.training_agent)
+                remote.send(obs)
+
             elif cmd == 'render':
                 remote.send(env.render(*data[0], **data[1]))
             elif cmd == 'close':
@@ -93,6 +121,10 @@ class SubprocVecEnv(VecEnv):
 
         self.remotes[0].send(('get_spaces', None))
         observation_space, action_space = self.remotes[0].recv()
+        """设置 space"""
+        observation_space.shape = get_feature_shape()
+        # action_space = get_action_space()
+
         VecEnv.__init__(self, len(env_fns), observation_space, action_space)
 
     def step_async(self, actions):
