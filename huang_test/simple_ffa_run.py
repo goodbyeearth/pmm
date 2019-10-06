@@ -17,20 +17,27 @@ def main():
         agents.RandomAgent(),
         # agents.PlayerAgent(agent_control="arrows"), # Arrows = Move, Space = Bomb
         agents.SimpleAgent(),
-        # agents.RandomAgent(),
-        agents.DockerAgent("pommerman/simple-agent", port=12345),
+        agents.RandomAgent(),
+        # agents.DockerAgent("pommerman/simple-agent", port=12345),
     ]
     # Make the "Free-For-All" environment using the agent list
-    env = pommerman.make('PommeFFACompetition-v0', agent_list)
+    env = pommerman.make('PommeRadioCompetition-v2', agent_list)
 
     # Run the episodes just like OpenAI Gym
     for i_episode in range(1):
         state = env.reset()
         done = False
+        frame = 0
         while not done:
             env.render()
             actions = env.act(state)
             state, reward, done, info = env.step(actions)
+
+            frame += 1
+            if frame==3:
+                print(env.observation_space.high)
+                print(env.action_space)
+
         print('Episode {} finished'.format(i_episode))
     env.close()
 

@@ -105,10 +105,12 @@ class A2C(ActorCriticRLModel):
 
                 n_batch_step = None
                 n_batch_train = None
+                """若 policy 为 recurrent 的"""
                 if issubclass(self.policy, RecurrentActorCriticPolicy):
                     n_batch_step = self.n_envs
                     n_batch_train = self.n_envs * self.n_steps
 
+                """初始化model"""
                 step_model = self.policy(self.sess, self.observation_space, self.action_space, self.n_envs, 1,
                                          n_batch_step, reuse=False, **self.policy_kwargs)
 
@@ -170,6 +172,7 @@ class A2C(ActorCriticRLModel):
 
                 self.summary = tf.summary.merge_all()
 
+    """得到policy loss, value loss 和 policy entropy"""
     def _train_step(self, obs, states, rewards, masks, actions, values, update, writer=None):
         """
         applies a training step to the model
@@ -234,9 +237,12 @@ class A2C(ActorCriticRLModel):
             ep_info_buf = deque(maxlen=100)
 
             t_start = time.time()
+            """更新次数: total_timesteps // self.n_batch """
             for update in range(1, total_timesteps // self.n_batch + 1):
+                """run 一个 learning step"""
                 # true_reward is the reward without discount
                 obs, states, rewards, masks, actions, values, ep_infos, true_reward = runner.run()
+
                 ep_info_buf.extend(ep_infos)
                 _, value_loss, policy_entropy = self._train_step(obs, states, rewards, masks, actions, values,
                                                                  self.num_timesteps // self.n_batch, writer)
@@ -317,10 +323,13 @@ class A2CRunner(AbstractEnvRunner):
         :return: ([float], [float], [float], [bool], [float], [float])
                  observations, states, rewards, masks, actions, values
         """
+
+        """每个列表的长度为 n_steps。（列表里的一个元素包含多个并行环境的东西？）"""
         mb_obs, mb_rewards, mb_actions, mb_values, mb_dones = [], [], [], [], []
         mb_states = self.states
         ep_infos = []
         for _ in range(self.n_steps):
+            """选动作，并给出value。（复数好像因为多个并行环境？）"""
             actions, values, states, _ = self.model.step(self.obs, self.states, self.dones)
             mb_obs.append(np.copy(self.obs))
             mb_actions.append(actions)
@@ -330,7 +339,11 @@ class A2CRunner(AbstractEnvRunner):
             # Clip the actions to avoid out of bound error
             if isinstance(self.env.action_space, gym.spaces.Box):
                 clipped_actions = np.clip(actions, self.env.action_space.low, self.env.action_space.high)
+
+            """将step命令和当前智能体的动作打包完送给另一个进程，请求 pommerman 环境进行step"""
+            # TODO
             obs, rewards, dones, infos = self.env.step(clipped_actions)
+
             for info in infos:
                 maybe_ep_info = info.get('episode')
                 if maybe_ep_info is not None:
