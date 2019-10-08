@@ -2,15 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b73852a1-d3de-4c6c-bca6-b466ae5a75cc" name="Default Changelist" comment="添加一些注释，此后版本开始分单智能体和多智能体版本">
-      <change beforePath="$PROJECT_DIR$/.idea/my_pmm.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/my_pmm.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/huang_test/.~lock.state.odt#" beforeDir="false" afterPath="$PROJECT_DIR$/huang_test/.~lock.state.odt#" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/huang_test/simple_ffa_run.py" beforeDir="false" afterPath="$PROJECT_DIR$/huang_test/simple_ffa_run.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/my_subproc_vec_env.py" beforeDir="false" afterPath="$PROJECT_DIR$/my_subproc_vec_env.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pommerman/agents/random_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/pommerman/agents/random_agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pommerman/forward_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/pommerman/forward_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run.py" beforeDir="false" afterPath="$PROJECT_DIR$/run.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -249,7 +241,7 @@
       <workItem from="1570346111210" duration="31972000" />
       <workItem from="1570450376585" duration="111000" />
       <workItem from="1570451420157" duration="13435000" />
-      <workItem from="1570515586681" duration="10489000" />
+      <workItem from="1570515586681" duration="10808000" />
     </task>
     <task id="LOCAL-00001" summary="添加一些注释，此后版本开始分单智能体和多智能体版本">
       <created>1570343564191</created>

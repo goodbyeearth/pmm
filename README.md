@@ -10,6 +10,4 @@ python run.py --alg=a2c --num_timesteps=1e5
 (具体参数暂时先看 my_cmd_utils.py 吧～～)
 
 # 对 pommerman 或 stable_baselines 的相关修改
-1、pommerman/forward_model.py: 修改了 act 函数里 is_communicative 的默认值，False->True。
-
-作用：设置其他智能体做出动作的格式，使动作包含 message
+无
