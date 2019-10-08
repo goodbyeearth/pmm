@@ -4,12 +4,10 @@ from collections import OrderedDict
 from gym import spaces
 from pommerman import *
 
-import numpy as np
-
 from stable_baselines.common.vec_env import VecEnv, CloudpickleWrapper
 from stable_baselines.common.tile_images import tile_images
 
-from utils import featurize, get_feature_shape, get_action_space
+from utils import *
 
 
 def _worker(remote, parent_remote, env_fn_wrapper):
@@ -21,11 +19,16 @@ def _worker(remote, parent_remote, env_fn_wrapper):
             cmd, data = remote.recv()
             if cmd == 'step':
                 some_actions = env.act(env.get_observations())     # 得到其他智能体的 action
-                data = list(data)                  # data 本来是 numpy ndarray
+                # 如果其他智能体动作不是元组（只有单一动作），改成元组
+                for i in range(3):
+                    if not isinstance(some_actions[i], tuple):
+                        some_actions[i] = (some_actions[i], 0, 0)
+
+                data = tuple(data)                  # data 本来是 numpy ndarray
                 some_actions.insert(env.training_agent, data)   # 当前训练的 agent 的动作也加进来
                 whole_obs, whole_rew, done, info = env.step(some_actions)       # 得到所有 agent 的四元组
 
-                obs = featurize(whole_obs, env.training_agent)    # 对训练智能体的 observation 提取特征
+                obs = featurize(whole_obs[env.training_agent])    # 对训练智能体的 observation 提取特征
                 rew = whole_rew[env.training_agent]               # 训练智能体的 reward
 
                 # 在多人条件下，如果我训练的智能体死了，那么就需要提前结束游戏
@@ -37,7 +40,7 @@ def _worker(remote, parent_remote, env_fn_wrapper):
                 if done:
                     info['terminal_observation'] = whole_obs    # 保存终结的 observation，否则 reset 后将丢失
                     whole_obs = env.reset()
-                    obs = featurize(whole_obs, env.training_agent)   # reset 后的 obs 会被返回
+                    obs = featurize(whole_obs[env.training_agent])   # reset 后的 obs 会被返回
 
                     if is_dead:
                         rew = -1
@@ -48,7 +51,7 @@ def _worker(remote, parent_remote, env_fn_wrapper):
 
             elif cmd == 'reset':
                 whole_obs = env.reset()
-                obs = featurize(whole_obs, env.training_agent)
+                obs = featurize(whole_obs[env.training_agent])
                 remote.send(obs)
 
             elif cmd == 'render':
@@ -57,7 +60,11 @@ def _worker(remote, parent_remote, env_fn_wrapper):
                 remote.close()
                 break
             elif cmd == 'get_spaces':
-                remote.send((env.observation_space, env.action_space))
+                """增加前三行，注释最后一行"""
+                observation_space = get_feature_space()
+                action_space = get_action_space()
+                remote.send((observation_space, action_space))
+                # remote.send((env.observation_space, env.action_space))
             elif cmd == 'env_method':
                 method = getattr(env, data[0])
                 remote.send(method(*data[1], **data[2]))
@@ -127,8 +134,11 @@ class SubprocVecEnv(VecEnv):
         对 observation_space 仅修改了 shape
         action_space 重新定义为 gym.spaces.MultiDiscrete([6, 8, 8]) 类型
         """
-        observation_space.shape = get_feature_shape()
-        action_space = get_action_space()
+        # print("observation_space(from pommerman):", observation_space)
+        # observation_space = get_feature_space()
+        # observation_space.shape = get_feature_shape()
+        # print("observation_space(after reshape):", observation_space)
+        # action_space = get_action_space()
 
         VecEnv.__init__(self, len(env_fns), observation_space, action_space)
 

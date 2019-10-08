@@ -83,7 +83,7 @@ class ForwardModel(object):
         return steps, board, agents, bombs, items, flames, done, info
 
     @staticmethod
-    def act(agents, obs, action_space, is_communicative=True):
+    def act(agents, obs, action_space, is_communicative=False):
         """Returns actions for each agent in this list.
 
         Args:

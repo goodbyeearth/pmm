@@ -16,7 +16,8 @@ from my_subproc_vec_env import SubprocVecEnv
 def make_envs(env_id):
     def _thunk():
         agent_list = [
-            agents.SimpleAgent(),
+            # agents.SimpleAgent(),
+            agents.RandomAgent(),
             agents.BaseAgent(),
             agents.SimpleAgent(),
             agents.SimpleAgent()
@@ -38,18 +39,15 @@ def train(args):
     env_id = args.env
 
     # 多线程设置
-    if args.num_env:
-        num_envs = args.num_env
-    else:
-        config = tf.ConfigProto()
-        os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-        config.gpu_options.allow_growth = True
-        num_envs = args.num_env or multiprocessing.cpu_count()
+    config = tf.ConfigProto()
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    config.gpu_options.allow_growth = True
+    num_envs = args.num_env or multiprocessing.cpu_count()
     envs = [make_envs(env_id) for _ in range(num_envs)]
     env = SubprocVecEnv(envs)
 
     model_fn = get_model_fn(args.alg)
-    model = model_fn(args.policy_type, env, verbose=1)
+    model = model_fn(args.policy_type, env, verbose=1, tensorboard_log=args.log_path)
     print('在环境 {} 上训练 {} 模型，进程数：{}'.format(env_id, args.alg, num_envs))
     # TODO: 可以加个 call back
     model.learn(total_timesteps=total_timesteps,
@@ -76,20 +74,12 @@ def get_model_fn(alg):
 def main(args):
     arg_parser = my_arg_parser()
     args, unknown_args = arg_parser.parse_known_args(args)
-    # print(args)
-    # print(unknown_args)
+
     # TODO:logger配置
 
     model, env = train(args)
     env.close()
-    # env_fn = make_envs(args.env)
-    # env = env_fn()
-    # obs = env.reset()
-    # for _ in range(1000):
-    #     action, _states = model.predict(obs)
-    #     obs, rewards, dones, info = env.step(action)
-    #     env.render()
-    # env.close()
+
     if args.save_path:
         model.save(args.save_path)
 

@@ -35,8 +35,11 @@ def main():
             state, reward, done, info = env.step(actions)
 
             frame += 1
-            if frame==5:
-                # print(state[0])
+            if frame==20:
+                # print(state[0]['board'])
+                # print(state[1]['board'])
+                # print(state[2]['board'])
+                print(state[3])
                 # print(env.observation_space.shape)
                 print(env.action_space.shape)
                 print(env.action_space)
