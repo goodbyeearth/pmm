@@ -7,7 +7,11 @@
 （如果修改涉及内容较多，如 pommerman 里的地图大小、道具等等，新建一个 my_pommerman 文件夹吧。）
 
 # 运行方法（命令行）
-python run.py --alg=ppo2 --policy_type=CustomPolicy --num_timesteps=1e5 --log_path=./log_test/
+### 训练并保存模型
+python run.py --alg=ppo2 --policy_type=CustomPolicy --num_timesteps=1e6 --log_path=./log_test/ --save_path=./save_test/1e6.zip
+
+### 观察训练模型效果
+python run.py --play --load_path=./save_test/1e6.zip
 
 (具体参数暂时先看 my_cmd_utils.py 吧～～)
 
