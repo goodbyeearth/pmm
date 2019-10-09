@@ -3,6 +3,7 @@ from pommerman import agents
 
 import sys
 import os
+
 from importlib import import_module
 import multiprocessing
 
@@ -10,7 +11,7 @@ import tensorflow as tf
 
 from my_cmd_utils import my_arg_parser
 from my_subproc_vec_env import SubprocVecEnv
-
+from my_policies import CustomPolicy
 
 # TODO：加seed
 def make_envs(env_id):
@@ -27,13 +28,6 @@ def make_envs(env_id):
     return _thunk
 
 
-# def make_envs(env_id):
-#     def _thunk():
-#         env = gym.make(env_id)
-#         return env
-#     return _thunk
-
-
 def train(args):
     total_timesteps = int(args.num_timesteps)
     env_id = args.env
@@ -47,8 +41,14 @@ def train(args):
     env = SubprocVecEnv(envs)
 
     model_fn = get_model_fn(args.alg)
-    model = model_fn(args.policy_type, env, verbose=1, tensorboard_log=args.log_path)
-    print('在环境 {} 上训练 {} 模型，进程数：{}'.format(env_id, args.alg, num_envs))
+
+    policy_type = args.policy_type
+    if policy_type == 'CustomPolicy':
+        policy_type = CustomPolicy
+
+    model = model_fn(policy_type, env, verbose=1, tensorboard_log=args.log_path)
+    print('在环境 {} 上训练 {} 模型，进程数：{}, policy type:{}'
+          .format(env_id, args.alg, num_envs, args.policy_type))
     # TODO: 可以加个 call back
     model.learn(total_timesteps=total_timesteps,
                 seed=args.seed)

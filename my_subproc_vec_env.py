@@ -13,6 +13,7 @@ from utils import *
 def _worker(remote, parent_remote, env_fn_wrapper):
     parent_remote.close()
     env = env_fn_wrapper.var()
+    # TODO:记得设置训练智能体的 index
     env.set_training_agent(1)  # 设置训练的 agent 的 index
     while True:
         try:
@@ -60,7 +61,7 @@ def _worker(remote, parent_remote, env_fn_wrapper):
                 remote.close()
                 break
             elif cmd == 'get_spaces':
-                """增加前三行，注释最后一行"""
+                """增加前三行，注释最后一行。自定义 observation 和 action 的 space"""
                 observation_space = get_feature_space()
                 action_space = get_action_space()
                 remote.send((observation_space, action_space))
@@ -111,7 +112,7 @@ class SubprocVecEnv(VecEnv):
             # Fork is not a thread safe method (see issue #217)
             # but is more user friendly (does not require to wrap the code in
             # a `if __name__ == "__main__":`)
-            """以下两行暂时注释,并暂时添加第三行"""
+            """注释前两行，增加第三行"""
             # forkserver_available = 'forkserver' in multiprocessing.get_all_start_methods()
             # start_method = 'forkserver' if forkserver_available else 'spawn'
             start_method = 'spawn'
@@ -129,16 +130,6 @@ class SubprocVecEnv(VecEnv):
 
         self.remotes[0].send(('get_spaces', None))
         observation_space, action_space = self.remotes[0].recv()
-
-        """
-        对 observation_space 仅修改了 shape
-        action_space 重新定义为 gym.spaces.MultiDiscrete([6, 8, 8]) 类型
-        """
-        # print("observation_space(from pommerman):", observation_space)
-        # observation_space = get_feature_space()
-        # observation_space.shape = get_feature_shape()
-        # print("observation_space(after reshape):", observation_space)
-        # action_space = get_action_space()
 
         VecEnv.__init__(self, len(env_fns), observation_space, action_space)
 
