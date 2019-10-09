@@ -92,7 +92,7 @@ def play():
     train_idx = 1
     env.set_training_agent(train_idx)
 
-    def get_all_actions(obs, train_agent_idx):
+    def get_all_actions():
         feature = featurize(obs[train_idx])
         action, _states = model.predict(feature)
         action = tuple(action)
@@ -109,12 +109,15 @@ def play():
         obs = env.reset()
         is_dead = False  # 标志我的智能体死没死
         for i in range(1000):
-            all_actions = get_all_actions(obs, train_idx)
-            obs, rewards, dones, info = env.step(all_actions)
+            all_actions = get_all_actions()
+            obs, rewards, done, info = env.step(all_actions)
             if not is_dead and not env._agents[env.training_agent].is_alive:
                 print("My agent is dead. ~.~")
                 is_dead = True
                 break  # 死了重来~~
+
+            if done:
+                break
             env.render()
     env.close()
 
