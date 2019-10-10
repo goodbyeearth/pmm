@@ -1,4 +1,5 @@
 '''Module to manage and advanced game state'''
+"""修改了 act 函数里 is_communicative 的默认值，False->True"""
 from collections import defaultdict
 
 import numpy as np

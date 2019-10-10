@@ -119,6 +119,7 @@ def conv(input_tensor, scope, *, n_filters, filter_size, stride,
     else:
         filter_height = filter_size
         filter_width = filter_size
+    """data 格式"""
     if data_format == 'NHWC':
         channel_ax = 3
         strides = [1, stride, stride, 1]
