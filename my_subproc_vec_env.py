@@ -25,7 +25,7 @@ def _worker(remote, parent_remote, env_fn_wrapper):
                     if not isinstance(some_actions[i], tuple):
                         some_actions[i] = (some_actions[i], 0, 0)
 
-                data = tuple(data)                  # data 本来是 numpy ndarray
+                data = (data, 0, 0)
                 some_actions.insert(env.training_agent, data)   # 当前训练的 agent 的动作也加进来
                 whole_obs, whole_rew, done, info = env.step(some_actions)       # 得到所有 agent 的四元组
 

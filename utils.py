@@ -40,4 +40,4 @@ def get_feature_space():
 
 
 def get_action_space():
-    return spaces.MultiDiscrete([6, 8, 8])
+    return spaces.Discrete(6)
