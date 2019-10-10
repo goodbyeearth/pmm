@@ -87,7 +87,6 @@ def play():
     env_fn = make_envs(args.env)
     env = env_fn()
 
-
     # 设置训练的 agent 的 index
     train_idx = 1
     env.set_training_agent(train_idx)
