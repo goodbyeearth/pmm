@@ -26,10 +26,12 @@ def featurize(obs):
             enemies_idx.append(e.value)
             maps.append(board == e.value)
     """训练智能体的位置"""
+    train_agent_idx = None
     for idx in [10, 11, 12, 13]:
         if idx not in enemies_idx + [teammate_idx]:
             train_agent_idx = idx
             break
+    assert train_agent_idx is not None
     maps.append(board == train_agent_idx)
 
     return np.stack(maps, axis=2)

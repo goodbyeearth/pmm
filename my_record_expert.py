@@ -29,29 +29,37 @@ def generate_expert_traj(env=None, agent_idx_list=None, save_path_list=None, n_e
 
     while ep_idx < n_episodes:
         # 每个智能体观察到的 obs[agent_idx] 经过特征化后，append 到各自的 observations（本身就是列表）里
-        for i, agent_idx in zip(range(n_record), agent_idx_list):
-            feature = featurize(obs[agent_idx])
-            observations_list[i].append(feature)
+        feature_list = []
+        for agent_idx in agent_idx_list:
+            # 死了就 append None
+            if env._agents[agent_idx].is_alive:
+                feature_list.append(featurize(obs[agent_idx]))   # 先保存 feature
+            else:
+                feature_list.append(None)
 
         all_action = env.act(obs)
 
         obs, reward, done, _ = env.step(all_action)    # obs 和 reward 均为长度为4的列表
 
         for i, agent_idx in zip(range(n_record), agent_idx_list):
-            actions_list[i].append(all_action[agent_idx])
-            rewards_list[i].append(reward[agent_idx])
-            episode_starts_list[i].append(done)
-            reward_sum_list[i] += reward[agent_idx]
+            if env._agents[agent_idx].is_alive:  # 活着的才记录
+                assert feature_list[agent_idx] is not None
+                observations_list[i].append(feature_list[agent_idx])
+                actions_list[i].append(all_action[agent_idx])
+                rewards_list[i].append(reward[agent_idx])
+                episode_starts_list[i].append(done)
+                reward_sum_list[i] += reward[agent_idx]
 
         if done:
             obs = env.reset()
             for i, agent_idx in zip(range(n_record), agent_idx_list):
-                episode_returns_list[i][ep_idx] = reward_sum_list[i]
+                if env._agents[agent_idx].is_alive:  # 活着的才记录
+                    episode_returns_list[i][ep_idx] = reward_sum_list[i]
 
             reward_sum_list = [0.0 for _ in range(n_record)]
             ep_idx += 1
             if ep_idx % 10 == 0:
-                print('爬取智能体{}的数据中，当前回合：{}'.format(agent_idx_list, ep_idx))
+                print('爬取数据中，当前回合：{}'.format(ep_idx))
 
     """
     在写入文件前，将单个智能体在所有回合里的数据保存为一个很大的 np.array

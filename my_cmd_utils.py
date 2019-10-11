@@ -6,7 +6,7 @@ def my_arg_parser():
 
     # 模式
     parser.add_argument('--train', help='训练强化学习算法', default=False, action='store_true')
-    parser.add_argument('--generate_data', help='获取并存储专家数据', default=False, action='store_true')
+    parser.add_argument('--generate_data', help='获取并存储专家数据', default=False, action='store_true')   # 生成专家数据相关
     parser.add_argument('--pre_train', help='监督学习训练', default=False, action='store_true')
     parser.add_argument('--play', help='跑训练好的算法', default=False, action='store_true')
 
@@ -25,11 +25,13 @@ def my_arg_parser():
     parser.add_argument('--nsteps', type=int, default=5),
     parser.add_argument('--seed', help='RNG seed', type=int, default=None)
 
+    parser.add_argument('--data_episode', type=int, default=None)     # 生成专家数据相关
+
     # 路径
     parser.add_argument('--save_path', help='保存强化学习训练好的模型的路径', default=None, type=str)
     parser.add_argument('--load_path', help='加载强化学习训练好的模型的路径', default=None, type=str)
     parser.add_argument('--log_path', help='保存强化学习训练日志的路径', default=None, type=str)
-    # parser.add_argument('--expert_path', help='保存专家数据的路径', default=None, type=str)
+    parser.add_argument('--expert_path', help='保存专家数据的路径', default=None, type=str)   # 生成专家数据相关
 
 
     return parser

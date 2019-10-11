@@ -70,7 +70,7 @@ def train():
         # assert args.expert_path is not None
         # 加载数据 TODO: 路径使用参数, 设置 traj_limitation
         print("开始加载专家数据...")
-        dataset = ExpertDataset(expert_path='./dataset_test/1_expert_agent_1_100.npz')  #  traj_limitation=100
+        dataset = ExpertDataset(expert_path='./dataset_test/expert_agent_1_300.npz')  #  traj_limitation=100
         # 开始与训练 TODO: 设置 epoch 数量
         print("开始在{}模型上进行预训练...\nPolicy type:{}".format(args.alg, args.policy_type))
         model.pretrain(dataset=dataset, n_epochs=100)
@@ -137,22 +137,23 @@ def play():
 
 def generate_expert_data():
     from my_record_expert import generate_expert_traj
-
+    # 记得设置相关参数
+    n_episodes = 100
+    record_idx_list = [0, 1, 2, 3]
+    prefix_path = './dataset_test/expert_agent_'
+    if args.data_episode:
+        n_episodes = args.data_episode
+    if args.expert_path:
+        prefix_path = args.expert_path
     agent_list = [
         agents.SimpleAgent(),
         agents.SimpleAgent(),
         agents.SimpleAgent(),
         agents.SimpleAgent(),
     ]
+
     env = pommerman.make(args.env, agent_list)
-
-    # 记得设置相关参数
-    n_episodes = 10
-    record_idx_list = [2, 3]
-
-    # TODO: 路径使用参数
-    # 设置 dataset 存储路径，每个 agent 的数据存放在不同的文件里
-    save_path_list = ['./dataset_test/expert_agent_' + str(idx) for idx in record_idx_list]
+    save_path_list = [prefix_path + str(idx) + '_' + str(n_episodes) for idx in record_idx_list]
 
     print('总回合数：{}, 目标智能体编号：{}'.format(n_episodes, record_idx_list))
     # 开始爬取并存储数据
