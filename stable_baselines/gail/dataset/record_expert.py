@@ -170,7 +170,7 @@ def generate_expert_traj(model, save_path=None, env=None, n_timesteps=0,
     }
 
     for key, val in numpy_dict.items():
-        print(key, val.shape)
+        print(key, val.shape, type(val), val[0])
 
     if save_path is not None:
         np.savez(save_path, **numpy_dict)

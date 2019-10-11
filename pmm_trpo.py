@@ -8,8 +8,9 @@ import tensorflow as tf
 import numpy as np
 
 import stable_baselines.common.tf_util as tf_util
-from stable_baselines.common import explained_variance, zipsame, dataset, fmt_row, colorize, ActorCriticRLModel, \
+from stable_baselines.common import explained_variance, zipsame, dataset, fmt_row, colorize, \
     SetVerbosity, TensorboardWriter
+from pmm_base_model import ActorCriticRLModel
 from stable_baselines import logger
 from stable_baselines.common.mpi_adam import MpiAdam
 from stable_baselines.common.cg import conjugate_gradient

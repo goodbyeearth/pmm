@@ -66,8 +66,9 @@ class ExpertDataset(object):
         # and S is the environment observation/action space.
         # S = (1, ) for discrete space
         # Flatten to (N * L, prod(S))
-        if len(observations.shape) > 2:
-            observations = np.reshape(observations, [-1, np.prod(observations.shape[1:])])
+
+        # if len(observations.shape) > 2:
+            # observations = np.reshape(observations, [-1, np.prod(observations.shape[1:])])
         if len(actions.shape) > 2:
             actions = np.reshape(actions, [-1, np.prod(actions.shape[1:])])
 

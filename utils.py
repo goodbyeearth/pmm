@@ -18,7 +18,8 @@ def featurize(obs):
     maps.append(np.full(board.shape, obs['can_kick']))
     """一个队友的位置"""
     teammate_idx = obs['teammate'].value
-    maps.append(board == teammate_idx)
+    if not teammate_idx == 9:
+        maps.append(board == teammate_idx)
     """两个敌人的位置"""
     enemies_idx = []
     for e in obs['enemies']:
@@ -32,7 +33,7 @@ def featurize(obs):
             break
     maps.append(board == train_agent_idx)
 
-    return np.stack(maps, axis=2)
+    return np.stack(maps, axis=2)  # 11*11*18
 
 
 def get_feature_space():

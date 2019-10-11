@@ -1,6 +1,11 @@
 # 自定义
+*.npz
+*_test.py
 *_test/
 .idea/
+.DS_Store
+.vscode/
+*.zip
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

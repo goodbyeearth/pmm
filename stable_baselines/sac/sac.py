@@ -14,7 +14,7 @@ from stable_baselines.deepq.replay_buffer import ReplayBuffer
 from stable_baselines.ppo2.ppo2 import safe_mean, get_schedule_fn
 from stable_baselines.sac.policies import SACPolicy
 from stable_baselines import logger
-
+from tqdm import tqdm
 
 def get_vars(scope):
     """
@@ -389,8 +389,8 @@ class SAC(OffPolicyRLModel):
             ep_info_buf = deque(maxlen=100)
             n_updates = 0
             infos_values = []
-
-            for step in range(total_timesteps):
+            logger.log("SAV learn")
+            for step in tqdm(range(total_timesteps)):
                 if callback is not None:
                     # Only stop training if return value is False, not when it is None. This is for backwards
                     # compatibility with callbacks that have no return statement.
