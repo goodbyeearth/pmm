@@ -6,7 +6,7 @@ import gym
 import tensorflow as tf
 import numpy as np
 
-from pmm_multiprocess import RunningMeanStd
+from stable_baselines.common.mpi_running_mean_std import RunningMeanStd
 from stable_baselines.common import tf_util as tf_util
 
 
@@ -62,7 +62,7 @@ class TransitionClassifier(object):
 
         self.hidden_size = hidden_size
         self.normalize = normalize
-        self.obs_rms = None  
+        self.obs_rms = None
 
         # Placeholders
         self.generator_obs_ph = tf.placeholder(observation_space.dtype, (None,) + self.observation_shape,
@@ -102,7 +102,7 @@ class TransitionClassifier(object):
             [self.generator_obs_ph, self.generator_acs_ph, self.expert_obs_ph, self.expert_acs_ph],
             self.losses + [tf_util.flatgrad(self.total_loss, var_list)])
 
-    def build_graph(self, obs_ph, acs_ph, reuse=False):  
+    def build_graph(self, obs_ph, acs_ph, reuse=False):
         """
         build the graph
 
@@ -117,7 +117,7 @@ class TransitionClassifier(object):
 
             if self.normalize:
                 with tf.variable_scope("obfilter"):
-                    self.obs_rms = RunningMeanStd(shape=self.observation_shape)  
+                    self.obs_rms = RunningMeanStd(shape=self.observation_shape)
                 obs = (obs_ph - self.obs_rms.mean) / self.obs_rms.std  # 标准差标准化，经过处理的数据符合标准正态分布
             else:
                 obs = obs_ph
@@ -127,8 +127,10 @@ class TransitionClassifier(object):
                 actions_ph = tf.cast(one_hot_actions, tf.float32)  # shape = [num_actions,class_actions]
             else:
                 actions_ph = acs_ph
-
-            _input = tf.concat([obs, actions_ph], axis=1)  # concatenate the two input -> form a transition 将每一个状态和每一个动作concat起来
+            '''reshape obs to (?,11,11,18)'''
+            dim = [-1]+[2178]
+            obs_r = tf.reshape(obs,shape=dim)
+            _input = tf.concat([obs_r, actions_ph], axis=1)  # concatenate the two input -> form a transition 将每一个状态和每一个动作concat起来
             p_h1 = tf.contrib.layers.fully_connected(_input, self.hidden_size, activation_fn=tf.nn.tanh)
             p_h2 = tf.contrib.layers.fully_connected(p_h1, self.hidden_size, activation_fn=tf.nn.tanh)
             logits = tf.contrib.layers.fully_connected(p_h2, 1, activation_fn=tf.identity)
@@ -158,7 +160,8 @@ class TransitionClassifier(object):
         elif len(actions.shape) == 0:
             # one discrete action
             actions = np.expand_dims(actions, 0)
-
-        feed_dict = {self.generator_obs_ph: obs, self.generator_acs_ph: actions}
+        '''reshape obs to (1,11,11,18)'''
+        obs_r = obs.reshape(-1,11,11,18)
+        feed_dict = {self.generator_obs_ph: obs_r, self.generator_acs_ph: actions}
         reward = sess.run(self.reward_op, feed_dict)
         return reward

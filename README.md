@@ -1,3 +1,9 @@
+# 修改pommerman
+1、添加并注册了新环境'PommeFFACompetition-v4' --> 文件v4 用于训练gail。
+
+# 未完成
+pmm_ppo2  pmm_multiprocess
+
 # Note
 1、统一**中文注释**吧。  
 

@@ -18,7 +18,7 @@ def featurize(obs):
     maps.append(np.full(board.shape, obs['can_kick']))
     """一个队友的位置"""
     teammate_idx = obs['teammate'].value
-    if not teammate_idx == 9:
+    if not teammate_idx == 9:  # AgentDummy
         maps.append(board == teammate_idx)
     """两个敌人的位置"""
     enemies_idx = []

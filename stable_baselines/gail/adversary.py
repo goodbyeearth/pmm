@@ -127,10 +127,7 @@ class TransitionClassifier(object):
                 actions_ph = tf.cast(one_hot_actions, tf.float32)  # shape = [num_actions,class_actions]
             else:
                 actions_ph = acs_ph
-            '''reshape obs to (?,11,11,18)'''
-            dim = [-1]+[2178]
-            obs_r = tf.reshape(obs,shape=dim)
-            _input = tf.concat([obs_r, actions_ph], axis=1)  # concatenate the two input -> form a transition 将每一个状态和每一个动作concat起来
+            _input = tf.concat([obs, actions_ph], axis=1)  # concatenate the two input -> form a transition 将每一个状态和每一个动作concat起来
             p_h1 = tf.contrib.layers.fully_connected(_input, self.hidden_size, activation_fn=tf.nn.tanh)
             p_h2 = tf.contrib.layers.fully_connected(p_h1, self.hidden_size, activation_fn=tf.nn.tanh)
             logits = tf.contrib.layers.fully_connected(p_h2, 1, activation_fn=tf.identity)
@@ -160,8 +157,6 @@ class TransitionClassifier(object):
         elif len(actions.shape) == 0:
             # one discrete action
             actions = np.expand_dims(actions, 0)
-        '''reshape obs to (1,11,11,18)'''
-        obs_r = obs.reshape(-1,11,11,18)
-        feed_dict = {self.generator_obs_ph: obs_r, self.generator_acs_ph: actions}
+        feed_dict = {self.generator_obs_ph: obs, self.generator_acs_ph: actions}
         reward = sess.run(self.reward_op, feed_dict)
         return reward
