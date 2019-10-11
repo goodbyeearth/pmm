@@ -3,6 +3,7 @@
 *_test.py
 *_test/
 .idea/
+log/
 .DS_Store
 .vscode/
 *.zip
