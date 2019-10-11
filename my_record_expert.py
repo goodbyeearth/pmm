@@ -1,143 +1,92 @@
-import os
-import warnings
-
-import cv2
 import numpy as np
 from gym import spaces
 
-from stable_baselines.common.base_class import BaseRLModel
-from stable_baselines.common.vec_env import VecEnv, VecFrameStack
-from stable_baselines.common.base_class import _UnvecWrapper
+from utils import featurize, get_feature_space, get_action_space
 
 
-def generate_expert_traj(model, save_path=None, env=None, n_timesteps=0, n_episodes=100):
-    """
-    Train expert controller (if needed) and record expert trajectories.
+def generate_expert_traj(env=None, agent_idx_list=None, save_path_list=None, n_episodes=100):
+    # Check
+    assert isinstance(get_feature_space(), spaces.Box)
+    assert isinstance(get_action_space(), spaces.Discrete)
+    assert env is not None
+    assert agent_idx_list is not None
+    assert save_path_list is not None
 
-    .. note::
+    n_record = len(agent_idx_list)         # 同时收集数据的智能体数目
 
-        only Box and Discrete spaces are supported for now.
+    # 以下的所有列表中的每一个元素为一个子列表，每个自列表对应每个智能体收集的数据
+    actions_list = [[] for _ in range(n_record)]
+    observations_list = [[] for _ in range(n_record)]    # 保存处理后的 feature, 而不是 dict
+    rewards_list = [[] for _ in range(n_record)]
+    episode_returns_list = [np.zeros((n_episodes,)) for _ in range(n_record)]  # 该列表中的每个元素，长度为 n_episodes
+    episode_starts_list = [[] for _ in range(n_record)]
 
-    :param model: (RL model or callable) The expert model, if it needs to be trained,
-        then you need to pass ``n_timesteps > 0``.
-    :param save_path: (str) Path without the extension where the expert dataset will be saved
-        (ex: 'expert_cartpole' -> creates 'expert_cartpole.npz').
-        If not specified, it will not save, and just return the generated expert trajectories.
-        This parameter must be specified for image-based environments.
-    :param env: (gym.Env) The environment, if not defined then it tries to use the model
-        environment.
-    :param n_timesteps: (int) Number of training timesteps
-    :param n_episodes: (int) Number of trajectories (episodes) to record
-    :param image_folder: (str) When using images, folder that will be used to record images.
-    :return: (dict) the generated expert trajectories.
-    """
-
-    """此句应该不会被执行"""
-    # Retrieve the environment using the RL model
-    if env is None and isinstance(model, BaseRLModel):
-        env = model.get_env()
-
-    assert env is not None, "You must set the env in the model or pass it to the function."
-
-    """没必要开启 VecEnv， 只有第一个 env 的数据会被记录"""
-    is_vec_env = False
-    if isinstance(env, VecEnv) and not isinstance(env, _UnvecWrapper):
-        is_vec_env = True
-        if env.num_envs > 1:
-            warnings.warn("You are using multiple envs, only the data from the first one will be recorded.")
-
-    # Sanity check
-    assert (isinstance(env.observation_space, spaces.Box) or
-            isinstance(env.observation_space, spaces.Discrete)), "Observation space type not supported"
-
-    assert (isinstance(env.action_space, spaces.Box) or
-            isinstance(env.action_space, spaces.Discrete)), "Action space type not supported"
-
-    """此句不会被执行"""
-    if n_timesteps > 0 and isinstance(model, BaseRLModel):
-        model.learn(n_timesteps)
-
-    actions = []
-    observations = []
-    rewards = []
-    episode_returns = np.zeros((n_episodes,))
-    episode_starts = []
-
-    ep_idx = 0
+    ep_idx = 0    # 记录对战回合数
     obs = env.reset()
-    episode_starts.append(True)
-    reward_sum = 0.0
-    idx = 0
-    # state and mask for recurrent policies
-    state, mask = None, None
-
-    """应该不会被执行"""
-    if is_vec_env:
-        mask = [True for _ in range(env.num_envs)]
+    for i in range(n_record):
+        episode_starts_list[i].append(True)
+    reward_sum_list = [0.0 for _ in range(n_record)]
 
     while ep_idx < n_episodes:
-        observations.append(obs)
+        # 每个智能体观察到的 obs[agent_idx] 经过特征化后，append 到各自的 observations（本身就是列表）里
+        for i, agent_idx in zip(range(n_record), agent_idx_list):
+            feature = featurize(obs[agent_idx])
+            observations_list[i].append(feature)
 
-        """修改了最后一行"""
-        if isinstance(model, BaseRLModel):
-            action, state = model.predict(obs, state=state, mask=mask)
-        else:
-            action = model.act(obs)
+        all_action = env.act(obs)
 
-        obs, reward, done, _ = env.step(action)
+        obs, reward, done, _ = env.step(all_action)    # obs 和 reward 均为长度为4的列表
 
-        """应该不会被执行"""
-        # Use only first env
-        if is_vec_env:
-            mask = [done[0] for _ in range(env.num_envs)]
-            action = np.array([action[0]])
-            reward = np.array([reward[0]])
-            done = np.array([done[0]])
+        for i, agent_idx in zip(range(n_record), agent_idx_list):
+            actions_list[i].append(all_action[agent_idx])
+            rewards_list[i].append(reward[agent_idx])
+            episode_starts_list[i].append(done)
+            reward_sum_list[i] += reward[agent_idx]
 
-        actions.append(action)
-        rewards.append(reward)
-        episode_starts.append(done)
-        reward_sum += reward
-        idx += 1
         if done:
-            if not is_vec_env:
-                obs = env.reset()
-                # Reset the state in case of a recurrent policy
-                state = None
+            obs = env.reset()
+            for i, agent_idx in zip(range(n_record), agent_idx_list):
+                episode_returns_list[i][ep_idx] = reward_sum_list[i]
 
-            episode_returns[ep_idx] = reward_sum
-            reward_sum = 0.0
+            reward_sum_list = [0.0 for _ in range(n_record)]
             ep_idx += 1
+            if ep_idx % 10 == 0:
+                print('爬取智能体{}的数据中，当前回合：{}'.format(agent_idx_list, ep_idx))
 
-    if isinstance(env.observation_space, spaces.Box):
-        observations = np.concatenate(observations).reshape((-1,) + env.observation_space.shape)
-    elif isinstance(env.observation_space, spaces.Discrete):
-        observations = np.array(observations).reshape((-1, 1))
+    """
+    在写入文件前，将单个智能体在所有回合里的数据保存为一个很大的 np.array
+    a : [array([0, 0, 0]), array([1, 1, 1]), array([2, 2, 2]), array([3, 3, 3])]
+    b = np.concatenate(a)
+    --->  b : array([0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3])
+    b.reshape((-1, 3, ))
+    --->  b: array([[0, 0, 0],
+                    [1, 1, 1],
+                    [2, 2, 2],
+                    [3, 3, 3]])
+    """
+    for i in range(n_record):
+        observations_list[i] = np.concatenate(observations_list[i]).reshape((-1,) + get_feature_space().shape)
+        actions_list[i] = np.array(actions_list[i]).reshape((-1, 1))
+        assert len(observations_list[i]) == len(actions_list[i])    # 确认一下
+        rewards_list[i] = np.array(rewards_list[i])       # 列表变 array
+        episode_starts_list[i] = np.array(episode_starts_list[i][:-1])  # 最后一位不要，在最开始的时候已多补了第一位
 
-    if isinstance(env.action_space, spaces.Box):
-        actions = np.concatenate(actions).reshape((-1,) + env.action_space.shape)
-    elif isinstance(env.action_space, spaces.Discrete):
-        actions = np.array(actions).reshape((-1, 1))
-
-    rewards = np.array(rewards)
-    episode_starts = np.array(episode_starts[:-1])
-
-    assert len(observations) == len(actions)
-
-    numpy_dict = {
-        'actions': actions,
-        'obs': observations,
-        'rewards': rewards,
-        'episode_returns': episode_returns,
-        'episode_starts': episode_starts
-    }
-
-    for key, val in numpy_dict.items():
-        print(key, val.shape)
-
-    if save_path is not None:
-        np.savez(save_path, **numpy_dict)
+    # 每个智能体的数据都包装成 numpy dict
+    print("将产生 {} 个文件，每个文件对应一个智能体。".format(n_record))
+    for i in range(n_record):
+        numpy_dict = {
+            'actions': actions_list[i],
+            'obs': observations_list[i],
+            'rewards': rewards_list[i],
+            'episode_returns': episode_returns_list[i],
+            'episode_starts': episode_starts_list[i]
+        }
+        print("以下数据将写入 {}".format(save_path_list[i]))
+        for key, val in numpy_dict.items():
+            print(key, val.shape)
+        np.savez(save_path_list[i], **numpy_dict)
+        print("以上数据写入完成。")
+        print("====================================")
 
     env.close()
 
-    return numpy_dict

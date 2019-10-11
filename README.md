@@ -5,13 +5,21 @@
 
 3、**不要改 pommerman 和 stable_baseline 里的东西**，要改的话直接在 my_*.py 里进行。
   
-# 运行方法（命令行）
+  
+# 运行方法（具体参数暂时先看 my_cmd_utils.py 吧～～)
+### 爬取并保存数据
+```python run.py --generate_data``` 
+
+(具体保存路径、回合数、目标智能体的设置到 run.py 里的 generate_expert_data() 方法里设置)
+
 ### 训练并保存模型
 ```python run.py --alg=ppo2 --policy_type=CustomPolicy --num_timesteps=1e6 --log_path=./log_test/ --save_path=./save_test/1e6.zip```  
 
+(如果要 **pretrain**，添加参数 \-\-pre_train)
+
 ### 观察训练模型效果
 ```python run.py --play --load_path=./save_test/1e6.zip```  
-(具体参数暂时先看 my_cmd_utils.py 吧～～)
+
 
 # observation （其中一个智能体的某一帧的 observation）
 ### 较有可能用到的
