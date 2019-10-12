@@ -16,6 +16,7 @@ from my_policies import CustomPolicy
 import numpy as np
 from utils import featurize
 import random
+from tqdm import tqdm
 
 def _extra():
     '''Simple function to bootstrap a game.
@@ -44,8 +45,9 @@ def _extra():
     rewards = []
     episode_returns = []
     episode_starts = []
-
-    for i_episode in range(args.num_traj_e):
+    print("提取专家数据数量: num_traj_e=%d" % args.num_traj_e)
+    print("随机提取每回合 %d% 的数据" % args.rand)
+    for i_episode in tqdm(range(args.num_traj_e)):
         state = env.reset()
         flag = True
         done = False
@@ -82,11 +84,12 @@ def _extra():
 
     for key, val in numpy_dict.items():
         print(key, val.shape)
-
+    print("保存专家数据到: data_path=%s" % args.data_path)
     np.savez(args.data_path, **numpy_dict)
 
 def data_load():
     '''加载 expert dataset'''
+    print("正在读取%d条专家数据, 数据路径为: data_path=%s" % (args.num_traj,args.data_path) )
     dataset = ExpertDataset(expert_path=args.data_path, traj_limitation=args.num_traj, verbose=1)
     print("=====> 加载专家数据 ok!")
     return dataset
@@ -94,23 +97,30 @@ def data_load():
 def gail_train():
     '''读取数据'''
     dataset = data_load()
+    print("正在初始化model")
+    print("初始化model的policy为: policy_type=%s" % args.policy_type)
     policy_type = args.policy_type
     if args.policy_type == 'CustomPolicy':
         policy_type = CustomPolicy
 
     '''使用GAIL'''
-    model = GAIL(policy_type, 'PommeFFACompetition-v4', dataset, verbose=1,
+    print("初始化GAIL参数为:")
+    print(" policy=%s \n tensorboard_log=%s " % (args.policy_type,args.log_path))
+    model = GAIL(policy_type, 'PommeFFACompetition-v4', dataset, verbose=0,
                  full_tensorboard_log=True, tensorboard_log=args.log_path)
     print("=====> gail init ok!")
+    print("开始训练model, num_timesteps=%f" % args.num_timesteps)
     model.learn(total_timesteps=args.num_timesteps)
     print("=====> gail learn ok!")
     '''保存模块'''
+    print("保存模型到: save_path=%s" % args.save_path)
     if args.save_path is not None:
         model.save(args.save_path)
 
 
 def _test():
     '''加载模块'''
+    print("加载模型: load_path=%s" % args.load_path)
     model = GAIL.load(args.load_path)
 
     '''测试模块 未完成'''
@@ -143,10 +153,13 @@ if __name__ == '__main__':
     args, unknown_args = arg_parser.parse_known_args(sys.argv)
 
     if args.extra:
+        print("正在进行专家数据提取, 保存路径为: %s" % args.data_path)
         _extra()
     if not args.play:
+        print("进入训练模块")
         gail_train()
     else:
+        print("进入测试模块")
         _test()
 
     # env_id = 'PommeFFACompetition-v4'
