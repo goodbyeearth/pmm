@@ -136,7 +136,7 @@ def play():
 
 
 def generate_expert_data():
-    from my_record_expert import generate_expert_traj
+    from my_record_expert import generate_expert_traj_v1
     # 记得设置相关参数
     n_episodes = 100
     record_idx_list = [0, 1, 2, 3]
@@ -157,7 +157,7 @@ def generate_expert_data():
 
     print('总回合数：{}, 目标智能体编号：{}'.format(n_episodes, record_idx_list))
     # 开始爬取并存储数据
-    generate_expert_traj(env, record_idx_list, save_path_list, n_episodes=n_episodes)
+    generate_expert_traj_v1(env, record_idx_list, save_path_list, n_episodes=n_episodes)
 
 
 if __name__ == '__main__':
