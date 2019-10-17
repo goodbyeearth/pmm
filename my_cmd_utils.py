@@ -7,6 +7,7 @@ def my_arg_parser():
     # 模式
     parser.add_argument('--train', help='训练强化学习算法', default=False, action='store_true')
     parser.add_argument('--generate_data', help='获取并存储专家数据', default=False, action='store_true')   # 生成专家数据相关
+    parser.add_argument('--merge_data', help='合并专家数据', default=False, action='store_true')  # 生成专家数据相关
     parser.add_argument('--pre_train', help='监督学习训练', default=False, action='store_true')
     parser.add_argument('--play', help='跑训练好的算法', default=False, action='store_true')
 
