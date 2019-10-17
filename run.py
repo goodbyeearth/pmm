@@ -13,6 +13,7 @@ from my_cmd_utils import my_arg_parser
 from my_subproc_vec_env import SubprocVecEnv
 from my_policies import CustomPolicy
 
+from generate_data import generate_expert_data
 
 # TODO：加seed
 def make_envs(env_id):
@@ -53,6 +54,7 @@ def train():
     config.gpu_options.allow_growth = True
     num_envs = args.num_env or multiprocessing.cpu_count()
     envs = [make_envs(args.env) for _ in range(num_envs)]
+
     env = SubprocVecEnv(envs)
 
     # 设置 policy_type
@@ -136,62 +138,14 @@ def play():
     env.close()
 
 
-def generate_expert_data():
-    # from my_record_expert import generate_expert_traj_v1
-    # # 记得设置相关参数
-    # n_episodes = 100
-    # record_idx_list = [0, 1, 2, 3]
-    # prefix_path = './dataset_test/expert_agent_'
-    # if args.data_episode:
-    #     n_episodes = args.data_episode
-    # if args.expert_path:
-    #     prefix_path = args.expert_path
-    # agent_list = [
-    #     agents.SimpleAgent(),
-    #     agents.SimpleAgent(),
-    #     agents.SimpleAgent(),
-    #     agents.SimpleAgent(),
-    # ]
-    #
-    # env = pommerman.make(args.env, agent_list)
-    # save_path_list = [prefix_path + str(idx) + '_' + str(n_episodes) for idx in record_idx_list]
-    #
-    # print('总回合数：{}, 目标智能体编号：{}'.format(n_episodes, record_idx_list))
-    # # 开始爬取并存储数据
-    # generate_expert_traj_v1(env, record_idx_list, save_path_list, n_episodes=n_episodes)
-
-    from my_record_expert import generate_expert_traj_v2
-    # 记得设置相关参数
-    n_episodes = 100
-    record_idx_list = [0, 1, 2, 3]
-    prefix_path = './dataset_test/agent_'
-    if args.data_episode:
-        n_episodes = args.data_episode
-    if args.expert_path:
-        prefix_path = args.expert_path
-    agent_list = [
-        agents.SimpleAgent(),
-        agents.SimpleAgent(),
-        agents.SimpleAgent(),
-        agents.SimpleAgent(),
-    ]
-
-    env = pommerman.make(args.env, agent_list)
-    save_path_list = [prefix_path + str(idx) + '_' + str(n_episodes) for idx in record_idx_list]
-
-    print('总回合数：{}, 目标智能体编号：{}'.format(n_episodes, record_idx_list))
-    # 开始爬取并存储数据
-    generate_expert_traj_v2(env, record_idx_list, save_path_list, n_episodes=n_episodes)
-
-
 if __name__ == '__main__':
     arg_parser = my_arg_parser()
     args, unknown_args = arg_parser.parse_known_args(sys.argv)
     print("环境：", args.env)
 
-    # 爬取并存储专家数据，记得在函数内部设置回合数等等
+    # 爬取并存储专家数据
     if args.generate_data:
-        generate_expert_data()
+        generate_expert_data(args.env, n_episodes=20)
 
     # 训练一波
     if args.train:
