@@ -13,7 +13,7 @@ from my_cmd_utils import my_arg_parser
 from my_subproc_vec_env import SubprocVecEnv
 from my_policies import CustomPolicy
 
-from generate_data import generate_expert_data
+from generate_data import generate_expert_data, merge_data
 
 # TODO：加seed
 def make_envs(env_id):
@@ -146,6 +146,7 @@ if __name__ == '__main__':
     # 爬取并存储专家数据
     if args.generate_data:
         generate_expert_data(args.env, n_episodes=20)
+        merge_data('./dataset_test/', './final_data_test/final_data')
 
     # 训练一波
     if args.train:
