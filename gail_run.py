@@ -18,75 +18,6 @@ from utils import featurize
 import random
 from tqdm import tqdm
 
-def _extra():
-    '''Simple function to bootstrap a game.
-
-           Use this as an example to secdt up your training env.
-        '''
-    # Print all possible environments in the Pommerman registry
-    print(pommerman.REGISTRY)
-
-    # Create a set of agents (exactly four)
-    agent_list = [
-        agents.SimpleAgent(),
-        agents.SimpleAgent(),
-        agents.SimpleAgent(),
-        agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12345),
-    ]
-
-    # Make the "Free-For-All" environment using the agent list
-    env = pommerman.make('PommeTeamCompetition-v1', agent_list)
-    print(env.observation_space)
-    print(env.action_space)
-
-    # Run the episodes just like OpenAI Gym
-    actions = []
-    observations = []
-    rewards = []
-    episode_returns = []
-    episode_starts = []
-    print("提取专家数据数量: num_traj_e=%d" % args.num_traj_e)
-    print("随机提取每回合 %d% 的数据" % args.rand)
-    for i_episode in tqdm(range(args.num_traj_e)):
-        state = env.reset()
-        flag = True
-        done = False
-        while not done:
-            if flag:
-                episode_starts.append(True)
-            else:
-                episode_starts.append(False)
-            # env.render()
-            acts = env.act(state)
-            state, reward, done, info = env.step(acts)
-            if not env._agents[3].is_alive:
-                done = True
-                reward = [0, 0, 0, -1]
-            # 随机存取
-            rand = random.randint(0,100)
-            if rand < args.rand or flag:
-                obs = featurize(state[3])
-                observations.append(obs)
-                rewards.append(reward[3])
-                actions.append(acts[3])
-            flag = False
-        print('Episode {} finished'.format(i_episode))
-        episode_returns.append(reward[3])
-    env.close()
-
-    numpy_dict = {
-        'actions': np.array(actions).reshape(-1, 1),
-        'obs': np.array(observations),
-        'rewards': np.array(rewards),
-        'episode_returns': np.array(episode_returns),
-        'episode_starts': np.array(episode_starts)
-    }
-
-    for key, val in numpy_dict.items():
-        print(key, val.shape)
-    print("保存专家数据到: data_path=%s" % args.data_path)
-    np.savez(args.data_path, **numpy_dict)
-
 def data_load():
     '''加载 expert dataset'''
     print("正在读取%d条专家数据, 数据路径为: data_path=%s" % (args.num_traj,args.data_path) )
@@ -152,9 +83,6 @@ if __name__ == '__main__':
     arg_parser = my_arg_parser()
     args, unknown_args = arg_parser.parse_known_args(sys.argv)
 
-    if args.extra:
-        print("正在进行专家数据提取, 保存路径为: %s" % args.data_path)
-        _extra()
     if not args.play:
         print("进入训练模块")
         gail_train()
