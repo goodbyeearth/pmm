@@ -37,6 +37,7 @@ def merge_data(dir_path, final_data_path):
         print(key, val.shape)
     np.savez(final_data_path, **numpy_dict)
 
+
 def generate_expert_data(env_id, n_process=None, n_episodes=250):
     n_process = n_process or multiprocessing.cpu_count()
     envs = [make_envs(env_id) for _ in range(n_process)]

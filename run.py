@@ -70,14 +70,13 @@ def train():
     if args.pre_train:
         from my_dataset import ExpertDataset
         # assert args.expert_path is not None
-        # 加载数据 TODO: 路径使用参数, 设置 traj_limitation
+        # 加载数据
         print("开始加载专家数据...")
         # dataset = ExpertDataset(expert_path='./dataset_test/agent_1_100.npz')
-        dataset = ExpertDataset(expert_path='./final_data_test/final_data.npz')  #  traj_limitation 只能取默认-1
-        # 开始与训练 TODO: 设置 epoch 数量
+        dataset = ExpertDataset(expert_path='./final_data_test/7w.npz')  #  traj_limitation 只能取默认-1
+        # 开始与训练
         print("开始在{}模型上进行预训练...\nPolicy type:{}".format(args.alg, args.policy_type))
-        model.pretrain(dataset=dataset, n_epochs=100)
-        # TODO: 要不要保存
+        model.pretrain(dataset=dataset, n_epochs=30)
         model.save('./pretrain_model_test/pretrain_model.zip')
 
     print('开始利用强化学习训练{}模型，进程数：{}, policy type:{}'
@@ -121,7 +120,7 @@ def play():
 
         return some_actions
 
-    for episode in range(5):
+    for episode in range(15):
         obs = env.reset()
         is_dead = False  # 标志我的智能体死没死
         for i in range(1000):
@@ -145,7 +144,7 @@ if __name__ == '__main__':
 
     # 爬取并存储专家数据
     if args.generate_data:
-        generate_expert_data(args.env, n_episodes=1000)
+        generate_expert_data(args.env, n_episodes=5000)
 
     if args.merge_data:
         merge_data('./dataset_test/', './final_data_test/final_data')
