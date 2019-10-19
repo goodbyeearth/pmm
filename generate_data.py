@@ -1,6 +1,6 @@
 from my_record_expert import generate_expert_traj_v2
-import pommerman
-from pommerman import agents
+import my_pommerman
+from my_pommerman import agents
 from stable_baselines.common.vec_env import CloudpickleWrapper
 
 import multiprocessing
@@ -70,7 +70,7 @@ def make_envs(env_id):
             agents.SimpleAgent(),
             agents.SimpleAgent()
         ]
-        env = pommerman.make(env_id, agent_list)
+        env = my_pommerman.make(env_id, agent_list)
         return env
     return _thunk
 

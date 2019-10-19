@@ -7,7 +7,7 @@ import numpy as np
 from joblib import Parallel, delayed
 
 from stable_baselines import logger
-from utils import get_feature_space
+
 
 class ExpertDataset(object):
     """

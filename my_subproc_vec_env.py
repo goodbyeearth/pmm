@@ -2,7 +2,7 @@ import multiprocessing
 from collections import OrderedDict
 
 from gym import spaces
-from pommerman import *
+from my_pommerman import *
 
 from stable_baselines.common.vec_env import VecEnv, CloudpickleWrapper
 from stable_baselines.common.tile_images import tile_images

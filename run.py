@@ -1,5 +1,5 @@
-import pommerman
-from pommerman import agents
+import my_pommerman
+from my_pommerman import agents
 
 import sys
 import os
@@ -15,6 +15,7 @@ from my_policies import CustomPolicy
 
 from generate_data import generate_expert_data, merge_data
 
+
 # TODO：加seed
 def make_envs(env_id):
     def _thunk():
@@ -25,7 +26,7 @@ def make_envs(env_id):
             agents.SimpleAgent(),
             agents.SimpleAgent()
         ]
-        env = pommerman.make(env_id, agent_list)
+        env = my_pommerman.make(env_id, agent_list)
         return env
     return _thunk
 
