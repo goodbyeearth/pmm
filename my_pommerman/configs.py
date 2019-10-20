@@ -21,8 +21,8 @@ def one_vs_one_env():
     """Start up an OneVsOne config with the default settings."""
     env = envs.v0.Pomme
     game_type = constants.GameType.OneVsOne
-    env_entry_point = 'pommerman.envs.v0:Pomme'
-    env_id = 'OneVsOne-v0'
+    env_entry_point = 'my_pommerman.envs.v0:Pomme'
+    env_id = 'my_OneVsOne-v0'
     env_kwargs = {
         'game_type': game_type,
         'board_size': constants.BOARD_SIZE_ONE_VS_ONE,
@@ -41,8 +41,8 @@ def ffa_competition_env():
     """Start up a FFA config with the competition settings."""
     env = envs.v0.Pomme
     game_type = constants.GameType.FFA
-    env_entry_point = 'pommerman.envs.v0:Pomme'
-    env_id = 'PommeFFACompetition-v0'
+    env_entry_point = 'my_pommerman.envs.v0:Pomme'
+    env_id = 'my_PommeFFACompetition-v0'
     env_kwargs = {
         'game_type': game_type,
         'board_size': constants.BOARD_SIZE,
@@ -61,8 +61,8 @@ def ffa_competition_fast_env():
     """Start up a FFA config with the competition settings."""
     env = envs.v0.Pomme
     game_type = constants.GameType.FFA
-    env_entry_point = 'pommerman.envs.v0:Pomme'
-    env_id = 'PommeFFACompetitionFast-v0'
+    env_entry_point = 'my_pommerman.envs.v0:Pomme'
+    env_id = 'my_PommeFFACompetitionFast-v0'
     env_kwargs = {
         'game_type': game_type,
         'board_size': constants.BOARD_SIZE,
@@ -81,8 +81,8 @@ def team_competition_env():
     """Start up a Team config with the competition settings."""
     env = envs.v0.Pomme
     game_type = constants.GameType.Team
-    env_entry_point = 'pommerman.envs.v0:Pomme'
-    env_id = 'PommeTeamCompetition-v0'
+    env_entry_point = 'my_pommerman.envs.v0:Pomme'
+    env_id = 'my_PommeTeamCompetition-v0'
     env_kwargs = {
         'game_type': game_type,
         'board_size': constants.BOARD_SIZE,
@@ -103,8 +103,8 @@ def team_competition_fast_env():
     """Start up a Team config with the competition settings."""
     env = envs.v0.Pomme
     game_type = constants.GameType.Team
-    env_entry_point = 'pommerman.envs.v0:Pomme'
-    env_id = 'PommeTeamCompetitionFast-v0'
+    env_entry_point = 'my_pommerman.envs.v0:Pomme'
+    env_id = 'my_PommeTeamCompetitionFast-v0'
     env_kwargs = {
         'game_type': game_type,
         'board_size': constants.BOARD_SIZE,
@@ -125,8 +125,8 @@ def team_competition_v1_env():
     """Start up a collapsing Team config with the competition settings."""
     env = envs.v1.Pomme
     game_type = constants.GameType.Team
-    env_entry_point = 'pommerman.envs.v1:Pomme'
-    env_id = 'PommeTeamCompetition-v1'
+    env_entry_point = 'my_pommerman.envs.v1:Pomme'
+    env_id = 'my_PommeTeamCompetition-v1'
     env_kwargs = {
         'game_type': game_type,
         'board_size': constants.BOARD_SIZE,
@@ -148,8 +148,8 @@ def ffa_v0_fast_env():
     """Start up a FFA config with the default settings."""
     env = envs.v0.Pomme
     game_type = constants.GameType.FFA
-    env_entry_point = 'pommerman.envs.v0:Pomme'
-    env_id = 'PommeFFAFast-v0'
+    env_entry_point = 'my_pommerman.envs.v0:Pomme'
+    env_id = 'my_PommeFFAFast-v0'
     env_kwargs = {
         'game_type': game_type,
         'board_size': constants.BOARD_SIZE,
@@ -168,8 +168,8 @@ def ffa_v1_env():
     """Start up a collapsing FFA config with the default settings."""
     env = envs.v1.Pomme
     game_type = constants.GameType.FFA
-    env_entry_point = 'pommerman.envs.v1:Pomme'
-    env_id = 'PommeFFA-v1'
+    env_entry_point = 'my_pommerman.envs.v1:Pomme'
+    env_id = 'my_PommeFFA-v1'
     env_kwargs = {
         'game_type': game_type,
         'board_size': constants.BOARD_SIZE,
@@ -189,8 +189,8 @@ def team_v0_env():
     """Start up a team config with the default settings."""
     env = envs.v0.Pomme
     game_type = constants.GameType.Team
-    env_entry_point = 'pommerman.envs.v0:Pomme'
-    env_id = 'PommeTeam-v0'
+    env_entry_point = 'my_pommerman.envs.v0:Pomme'
+    env_id = 'my_PommeTeam-v0'
     env_kwargs = {
         'game_type': game_type,
         'board_size': constants.BOARD_SIZE,
@@ -209,8 +209,8 @@ def team_v0_fast_env():
     """Start up a team config with the default settings."""
     env = envs.v0.Pomme
     game_type = constants.GameType.Team
-    env_entry_point = 'pommerman.envs.v0:Pomme'
-    env_id = 'PommeTeamFast-v0'
+    env_entry_point = 'my_pommerman.envs.v0:Pomme'
+    env_id = 'my_PommeTeamFast-v0'
     env_kwargs = {
         'game_type': game_type,
         'board_size': constants.BOARD_SIZE,
@@ -229,8 +229,8 @@ def radio_v2_env():
     """Start up a team radio config with the default settings."""
     env = envs.v2.Pomme
     game_type = constants.GameType.TeamRadio
-    env_entry_point = 'pommerman.envs.v2:Pomme'
-    env_id = 'PommeRadio-v2'
+    env_entry_point = 'my_pommerman.envs.v2:Pomme'
+    env_id = 'my_PommeRadio-v2'
     env_kwargs = {
         'game_type': game_type,
         'board_size': constants.BOARD_SIZE,
@@ -253,8 +253,8 @@ def radio_competition_env():
     """Start up a team radio config with the default settings."""
     env = envs.v2.Pomme
     game_type = constants.GameType.TeamRadio
-    env_entry_point = 'pommerman.envs.v2:Pomme'
-    env_id = 'PommeRadioCompetition-v2'
+    env_entry_point = 'my_pommerman.envs.v2:Pomme'
+    env_id = 'my_PommeRadioCompetition-v2'
     env_kwargs = {
         'game_type': game_type,
         'board_size': constants.BOARD_SIZE,
