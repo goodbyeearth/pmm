@@ -7,18 +7,26 @@
   
   
 # 运行方法（具体参数暂时先看 my_cmd_utils.py 吧～～)
-### 爬取并保存数据
+### 爬取数据
 ```python run.py --generate_data``` 
 
 (具体保存路径、回合数、目标智能体的设置到 run.py 里的 generate_expert_data() 方法里设置)
 
-### 训练并保存模型
-```python run.py --alg=ppo2 --policy_type=CustomPolicy --num_timesteps=1e6 --log_path=./log_test/ --save_path=./save_test/1e6.zip```  
+### 合并数据
+```python run.py --merge_data```
 
-(如果要 **pretrain**，添加参数 \-\-pre_train)
+### 训练PPO2
+```python run.py --train --pre_train --policy_type=CustomPolicy --num_timesteps=1e5 --log_path=./log_test/ --save_path=./save_test/ppo2.zip```  
+
+**(pretrain 训练的epoch、模型保存路径等等均在代码里设置，请阅读run.py)**
+
+(如果不需要 pretrain，去掉参数 \-\-pre_train)
 
 ### 观察训练模型效果
-```python run.py --play --load_path=./save_test/1e6.zip```  
+观察预训练好的模型的效果```python run.py --play --load_path=./pretrain_model_test/pretrain_model.zip```  
+
+观察训练好的ppo2模型的效果```python run.py --play --load_path=./save_test/ppo2.zip```  
+
 
 
 # observation （其中一个智能体的某一帧的 observation）
