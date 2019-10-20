@@ -45,18 +45,19 @@ class ExpertDataset(object):
                 print(key, val.shape)
 
         # Array of bool where episode_starts[i] = True for each new episode
-        episode_starts = traj_data['episode_starts']
+
+        # episode_starts = traj_data['episode_starts']
 
         traj_limit_idx = len(traj_data['obs'])
 
-        if traj_limitation > 0:
-            n_episodes = 0
-            # Retrieve the index corresponding
-            # to the traj_limitation trajectory
-            for idx, episode_start in enumerate(episode_starts):
-                n_episodes += int(episode_start)
-                if n_episodes == (traj_limitation + 1):
-                    traj_limit_idx = idx - 1
+        # if traj_limitation > 0:
+        #     n_episodes = 0
+        #     # Retrieve the index corresponding
+        #     # to the traj_limitation trajectory
+        #     for idx, episode_start in enumerate(episode_starts):
+        #         n_episodes += int(episode_start)
+        #         if n_episodes == (traj_limitation + 1):
+        #             traj_limit_idx = idx - 1
 
         observations = traj_data['obs'][:traj_limit_idx]
         actions = traj_data['actions'][:traj_limit_idx]
@@ -91,8 +92,9 @@ class ExpertDataset(object):
 
         assert len(self.observations) == len(self.actions), "The number of actions and observations differ " \
                                                             "please check your expert dataset"
-        self.num_traj = min(traj_limitation, np.sum(episode_starts))
+        # self.num_traj = min(traj_limitation, np.sum(episode_starts))
         self.num_transition = len(self.observations)
+        self.num_traj = self.num_transition
         self.randomize = randomize
         self.sequential_preprocessing = sequential_preprocessing
 

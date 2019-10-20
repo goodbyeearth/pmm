@@ -1,5 +1,6 @@
 # 自定义
-*.npz
+dataset/
+model/
 *_test.py
 *_test/
 .idea/

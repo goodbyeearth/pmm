@@ -19,42 +19,44 @@ import random
 from tqdm import tqdm
 
 def data_load():
-    '''加载 expert dataset'''
-    print("正在读取%d条专家数据, 数据路径为: data_path=%s" % (args.num_traj,args.data_path) )
+    '''LOAD EXPERT DATASET'''
+    print("LOAD %d DATASET data_path=%s" % (args.num_traj,args.data_path) )
     dataset = ExpertDataset(expert_path=args.data_path, traj_limitation=args.num_traj, verbose=1)
-    print("=====> 加载专家数据 ok!")
+    print("=====> LOAD DATASET ok!")
     return dataset
 
 def gail_train():
-    '''读取数据'''
+    '''LOAD DATASET'''
     dataset = data_load()
-    print("正在初始化model")
-    print("初始化model的policy为: policy_type=%s" % args.policy_type)
+    print("INITIALIZING MODEL")
+    print("MODEL USE POLICY policy_type=%s" % args.policy_type)
     policy_type = args.policy_type
     if args.policy_type == 'CustomPolicy':
         policy_type = CustomPolicy
 
-    '''使用GAIL'''
-    print("初始化GAIL参数为:")
+    '''USING GAIL'''
+    print("INITIALIZING GAIL PARAMETERS")
     print(" policy=%s \n tensorboard_log=%s " % (args.policy_type,args.log_path))
-    model = GAIL(policy_type, 'PommeFFACompetition-v4', dataset, verbose=0,
+    model = GAIL(policy_type, 'PommeFFACompetition-v4', dataset, verbose=1,
                  full_tensorboard_log=True, tensorboard_log=args.log_path)
-    print("=====> gail init ok!")
-    print("开始训练model, num_timesteps=%f" % args.num_timesteps)
+    print("=====> GAIL INIT OK")
+
+    print("START LEARN num_timesteps=%f" % args.num_timesteps)
     model.learn(total_timesteps=args.num_timesteps)
-    print("=====> gail learn ok!")
-    '''保存模块'''
-    print("保存模型到: save_path=%s" % args.save_path)
+    print("=====> GAIL LEARN OK")
+
+    '''SAVE MODEL'''
     if args.save_path is not None:
+        print("SAVE MODEL save_path=%s" % args.save_path)
         model.save(args.save_path)
 
 
 def _test():
-    '''加载模块'''
-    print("加载模型: load_path=%s" % args.load_path)
+    '''LOAD MODEL'''
+    print("LOAD MODEL load_path=%s" % args.load_path)
     model = GAIL.load(args.load_path)
 
-    '''测试模块 未完成'''
+    '''TEST MODEL'''
     from utils import featurize
     agent_list = [
                 # agents.SimpleAgent(),
@@ -64,7 +66,7 @@ def _test():
                 agents.SimpleAgent(),
             ]
     env = pommerman.make('PommeFFACompetition-v0', agent_list)
-    print("=====> test env make ok!")
+    print("=====> TEST ENV MAKE OK")
     for i_episode in range(1):
         obs = env.reset()
         done = False
@@ -74,6 +76,7 @@ def _test():
             act, _states = model.predict(featurize(obs[3]))
             action[3] = int(act)
             obs, rewards, done, info = env.step(action)
+            # print(action[3])
         print('Episode {} finished'.format(i_episode))
         print(rewards)
         print(info)
@@ -84,10 +87,10 @@ if __name__ == '__main__':
     args, unknown_args = arg_parser.parse_known_args(sys.argv)
 
     if not args.play:
-        print("进入训练模块")
+        print("IN TRAIN")
         gail_train()
     else:
-        print("进入测试模块")
+        print("IN TEST")
         _test()
 
     # env_id = 'PommeFFACompetition-v4'

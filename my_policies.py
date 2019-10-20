@@ -8,7 +8,6 @@ from stable_baselines.a2c.utils import conv, linear, conv_to_fc
 def custom_cnn(scaled_images, **kwargs):
     activ = tf.nn.relu
     # TODO: 调整网络结构
-    print(scaled_images)
     x_1 = conv(scaled_images, 'c1', n_filters=32, pad='SAME', filter_size=3, stride=1,
              init_scale=np.sqrt(2), **kwargs)
     layer_1 = activ(x_1)
@@ -27,7 +26,7 @@ def custom_cnn(scaled_images, **kwargs):
         conv(layer_3, 'c5', n_filters=64, pad='SAME', filter_size=3, stride=1, init_scale=np.sqrt(2), **kwargs))
     layer_4 = conv_to_fc(layer_4)
 
-    return activ(linear(layer_4, 'fc1', n_hidden=128, init_scale=np.sqrt(2)))
+    return activ(linear(layer_4, 'fc1', n_hidden=256, init_scale=np.sqrt(2)))
 
 
 class CustomPolicy(ActorCriticPolicy):

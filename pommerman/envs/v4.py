@@ -208,6 +208,8 @@ class Pomme(gym.Env):
         done = self._get_done()
         obs = self.get_observations()
         reward = self._get_rewards()
+        if not self._agents[3].is_alive:
+            done = True
         info = self._get_info(done, reward)
 
         if done:

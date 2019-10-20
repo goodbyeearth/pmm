@@ -22,5 +22,4 @@ def my_arg_parser():
     parser.add_argument('--load_path', help='Path to load trained model from', default=None, type=str)
     parser.add_argument('--play', default=False, action='store_true')
     parser.add_argument('--num_traj', type=int, default=-1)
-    parser.add_argument('--rand', type=int, default=10)
     return parser

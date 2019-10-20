@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from collections import deque
 
 import gym
-from mpi4py import MPI
+# from mpi4py import MPI
 import tensorflow as tf
 import numpy as np
 
@@ -12,14 +12,14 @@ from stable_baselines.common import explained_variance, zipsame, dataset, fmt_ro
     SetVerbosity, TensorboardWriter
 from pmm_base_model import ActorCriticRLModel
 from stable_baselines import logger
-from stable_baselines.common.mpi_adam import MpiAdam
+# from stable_baselines.common.mpi_adam import MpiAdam
 from stable_baselines.common.cg import conjugate_gradient
 from stable_baselines.common.policies import ActorCriticPolicy
 from stable_baselines.a2c.utils import total_episode_reward_logger
 from stable_baselines.trpo_mpi.utils import traj_segment_generator, add_vtarg_and_adv, flatten_lists
 
 
-class TRPO(ActorCriticRLModel):
+class TRPO1(ActorCriticRLModel):
     """
     Trust Region Policy Optimization (https://arxiv.org/abs/1502.05477)
 
@@ -45,7 +45,7 @@ class TRPO(ActorCriticRLModel):
     def __init__(self, policy, env, gamma=0.99, timesteps_per_batch=1024, max_kl=0.01, cg_iters=10, lam=0.98,
                  entcoeff=0.0, cg_damping=1e-2, vf_stepsize=3e-4, vf_iters=3, verbose=0, tensorboard_log=None,
                  _init_setup_model=True, policy_kwargs=None, full_tensorboard_log=False):
-        super(TRPO, self).__init__(policy=policy, env=env, verbose=verbose, requires_vec_env=False,
+        super(TRPO1, self).__init__(policy=policy, env=env, verbose=verbose, requires_vec_env=False,
                                    _init_setup_model=_init_setup_model, policy_kwargs=policy_kwargs)
 
         self.using_gail = False
@@ -83,9 +83,9 @@ class TRPO(ActorCriticRLModel):
         self.get_flat = None
         self.set_from_flat = None
         self.timed = None
-        self.allmean = None
-        self.nworkers = None
-        self.rank = None
+        # self.allmean = None
+        # self.nworkers = None
+        # self.rank = None
         self.reward_giver = None
         self.step = None
         self.proba_step = None
@@ -113,8 +113,8 @@ class TRPO(ActorCriticRLModel):
             assert issubclass(self.policy, ActorCriticPolicy), "Error: the input policy for the TRPO model must be " \
                                                                "an instance of common.policies.ActorCriticPolicy."
 
-            self.nworkers = MPI.COMM_WORLD.Get_size()
-            self.rank = MPI.COMM_WORLD.Get_rank()
+            # self.nworkers = MPI.COMM_WORLD.Get_size()
+            # self.rank = MPI.COMM_WORLD.Get_rank()
             np.set_printoptions(precision=3)
 
             self.graph = tf.Graph()
@@ -199,7 +199,8 @@ class TRPO(ActorCriticRLModel):
 
                     @contextmanager
                     def timed(msg):
-                        if self.rank == 0 and self.verbose >= 1:
+                        # if self.rank == 0 and self.verbose >= 1:
+                        if self.verbose >= 1:
                             print(colorize(msg, color='magenta'))
                             start_time = time.time()
                             yield
@@ -208,17 +209,17 @@ class TRPO(ActorCriticRLModel):
                         else:
                             yield
 
-                    def allmean(arr):
-                        assert isinstance(arr, np.ndarray)
-                        out = np.empty_like(arr)
-                        MPI.COMM_WORLD.Allreduce(arr, out, op=MPI.SUM)
-                        out /= self.nworkers
-                        return out
+                    # def allmean(arr):
+                    #     assert isinstance(arr, np.ndarray)
+                    #     out = np.empty_like(arr)
+                    #     MPI.COMM_WORLD.Allreduce(arr, out, op=MPI.SUM)
+                    #     out /= self.nworkers
+                    #     return out
 
                     tf_util.initialize(sess=self.sess)
 
                     th_init = self.get_flat()
-                    MPI.COMM_WORLD.Bcast(th_init, root=0)
+                    # MPI.COMM_WORLD.Bcast(th_init, root=0)
                     self.set_from_flat(th_init)
 
                 with tf.variable_scope("Adam_mpi", reuse=False):
@@ -245,7 +246,7 @@ class TRPO(ActorCriticRLModel):
                             tf.summary.histogram('observation', observation)
 
                 self.timed = timed
-                self.allmean = allmean
+                # self.allmean = allmean
 
                 self.step = self.policy_pi.step
                 self.proba_step = self.policy_pi.proba_step
@@ -308,7 +309,8 @@ class TRPO(ActorCriticRLModel):
                     logger.log("********** Iteration %i ************" % iters_so_far)
 
                     def fisher_vector_product(vec):
-                        return self.allmean(self.compute_fvp(vec, *fvpargs, sess=self.sess)) + self.cg_damping * vec
+                        # return self.allmean(self.compute_fvp(vec, *fvpargs, sess=self.sess)) + self.cg_damping * vec
+                        return self.compute_fvp(vec, *fvpargs, sess=self.sess) + self.cg_damping * vec
 
                     # ------------------ Update G ------------------
                     logger.log("Optimizing Policy...")
@@ -363,14 +365,17 @@ class TRPO(ActorCriticRLModel):
                                                                                 options=run_options,
                                                                                 run_metadata=run_metadata)
 
-                        lossbefore = self.allmean(np.array(lossbefore))
-                        grad = self.allmean(grad)
+                        # lossbefore = self.allmean(np.array(lossbefore))
+                        # grad = self.allmean(grad)
+                        lossbefore = np.array(lossbefore)
                         if np.allclose(grad, 0):
                             logger.log("Got zero gradient. not updating")
                         else:
                             with self.timed("conjugate_gradient"):
+                                # stepdir = conjugate_gradient(fisher_vector_product, grad, cg_iters=self.cg_iters,
+                                #                              verbose=self.rank == 0 and self.verbose >= 1)
                                 stepdir = conjugate_gradient(fisher_vector_product, grad, cg_iters=self.cg_iters,
-                                                             verbose=self.rank == 0 and self.verbose >= 1)
+                                                             verbose=self.verbose >= 1)
                             assert np.isfinite(stepdir).all()
                             shs = .5 * stepdir.dot(fisher_vector_product(stepdir))
                             # abs(shs) to avoid taking square root of negative values
@@ -385,8 +390,9 @@ class TRPO(ActorCriticRLModel):
                             for _ in range(10):
                                 thnew = thbefore + fullstep * stepsize
                                 self.set_from_flat(thnew)
-                                mean_losses = surr, kl_loss, *_ = self.allmean(
-                                    np.array(self.compute_losses(*args, sess=self.sess)))
+                                # mean_losses = surr, kl_loss, *_ = self.allmean(
+                                #     np.array(self.compute_losses(*args, sess=self.sess)))
+                                mean_losses = surr, kl_loss, *_ = np.array(self.compute_losses(*args, sess=self.sess))
                                 improve = surr - surrbefore
                                 logger.log("Expected: %.3f Actual: %.3f" % (expectedimprove, improve))
                                 if not np.isfinite(mean_losses).all():
@@ -402,10 +408,10 @@ class TRPO(ActorCriticRLModel):
                             else:
                                 logger.log("couldn't compute a good step")
                                 self.set_from_flat(thbefore)
-                            if self.nworkers > 1 and iters_so_far % 20 == 0:
-                                # list of tuples
-                                ls
-                                assert all(np.allclose(ps, paramsums[0]) for ps in paramsums[1:])
+                            # if self.nworkers > 1 and iters_so_far % 20 == 0:
+                            #     # list of tuples
+                            #     paramsums = MPI.COMM_WORLD.allgather((thnew.sum(), self.vfadam.getflat().sum()))
+                            #     assert all(np.allclose(ps, paramsums[0]) for ps in paramsums[1:])
 
                         with self.timed("vf"):
                             for _ in range(self.vf_iters):
@@ -414,11 +420,12 @@ class TRPO(ActorCriticRLModel):
                                                                          include_final_partial_batch=False,
                                                                          batch_size=128,
                                                                          shuffle=True):
-                                    grad = self.allmean(self.compute_vflossandgrad(mbob, mbob, mbret, sess=self.sess))
+                                    # grad = self.allmean(self.compute_vflossandgrad(mbob, mbob, mbret, sess=self.sess))
+                                    grad = self.compute_vflossandgrad(mbob, mbob, mbret, sess=self.sess)
                                     self.vfadam.update(grad, self.vf_stepsize)
 
-                    # for (loss_name, loss_val) in zip(self.loss_names, mean_losses):
-                    #     logger.record_tabular(loss_name, loss_val)
+                    for (loss_name, loss_val) in zip(self.loss_names, mean_losses):
+                        logger.record_tabular(loss_name, loss_val)
 
                     logger.record_tabular("explained_variance_tdlam_before",
                                           explained_variance(vpredbefore, tdlamret))
@@ -449,7 +456,8 @@ class TRPO(ActorCriticRLModel):
                                 if len(ac_expert.shape) == 2:
                                     ac_expert = ac_expert[:, 0]
                             *newlosses, grad = self.reward_giver.lossandgrad(ob_batch, ac_batch, ob_expert, ac_expert)
-                            self.d_adam.update(self.allmean(grad), self.d_stepsize)
+                            # self.d_adam.update(self.allmean(grad), self.d_stepsize)
+                            self.d_adam.update(grad, self.d_stepsize)
                             d_losses.append(newlosses)
                         logger.log(fmt_row(13, np.mean(d_losses, axis=0)))
 
@@ -482,7 +490,8 @@ class TRPO(ActorCriticRLModel):
                     logger.record_tabular("TimestepsSoFar", self.num_timesteps)
                     logger.record_tabular("TimeElapsed", time.time() - t_start)
 
-                    if self.verbose >= 1 and self.rank == 0:
+                    # if self.verbose >= 1 and self.rank == 0:
+                    if self.verbose >= 1:
                         logger.dump_tabular()
 
         return self
@@ -503,7 +512,7 @@ class TRPO(ActorCriticRLModel):
             "vf_iters": self.vf_iters,
             "hidden_size_adversary": self.hidden_size_adversary,
             "adversary_entcoeff": self.adversary_entcoeff,
-            # "expert_dataset": self.expert_dataset,
+            "expert_dataset": self.expert_dataset,
             "g_step": self.g_step,
             "d_step": self.d_step,
             "d_stepsize": self.d_stepsize,

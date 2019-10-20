@@ -6,7 +6,8 @@ import pommerman
 from pommerman import agents
 import time
 
-def _extra(rand,data_path,num_traj):
+
+def _extra(data_path, num_traj):
     '''Simple function to bootstrap a game.
            Use this as an example to secdt up your training env.
         '''
@@ -15,19 +16,19 @@ def _extra(rand,data_path,num_traj):
 
     # Create a set of agents (exactly four)
     agent_list = [
-        # agents.SimpleAgent(),
-        # agents.SimpleAgent(),
-        # agents.SimpleAgent(),
-        # agents.SimpleAgent(),
-        agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12345),
-        agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12346),
-        agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12347),
-        agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12348),
+        agents.SimpleAgent(),
+        agents.SimpleAgent(),
+        agents.SimpleAgent(),
+        agents.SimpleAgent(),
+        # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12345),
+        # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12346),
+        # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12347),
+        # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12348),
     ]
 
     # Make the "Free-For-All" environment using the agent list
-    env = pommerman.make('PommeTeamCompetition-v1', agent_list)
-    env.max_steps=500
+    env = pommerman.make('PommeFFACompetition-v0', agent_list)
+    # env.max_steps=500
     print(env.observation_space)
     print(env.action_space)
 
@@ -36,74 +37,60 @@ def _extra(rand,data_path,num_traj):
     observations = []
     rewards = []
     episode_returns = []
-    episode_starts = []
-    print("提取专家数据数量: num_traj_e=%d" % num_traj)
-    print("随机提取每回合 %d%%的数据" % rand)
+    print("NUM OF EXTRACTED EXPERT DATA", num_traj)
     for i_episode in tqdm(range(num_traj)):
+        start = time.time()
         state = env.reset()
-        flag = True
+        tmp_ob = [[],[],[],[]]
+        tmp_act = [[],[],[],[]]
+        tmp_r = [[],[],[],[]]
         done = False
         while not done:
-            if flag:
-                episode_starts.append(True)
-            else:
-                episode_starts.append(False)
             # env.render()
+            obs = [[],[],[],[]]
             acts = env.act(state)
             state, reward, done, info = env.step(acts)
-
-            if env._agents[0].is_alive:
-                obs = featurize(state[0])
-                observations.append(obs)
-            if env._agents[1].is_alive:
-                obs = featurize(state[1])
-                observations.append(obs)
-            if env._agents[2].is_alive:
-                obs = featurize(state[2])
-                observations.append(obs)
-            if env._agents[3].is_alive:
-                obs = featurize(state[3])
-                observations.append(obs)
-
-            # 如果第三个智能体死了就不取数据
-            # if not env._agents[3].is_alive:
-            #     done = True
-            #     reward = [0, 0, 0, -1]
-
-            # 随机存取
-            # _rand = random.randint(0,100)
-            # if _rand < rand or flag:
-            #     obs = featurize(state[3])
-            #     observations.append(obs)
-            #     rewards.append(reward[3])
-            #     actions.append(acts[3])
+            for _i in range(4):
+                obs[_i].append(featurize(state[_i]))
+                # print(np.array(obs[_i]).shape)
+                tmp_ob[_i].append(obs[_i])
+                tmp_r[_i].append(reward[_i])
+                tmp_act[_i].append(acts[_i])
+                # print(tmp_act)
 
             # flag = False
         print('Episode {} finished'.format(i_episode))
-        episode_returns.append(reward[3])
+        if _i in range(4):
+            if reward[_i] == 1:
+                observations.extend(tmp_ob[_i])
+                actions.extend(tmp_act[_i])
+                rewards.extend(tmp_r[_i])
+                episode_returns.append(reward[_i])
+        end = time.time()
+        print("TIME:", end - start)
     env.close()
 
-    start = time.time()
-    obs = np.array(observations)
-    print("去重前shape:", obs.shape)
-    print("去重后shape:", np.unique(obs, axis=0).shape)
-    end = time.time()
-    print("去重所用时间:", end - start)
+    # start = time.time()
+    # obs = np.array(observations)
+    # print("BEFORE UNIQUE SHAPE", obs.shape)
+    # print("AFTER UNIQUE SHAPE", np.unique(obs, axis=0).shape)
+    # end = time.time()
+    # print("UNIQUE TIME", end - start)
 
     numpy_dict = {
         'actions': np.array(actions).reshape(-1, 1),
-        'obs': np.array(observations),
+        'obs': np.array(observations).reshape(-1,11,11,18),
         'rewards': np.array(rewards),
         'episode_returns': np.array(episode_returns),
-        'episode_starts': np.array(episode_starts)
     }
 
     for key, val in numpy_dict.items():
         print(key, val.shape)
-    print("保存专家数据到: data_path=%s" % data_path)
+    print("SAVE DATA data_path=%s" % data_path)
     np.savez(data_path, **numpy_dict)
 
+
 if __name__ == '__main__':
-    data_path = 'dataset/test_unique.npz'
-    print("正在进行专家数据提取, 保存路径为: %s" % data_path)
-    _extra(rand=1000, data_path=data_path, num_traj=3)
+    data_path = 'dataset/all_simple_1w.npz'
+    print("EXTRA DATA SAVE IN %s" % data_path)
+    _extra(data_path=data_path, num_traj=2000)
