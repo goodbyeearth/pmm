@@ -11,7 +11,7 @@ import tensorflow as tf
 
 from my_cmd_utils import my_arg_parser
 from my_subproc_vec_env import SubprocVecEnv
-from my_policies import CustomPolicy
+from my_policies import CustomPolicy, CustomLSTM
 
 from generate_data import generate_expert_data, merge_data
 
@@ -62,6 +62,8 @@ def train():
     if policy_type == 'CustomPolicy':
         policy_type = CustomPolicy
 
+    # policy_type = CustomLSTM
+
     # 初始化 model，如 PPO2
     model_fn = get_model_fn(args.alg)
     model = model_fn(policy_type, env, verbose=1, tensorboard_log=args.log_path)
@@ -72,8 +74,8 @@ def train():
         # assert args.expert_path is not None
         # 加载数据
         print("开始加载专家数据...")
-        # dataset = ExpertDataset(expert_path='./dataset_test/agent_1_100.npz')
-        dataset = ExpertDataset(expert_path='./final_data_test/7w.npz')  #  traj_limitation 只能取默认-1
+        dataset = ExpertDataset(expert_path='./dataset_test/e200_p1_a0.npz', batch_size=num_envs)
+        # dataset = ExpertDataset(expert_path='./final_data_test/7w.npz')  #  traj_limitation 只能取默认-1
         # 开始与训练
         print("开始在{}模型上进行预训练...\nPolicy type:{}".format(args.alg, args.policy_type))
         model.pretrain(dataset=dataset, n_epochs=30)

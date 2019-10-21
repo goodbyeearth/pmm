@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 
 from stable_baselines.common.policies import ActorCriticPolicy
+from stable_baselines.common.policies import LstmPolicy
 from stable_baselines.a2c.utils import conv, linear, conv_to_fc
 
 
@@ -62,3 +63,10 @@ class CustomPolicy(ActorCriticPolicy):
 
     def value(self, obs, state=None, mask=None):
         return self.sess.run(self.value_flat, {self.obs_ph: obs})
+
+
+class CustomLSTM(LstmPolicy):
+    def __init__(self, sess, ob_space, ac_space, n_env, n_steps, n_batch, n_lstm=256, reuse=False, **_kwargs):
+        super(CustomLSTM, self).__init__(sess, ob_space, ac_space, n_env, n_steps, n_batch, n_lstm, reuse,
+                                            layer_norm=False, feature_extraction="cnn", cnn_extractor=custom_cnn,
+                                         **_kwargs)
