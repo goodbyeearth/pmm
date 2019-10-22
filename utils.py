@@ -4,9 +4,15 @@ from gym import spaces
 
 def featurize(obs):
     maps = []
-    # TODO: 爆炸范围内的位置手动置 1，还要考虑地图空白部分。还有另外两个11*11的特征
-    maps.append(obs['bomb_blast_strength'])
-    maps.append(obs['bomb_life'])
+    maps.append(obs['bomb_blast_strength']/5)
+    # bomb_life = 11 - obs['bomb_life']
+    # bomb_life =
+    # maps.append(obs['bomb_life']/5)
+    # maps.append(obs['flame_life']/3)
+    for i in range(1, 4):
+        maps.append(obs['flame_life'] == i)
+    for i in range(1, 11):
+        maps.append(obs['bomb_life'] == i)
 
     board = obs['board']
     """棋盘物体 one hot"""
@@ -38,7 +44,7 @@ def featurize(obs):
 
 
 def get_feature_space():
-    return spaces.Box(low=0, high=1, shape=(11, 11, 18))
+    return spaces.Box(low=0, high=1, shape=(11, 11, 30))
 
 
 def get_action_space():

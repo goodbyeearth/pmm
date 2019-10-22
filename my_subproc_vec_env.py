@@ -15,6 +15,18 @@ def _worker(remote, parent_remote, env_fn_wrapper):
     env = env_fn_wrapper.var()
     # TODO:记得设置训练智能体的 index
     env.set_training_agent(1)  # 设置训练的 agent 的 index
+    teammate = 3
+    enemy = [0, 2]
+
+    """设置reward"""
+    ally_die = -1
+    enemy_die = 100
+    # step_cost = -0.01
+    step_cost = 0
+    step_count = 0
+    win = 200
+
+    is_dead = [False for _ in range(4)]
     while True:
         try:
             cmd, data = remote.recv()
@@ -30,23 +42,34 @@ def _worker(remote, parent_remote, env_fn_wrapper):
                 whole_obs, whole_rew, done, info = env.step(some_actions)       # 得到所有 agent 的四元组
 
                 obs = featurize(whole_obs[env.training_agent])    # 对训练智能体的 observation 提取特征
-                rew = whole_rew[env.training_agent]               # 训练智能体的 reward
-
-                # 在多人条件下，如果我训练的智能体死了，那么就需要提前结束游戏
-                is_dead = False
-                if not done and not env._agents[env.training_agent].is_alive:
-                    is_dead = True   # 训练的智能体已死的标志
-                    done = True
+                # rew = whole_rew[env.training_agent]               # 训练智能体的 reward
+                """调"""
+                rew = 0
+                rew += step_cost   # 每一步都要扣
+                if not is_dead[env.training_agent] and not env._agents[env.training_agent].is_alive:
+                    rew += ally_die
+                    is_dead[env.training_agent] = True
+                    done = True    # 提前结束比赛
+                # if not is_dead[teammate] and not env._agents[teammate].is_alive:      # 只在它死的那一步给奖励，后面步不能给
+                #     rew += -0.5 * ally_scale
+                #     is_dead[teammate] = True
+                if not is_dead[enemy[0]] and not env._agents[enemy[0]].is_alive:
+                    rew += enemy_die
+                    is_dead[enemy[0]] = True
+                if not is_dead[enemy[1]] and not env._agents[enemy[1]].is_alive:
+                    rew += enemy_die
+                    is_dead[enemy[1]] = True
 
                 if done:
+                    step_count = 0
+                    if env._agents[env.training_agent].is_alive:
+                        rew += win
+
                     info['terminal_observation'] = whole_obs    # 保存终结的 observation，否则 reset 后将丢失
                     whole_obs = env.reset()
                     obs = featurize(whole_obs[env.training_agent])   # reset 后的 obs 会被返回
 
-                    if is_dead:
-                        rew = -1
-                    else:
-                        rew = whole_rew[env.training_agent]
+                    is_dead = [False for _ in range(4)]
 
                 remote.send((obs, rew, done, info))
 

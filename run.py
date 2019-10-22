@@ -63,7 +63,7 @@ def train():
     if policy_type == 'CustomPolicy':
         policy_type = CustomPolicy
 
-    policy_type = CustomLSTM
+    # policy_type = CustomLSTM
 
     # 初始化 model，如 PPO2
     model_fn = get_model_fn(args.alg)
