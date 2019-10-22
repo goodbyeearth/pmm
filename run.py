@@ -79,7 +79,7 @@ def train():
         dataset = ExpertDataset(expert_path='./final_data_test/7w.npz')  #  traj_limitation 只能取默认-1
         # 开始与训练
         print("开始在{}模型上进行预训练...\nPolicy type:{}".format(args.alg, args.policy_type))
-        model.pretrain(dataset=dataset, n_epochs=20)
+        model.pretrain(dataset=dataset, n_epochs=30)
         model.save('./pretrain_model_test/pretrain_model.zip')
 
     print('开始利用强化学习训练{}模型，进程数：{}, policy type:{}'
@@ -103,12 +103,21 @@ def play():
 
     model_fn = get_model_fn(args.alg)
     model = model_fn.load(args.load_path)
-    env_fn = make_envs(args.env)
-    env = env_fn()
+    # env_fn = make_envs(args.env)
+    # env = env_fn()
+    agent_list = [
+        agents.SimpleAgent(),
+        agents.RandomAgent(),
+        # agents.BaseAgent(),
+        agents.SimpleAgent(),
+        agents.SimpleAgent()
+        # agents.RandomAgent(),
+    ]
+    env = pommerman.make(args.env, agent_list)
 
     # 设置训练的 agent 的 index
     train_idx = 1
-    env.set_training_agent(train_idx)
+    # env.set_training_agent(train_idx)
 
     def get_all_actions():
         feature = featurize(obs[train_idx])
@@ -129,9 +138,10 @@ def play():
         for i in range(1000):
             all_actions = get_all_actions()
             obs, rewards, done, info = env.step(all_actions)
-            if not is_dead and not env._agents[env.training_agent].is_alive:
+            # if not is_dead and not env._agents[train_idx].is_alive:
+            # input(obs[0]['alive'])
+            if not is_dead and ((train_idx + 10) not in obs[0]['alive']):
                 print("My agent is dead. ~.~")
-                is_dead = True
                 break  # 死了重来~~
 
             if done:

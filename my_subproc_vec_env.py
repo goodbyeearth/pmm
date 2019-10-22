@@ -13,17 +13,19 @@ from utils import *
 def _worker(remote, parent_remote, env_fn_wrapper):
     parent_remote.close()
     env = env_fn_wrapper.var()
-    # TODO:记得设置训练智能体的 index
-    env.set_training_agent(1)  # 设置训练的 agent 的 index
+
+    env.set_training_agent(1)  # TODO:记得设置训练智能体的 index
     teammate = 3
     enemy = [0, 2]
 
+    """计数相关"""
+    step_count = 0
+    laybomb_count = 0
     """设置reward"""
     ally_die = -1
     enemy_die = 100
-    # step_cost = -0.01
     step_cost = 0
-    step_count = 0
+    laybomb = 10
     win = 200
 
     is_dead = [False for _ in range(4)]
@@ -31,6 +33,7 @@ def _worker(remote, parent_remote, env_fn_wrapper):
         try:
             cmd, data = remote.recv()
             if cmd == 'step':
+                ammo = whole_obs[env.training_agent]['ammo']
                 some_actions = env.act(env.get_observations())     # 得到其他智能体的 action
                 # 如果其他智能体动作不是元组（只有单一动作），改成元组
                 for i in range(3):
@@ -43,9 +46,18 @@ def _worker(remote, parent_remote, env_fn_wrapper):
 
                 obs = featurize(whole_obs[env.training_agent])    # 对训练智能体的 observation 提取特征
                 # rew = whole_rew[env.training_agent]               # 训练智能体的 reward
+
+                step_count += 1
                 """调"""
                 rew = 0
                 rew += step_cost   # 每一步都要扣
+                # 放炸弹前弹药量必须大于0
+                if data[0] == 5 and ammo > 0:
+                    rew += laybomb
+                    laybomb_count += 1
+                    print(laybomb_count, "th time laying bomb")
+                # if step_count > 0 and step_count % 10 == 0:
+                #     print(step_count)
                 if not is_dead[env.training_agent] and not env._agents[env.training_agent].is_alive:
                     rew += ally_die
                     is_dead[env.training_agent] = True
@@ -61,7 +73,10 @@ def _worker(remote, parent_remote, env_fn_wrapper):
                     is_dead[enemy[1]] = True
 
                 if done:
+                    """计数相关"""
                     step_count = 0
+                    laybomb_count = 0
+
                     if env._agents[env.training_agent].is_alive:
                         rew += win
 
