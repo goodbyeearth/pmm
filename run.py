@@ -42,7 +42,7 @@ def get_model_fn(alg):
         return get_alg_module(alg).A2C
     if alg == 'ppo2':
         return get_alg_module(alg).PPO2
-    print("算法", alg, ' 未注册到run.get_model里')
+    # print("算法", alg, ' 未注册到run.get_model里')
     raise ImportError
 
 
@@ -74,15 +74,15 @@ def train():
         from my_dataset import ExpertDataset
         # assert args.expert_path is not None
         # 加载数据
-        print("开始加载专家数据...")
+        print("loading data...")
         # dataset = ExpertDataset(expert_path='./dataset_test/e200_p1_a0.npz', batch_size=num_envs)
         dataset = ExpertDataset(expert_path='./final_data_test/7w.npz')  #  traj_limitation 只能取默认-1
         # 开始与训练
-        print("开始在{}模型上进行预训练...\nPolicy type:{}".format(args.alg, args.policy_type))
+        print("pretrain in {}...\nPolicy type:{}".format(args.alg, args.policy_type))
         model.pretrain(dataset=dataset, n_epochs=30)
         model.save('./pretrain_model_test/pretrain_model.zip')
 
-    print('开始利用强化学习训练{}模型，进程数：{}, policy type:{}'
+    print('training in RL, alg:{}, env:{}, policy type:{}'
           .format(args.alg, num_envs, args.policy_type))
     # TODO: 可以加个 call back
     model.learn(total_timesteps=total_timesteps,
@@ -96,7 +96,7 @@ def train():
 
 def play():
     if not args.load_path:
-        print('在 play 模式下，务必添加参数 --load_path')
+        print('play mode,must add --load_path')
         raise ValueError
 
     from utils import featurize
@@ -153,7 +153,7 @@ def play():
 if __name__ == '__main__':
     arg_parser = my_arg_parser()
     args, unknown_args = arg_parser.parse_known_args(sys.argv)
-    print("环境：", args.env)
+    print("environment：", args.env)
 
     # 爬取并存储专家数据
     if args.generate_data:
