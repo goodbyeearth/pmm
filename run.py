@@ -19,11 +19,12 @@ from generate_data import generate_expert_data, merge_data
 def make_envs(env_id):
     def _thunk():
         agent_list = [
-            # agents.SimpleAgent(),
-            agents.RandomAgent(),
+            agents.SimpleAgent(),
+            # agents.RandomAgent(),
             agents.BaseAgent(),
             agents.SimpleAgent(),
-            agents.SimpleAgent()
+            # agents.SimpleAgent()
+            agents.RandomAgent(),
         ]
         env = pommerman.make(env_id, agent_list)
         return env
@@ -62,7 +63,7 @@ def train():
     if policy_type == 'CustomPolicy':
         policy_type = CustomPolicy
 
-    # policy_type = CustomLSTM
+    policy_type = CustomLSTM
 
     # 初始化 model，如 PPO2
     model_fn = get_model_fn(args.alg)
@@ -74,11 +75,11 @@ def train():
         # assert args.expert_path is not None
         # 加载数据
         print("开始加载专家数据...")
-        dataset = ExpertDataset(expert_path='./dataset_test/e200_p1_a0.npz', batch_size=num_envs)
-        # dataset = ExpertDataset(expert_path='./final_data_test/7w.npz')  #  traj_limitation 只能取默认-1
+        # dataset = ExpertDataset(expert_path='./dataset_test/e200_p1_a0.npz', batch_size=num_envs)
+        dataset = ExpertDataset(expert_path='./final_data_test/7w.npz')  #  traj_limitation 只能取默认-1
         # 开始与训练
         print("开始在{}模型上进行预训练...\nPolicy type:{}".format(args.alg, args.policy_type))
-        model.pretrain(dataset=dataset, n_epochs=30)
+        model.pretrain(dataset=dataset, n_epochs=20)
         model.save('./pretrain_model_test/pretrain_model.zip')
 
     print('开始利用强化学习训练{}模型，进程数：{}, policy type:{}'
