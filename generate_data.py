@@ -43,7 +43,7 @@ def generate_expert_data(env_id, n_process=None, n_episodes=250):
     envs = [make_envs(env_id) for _ in range(n_process)]
     ps = []
     for i, env in zip(range(n_process), envs):
-        prefix_path = './dataset_test/e' + str(n_episodes) + '_p' + str(i) + '_a'
+        prefix_path = './dataset/e' + str(n_episodes) + '_p' + str(i) + '_a'
         ps.append(multiprocessing.Process(target=worker, args=(CloudpickleWrapper(env), n_episodes, prefix_path)))
     print('开始取数据，进程数量：', n_process)
     for p in ps:

@@ -5,40 +5,52 @@ from stable_baselines.common.policies import ActorCriticPolicy
 from stable_baselines.a2c.utils import conv, linear, conv_to_fc
 
 
-def custom_cnn(scaled_images, **kwargs):
+def custom_cnn(scaled_images, old=None, **kwargs):
     activ = tf.nn.relu
     # TODO: 调
-    layer_1 = activ(conv(scaled_images, 'c1', n_filters=32, filter_size=3, stride=1, init_scale=np.sqrt(2), **kwargs))
-    layer_2 = activ(conv(layer_1, 'c2', n_filters=64, filter_size=3, stride=1, init_scale=np.sqrt(2), **kwargs))
-    #layer_3 = activ(conv(layer_2, 'c3', n_filters=64, filter_size=3, stride=1, init_scale=np.sqrt(2), **kwargs))
-    # layer_3 = conv_to_fc(layer_3)
-    layer_3 = conv_to_fc(layer_2)
-    return activ(linear(layer_3, 'fc1', n_hidden=512, init_scale=np.sqrt(2)))
+    layer_1 = activ(
+        conv(scaled_images, 'c1', n_filters=16, filter_size=3, stride=1, init_scale=np.sqrt(2), old=old, **kwargs))
+
+    layer_2 = activ(
+        conv(layer_1, 'c2', n_filters=32, filter_size=3, stride=1, init_scale=np.sqrt(2), old=old, **kwargs))
+
+    layer_3 = activ(
+        conv(layer_2, 'c3', n_filters=64, filter_size=3, stride=1, init_scale=np.sqrt(2), old=old, **kwargs))
+    layer_3 = conv_to_fc(layer_3)
+
+    return activ(linear(layer_3, 'fc1', n_hidden=256, old=old, init_scale=np.sqrt(2)))
 
 
 class CustomPolicy(ActorCriticPolicy):
-    def __init__(self, sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse=False, **kwargs):
+    def __init__(self, sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse=False, old=None, **kwargs):
         super(CustomPolicy, self).__init__(sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse=reuse, scale=True)
         # print("Initial CustomPolicy...")
-
         with tf.variable_scope('model', reuse=reuse):
             activ = tf.nn.relu
 
             """CNN提取后的特征"""
-            extracted_features = custom_cnn(self.processed_obs, **kwargs)
+            extracted_features = custom_cnn(self.processed_obs, old=old, **kwargs)
             extracted_features = tf.layers.flatten(extracted_features)
-
             pi_h = extracted_features
             # TODO: 调
             for i, layer_size in enumerate([64, 64]):
-                pi_h = activ(tf.layers.dense(pi_h, layer_size, name='pi_fc'+str(i)))
+                    pi_h = activ(linear(pi_h, 'pi_fc' + str(i), n_hidden=layer_size, old=old,
+                                        init_scale=np.sqrt(2),is_dense=True))
+
+            # for i, layer_size in enumerate([64, 64]):
+            #         pi_h = activ(tf.layers.dense(pi_h, layer_size, name='pi_fc' + str(i)))
             pi_latent = pi_h
 
             vf_h = extracted_features
             # TODO: 调
             for i, layer_size in enumerate([64]):
-                vf_h = activ(tf.layers.dense(vf_h, layer_size, name='vf_fc'+str(i)))
-            value_fn = tf.layers.dense(vf_h, 1, name='vf')
+                vf_h = activ(linear(vf_h, 'vf_fc' + str(i), n_hidden=layer_size, old=old,
+                                    init_scale=np.sqrt(2),is_dense=True))
+
+            # for i, layer_size in enumerate([64]):
+            #     vf_h = activ(tf.layers.dense(vf_h, layer_size, name='vf_fc' + str(i)))
+            value_fn = linear(vf_h, 'vf', n_hidden=1, old=old, init_scale=np.sqrt(2),is_dense=True)
+            # value_fn = tf.layers.dense(vf_h, 1, name='vf')
             vf_latent = vf_h
 
             self._proba_distribution, self._policy, self.q_value = \

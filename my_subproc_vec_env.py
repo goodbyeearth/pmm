@@ -32,21 +32,14 @@ def _worker(remote, parent_remote, env_fn_wrapper):
                 obs = featurize(whole_obs[env.training_agent])    # 对训练智能体的 observation 提取特征
                 rew = whole_rew[env.training_agent]               # 训练智能体的 reward
 
-                # 在多人条件下，如果我训练的智能体死了，那么就需要提前结束游戏
-                is_dead = False
-                if not done and not env._agents[env.training_agent].is_alive:
-                    is_dead = True   # 训练的智能体已死的标志
-                    done = True
 
                 if done:
                     info['terminal_observation'] = whole_obs    # 保存终结的 observation，否则 reset 后将丢失
                     whole_obs = env.reset()
                     obs = featurize(whole_obs[env.training_agent])   # reset 后的 obs 会被返回
 
-                    if is_dead:
-                        rew = -1
-                    else:
-                        rew = whole_rew[env.training_agent]
+
+                    rew = whole_rew[env.training_agent]
 
                 remote.send((obs, rew, done, info))
 

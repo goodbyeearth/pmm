@@ -95,7 +95,7 @@ def ortho_init(scale=1.0):
 
 
 def conv(input_tensor, scope, *, n_filters, filter_size, stride,
-         pad='VALID', init_scale=1.0, data_format='NHWC', one_dim_bias=False):
+         pad='VALID', init_scale=1.0, data_format='NHWC', one_dim_bias=False,old=None):
     """
     Creates a 2d convolutional layer for TensorFlow
 
@@ -136,12 +136,20 @@ def conv(input_tensor, scope, *, n_filters, filter_size, stride,
     with tf.variable_scope(scope):
         weight = tf.get_variable("w", wshape, initializer=ortho_init(init_scale))
         bias = tf.get_variable("b", bias_var_shape, initializer=tf.constant_initializer(0.0))
+
+        if old:
+            ww = tf.convert_to_tensor(old[weight.name], dtype=tf.float32)
+            weight =tf.add(weight, ww)
+
+            bb = tf.convert_to_tensor(old[bias.name],dtype=tf.float32)
+            bias = tf.add(bias,bb)
+
         if not one_dim_bias and data_format == 'NHWC':
             bias = tf.reshape(bias, bshape)
         return bias + tf.nn.conv2d(input_tensor, weight, strides=strides, padding=pad, data_format=data_format)
 
 
-def linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0.0):
+def linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0.0, old=None, is_dense=False):
     """
     Creates a fully connected layer for TensorFlow
 
@@ -153,9 +161,23 @@ def linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0.0):
     :return: (TensorFlow Tensor) fully connected layer
     """
     with tf.variable_scope(scope):
+        if is_dense:
+            w = 'kernel'
+            b = 'bias'
+        else:
+            w = 'w'
+            b = 'b'
         n_input = input_tensor.get_shape()[1].value
-        weight = tf.get_variable("w", [n_input, n_hidden], initializer=ortho_init(init_scale))
-        bias = tf.get_variable("b", [n_hidden], initializer=tf.constant_initializer(init_bias))
+        weight = tf.get_variable(w, [n_input, n_hidden], initializer=ortho_init(init_scale))
+        bias = tf.get_variable(b, [n_hidden], initializer=tf.constant_initializer(init_bias))
+
+        if old:
+            ww = tf.convert_to_tensor(old[weight.name], dtype=tf.float32)
+            weight = tf.add(weight, ww)
+
+            bb = tf.convert_to_tensor(old[bias.name], dtype=tf.float32)
+            bias = tf.add(bias, bb)
+
         return tf.matmul(input_tensor, weight) + bias
 
 

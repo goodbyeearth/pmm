@@ -7,7 +7,36 @@ import numpy as np
 from joblib import Parallel, delayed
 
 from stable_baselines import logger
-from utils import get_feature_space
+from utils import featurize,get_feature_space
+import os
+
+def merge_data(dir_path):
+    files_list = os.listdir(dir_path)
+    obs = []
+    actions = []
+    for f_name in files_list:
+        f_path = dir_path + f_name
+        sub_data = np.load(f_path, allow_pickle=True)
+
+        actions.extend(sub_data['actions'])
+        obs.extend(sub_data['obs'])
+
+    ob = []
+    for o in obs:
+        o = featurize(o)
+        ob.append(o)
+    obs = np.array(ob)
+
+    actions=np.array(actions)
+    actions.reshape(-1,1)
+
+    numpy_dict = {
+        'actions': actions,
+        'obs': obs,
+    }
+    for key, val in numpy_dict:
+        print(key,val.shape)
+    return  numpy_dict
 
 class ExpertDataset(object):
     """
@@ -38,7 +67,8 @@ class ExpertDataset(object):
         if traj_data is None and expert_path is None:
             raise ValueError("Must specify one of 'traj_data' or 'expert_path'")
         if traj_data is None:
-            traj_data = np.load(expert_path, allow_pickle=True)
+            # traj_data = np.load(expert_path, allow_pickle=True)
+            traj_data = merge_data(expert_path)
 
         if verbose > 0:
             for key, val in traj_data.items():
@@ -76,9 +106,9 @@ class ExpertDataset(object):
         self.observations = observations
         self.actions = actions
 
-        self.returns = traj_data['episode_returns'][:traj_limit_idx]
-        self.avg_ret = sum(self.returns) / len(self.returns)
-        self.std_ret = np.std(np.array(self.returns))
+        # self.returns = traj_data['episode_returns'][:traj_limit_idx]
+        # self.avg_ret = sum(self.returns) / len(self.returns)
+        # self.std_ret = np.std(np.array(self.returns))
         self.verbose = verbose
 
         assert len(self.observations) == len(self.actions), "The number of actions and observations differ " \
@@ -125,8 +155,8 @@ class ExpertDataset(object):
         """
         logger.log("Total trajectories: {}".format(self.num_traj))
         logger.log("Total transitions: {}".format(self.num_transition))
-        logger.log("Average returns: {}".format(self.avg_ret))
-        logger.log("Std for returns: {}".format(self.std_ret))
+        # logger.log("Average returns: {}".format(self.avg_ret))
+        # logger.log("Std for returns: {}".format(self.std_ret))
 
     def get_next_batch(self, split=None):
         """
@@ -212,7 +242,17 @@ class DataLoader(object):
         if partial_minibatch and len(indices) / batch_size > 0:
             self.n_minibatches += 1
         self.batch_size = batch_size
+        # _obs = []
+        # for ob in observations:
+        #     _obs.append(featurize(ob))
+        # _observations = np.array(_obs)
+        # print(_observations.shape)
+        # _observations.shape=(-1,)+get_feature_space()
+        # print(_observations.shape)
         self.observations = observations
+        # _actions = np.array(actions)
+        # _actions.shape=(-1,1)
+        # print(_actions.shape)
         self.actions = actions
         self.shuffle = shuffle
         self.queue = Queue(max_queue_len)

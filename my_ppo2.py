@@ -8,11 +8,17 @@ import numpy as np
 import tensorflow as tf
 
 from stable_baselines import logger
-from stable_baselines.common import explained_variance, ActorCriticRLModel, tf_util, SetVerbosity, TensorboardWriter
+from stable_baselines.common import explained_variance, tf_util, SetVerbosity, TensorboardWriter
 from stable_baselines.common.runners import AbstractEnvRunner
 from stable_baselines.common.policies import ActorCriticPolicy, RecurrentActorCriticPolicy
 from stable_baselines.a2c.utils import total_episode_reward_logger
 
+from my_base_class import ActorCriticRLModel
+from stable_baselines.common.vec_env import VecEnv, DummyVecEnv
+from my_base_class import _UnvecWrapper
+from gym import spaces
+from utils import get_feature_space, get_action_space
+from tqdm import tqdm
 
 class PPO2(ActorCriticRLModel):
     """
@@ -47,12 +53,12 @@ class PPO2(ActorCriticRLModel):
         WARNING: this logging can take a lot of space quickly
     """
 
-    def __init__(self, policy, env, gamma=0.99, n_steps=128, ent_coef=0.01, learning_rate=2.5e-4, vf_coef=0.5,
+    def __init__(self, policy, gamma=0.99, n_steps=128, ent_coef=0.01, learning_rate=2.5e-4, vf_coef=0.5,
                  max_grad_norm=0.5, lam=0.95, nminibatches=4, noptepochs=4, cliprange=0.2, cliprange_vf=None,
                  verbose=0, tensorboard_log=None, _init_setup_model=True, policy_kwargs=None,
                  full_tensorboard_log=False):
 
-        super(PPO2, self).__init__(policy=policy, env=env, verbose=verbose, requires_vec_env=True,
+        super(PPO2, self).__init__(policy=policy, verbose=verbose, requires_vec_env=True,
                                    _init_setup_model=_init_setup_model, policy_kwargs=policy_kwargs)
 
         self.learning_rate = learning_rate
@@ -96,6 +102,14 @@ class PPO2(ActorCriticRLModel):
         self.summary = None
         self.episode_reward = None
 
+        self.observation_space = get_feature_space()
+        self.action_space = get_action_space()
+        self.n_envs = 1
+        self.requires_vec_env = True
+        # self.MOD = 0
+        self.old_params = {}
+        # self.old_graph = None
+
         if _init_setup_model:
             self.setup_model()
 
@@ -105,7 +119,7 @@ class PPO2(ActorCriticRLModel):
             return policy.obs_ph, self.action_ph, policy.policy
         return policy.obs_ph, self.action_ph, policy.deterministic_action
 
-    def setup_model(self):
+    def setup_model(self,old = None):
         with SetVerbosity(self.verbose):
 
             assert issubclass(self.policy, ActorCriticPolicy), "Error: the input policy for the PPO2 model must be " \
@@ -119,6 +133,7 @@ class PPO2(ActorCriticRLModel):
 
             self.graph = tf.Graph()
             with self.graph.as_default():
+
                 self.sess = tf_util.make_session(num_cpu=n_cpu, graph=self.graph)
 
                 n_batch_step = None
@@ -130,13 +145,13 @@ class PPO2(ActorCriticRLModel):
                     n_batch_train = self.n_batch // self.nminibatches
 
                 act_model = self.policy(self.sess, self.observation_space, self.action_space, self.n_envs, 1,
-                                        n_batch_step, reuse=False, **self.policy_kwargs)
-                print(len(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model')))
+                                        n_batch_step, reuse=False,old=old,**self.policy_kwargs)
+                # print(len(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model')))
                 with tf.variable_scope("train_model", reuse=True,
                                        custom_getter=tf_util.outer_scope_getter("train_model")):
                     train_model = self.policy(self.sess, self.observation_space, self.action_space,
                                               self.n_envs // self.nminibatches, self.n_steps, n_batch_train,
-                                              reuse=True, **self.policy_kwargs)
+                                              reuse=True,old=old, **self.policy_kwargs)
 
                 with tf.variable_scope("loss", reuse=False):
                     self.action_ph = train_model.pdtype.sample_placeholder([None], name="action_ph")
@@ -208,7 +223,7 @@ class PPO2(ActorCriticRLModel):
                         grads, _grad_norm = tf.clip_by_global_norm(grads, self.max_grad_norm)
                     grads = list(zip(grads, self.params))
                 trainer = tf.train.AdamOptimizer(learning_rate=self.learning_rate_ph, epsilon=1e-5)
-                print(len(tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope='model')))
+                # print(len(tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,scope='model')))
                 self._train = trainer.apply_gradients(grads)
 
                 self.loss_names = ['policy_loss', 'value_loss', 'policy_entropy', 'approxkl', 'clipfrac']
@@ -247,9 +262,11 @@ class PPO2(ActorCriticRLModel):
                 self.summary = tf.summary.merge_all()
 
                 # 输出计算图
+                # self.old_graph = self.graph
                 # writer = tf.summary.FileWriter('../logs/graph',self.graph)
                 # writer.flush()
                 # writer.close()
+
     def _train_step(self, learning_rate, cliprange, obs, returns, masks, actions, values, neglogpacs, update,
                     writer, states=None, cliprange_vf=None):
         """
@@ -309,7 +326,29 @@ class PPO2(ActorCriticRLModel):
         return policy_loss, value_loss, policy_entropy, approxkl, clipfrac
 
     def learn(self, total_timesteps, callback=None, seed=None, log_interval=1, tb_log_name="PPO2",
-              reset_num_timesteps=True):
+              reset_num_timesteps=True, env=None, using_PGN=False, save_old =False, gamma=0.99, n_steps=128,
+              ent_coef=0.01, learning_rate=2.5e-4, vf_coef=0.5,max_grad_norm=0.5, lam=0.95, nminibatches=4,
+              noptepochs=4, cliprange=0.2, cliprange_vf=None,):
+        # Using new params
+        self.learning_rate = learning_rate
+        self.cliprange = cliprange
+        self.cliprange_vf = cliprange_vf
+        self.n_steps = n_steps
+        self.ent_coef = ent_coef
+        self.vf_coef = vf_coef
+        self.max_grad_norm = max_grad_norm
+        self.gamma = gamma
+        self.lam = lam
+        self.nminibatches = nminibatches
+        self.noptepochs = noptepochs
+        # Init env
+        self.init_env(env=env)
+
+        # MOD: Use new policy
+        if using_PGN:
+            print("Using PGN",using_PGN)
+            self.setup_model(old=self.old_params)
+
         # Transform to callable if needed
         self.learning_rate = get_schedule_fn(self.learning_rate)
         self.cliprange = get_schedule_fn(self.cliprange)
@@ -328,7 +367,7 @@ class PPO2(ActorCriticRLModel):
             t_first_start = time.time()
 
             n_updates = total_timesteps // self.n_batch
-            for update in range(1, n_updates + 1):
+            for update in tqdm(range(1, n_updates + 1)):
                 assert self.n_batch % self.nminibatches == 0
                 batch_size = self.n_batch // self.nminibatches
                 t_start = time.time()
@@ -405,9 +444,20 @@ class PPO2(ActorCriticRLModel):
                     if callback(locals(), globals()) is False:
                         break
 
+            if save_old:
+                print("Save old params", using_PGN)
+                len_parm = len(self.get_parameters())
+                params_to_old = self.get_parameters()
+                for _ in range(len_parm):
+                    key,val = params_to_old.popitem()
+                    self.old_params[key] += val
+
             return self
 
     def save(self, save_path, cloudpickle=False):
+        # print(self.get_parameter_list())
+        # print(type(self.get_parameters()),len(self.get_parameters()))
+        # print(type(self.get_parameter_list()), len(self.get_parameter_list()))
         data = {
             "gamma": self.gamma,
             "n_steps": self.n_steps,
@@ -426,13 +476,47 @@ class PPO2(ActorCriticRLModel):
             "action_space": self.action_space,
             "n_envs": self.n_envs,
             "_vectorize_action": self._vectorize_action,
-            "policy_kwargs": self.policy_kwargs
+            "policy_kwargs": self.policy_kwargs,
+            "old_params": self.old_params
         }
 
         params_to_save = self.get_parameters()
 
         self._save_to_file(save_path, data=data, params=params_to_save, cloudpickle=cloudpickle)
 
+    def init_env(self, env=None):
+        """
+        initialize env
+
+        :param self:
+        :param env:
+        :return:
+        """
+        self.env=env
+        if env is not None:
+            if isinstance(env, str):
+                if self.verbose >= 1:
+                    print("Creating environment from the given name, wrapped in a DummyVecEnv.")
+                self.env = env = DummyVecEnv([lambda: gym.make(env)])
+
+            self.observation_space = env.observation_space
+            self.action_space = env.action_space
+            if self.requires_vec_env:
+                if isinstance(env, VecEnv):
+                    self.n_envs = env.num_envs
+                else:
+                    raise ValueError("Error: the model requires a vectorized environment, please use a VecEnv wrapper.")
+            else:
+                if isinstance(env, VecEnv):
+                    if env.num_envs == 1:
+                        self.env = _UnvecWrapper(env)
+                        self._vectorize_action = True
+                    else:
+                        raise ValueError("Error: the model requires a non vectorized environment or a single vectorized"
+                                         " environment.")
+                self.n_envs = 1
+
+            print("INIT ENV self.n_envs", self.n_envs)
 
 class Runner(AbstractEnvRunner):
     def __init__(self, *, env, model, n_steps, gamma, lam):
@@ -567,3 +651,5 @@ def safe_mean(arr):
     :return: (float)
     """
     return np.nan if len(arr) == 0 else np.mean(arr)
+
+

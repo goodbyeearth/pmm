@@ -1,6 +1,9 @@
 # 自定义
 *_test/
 .idea/
+dataset/
+logs/
+models/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
