@@ -16,17 +16,65 @@ from my_policies import CustomPolicy, CustomLSTM
 from generate_data import generate_expert_data, merge_data
 
 # TODO：加seed
-def make_envs(env_id):
+def make_envs_0(env_id):
+    def _thunk():
+        agent_list = [
+            agents.BaseAgent(),
+            agents.SimpleAgent(),
+            agents.RandomAgent(),
+            agents.SimpleAgent(),
+            # agents.SimpleAgent()
+            # agents.RandomAgent(),
+        ]
+        env = pommerman.make(env_id, agent_list)
+        env.set_training_agent(0)
+        return env
+    return _thunk
+
+def make_envs_1(env_id):
     def _thunk():
         agent_list = [
             agents.SimpleAgent(),
+            agents.BaseAgent(),
+            agents.SimpleAgent(),
+            agents.RandomAgent(),
+            # agents.SimpleAgent()
             # agents.RandomAgent(),
+        ]
+        env = pommerman.make(env_id, agent_list)
+        env.set_training_agent(1)
+        return env
+    return _thunk
+
+
+def make_envs_2(env_id):
+    def _thunk():
+        agent_list = [
+            agents.RandomAgent(),
+            agents.SimpleAgent(),
             agents.BaseAgent(),
             agents.SimpleAgent(),
             # agents.SimpleAgent()
-            agents.RandomAgent(),
+            # agents.RandomAgent(),
         ]
         env = pommerman.make(env_id, agent_list)
+        env.set_training_agent(2)
+        return env
+    return _thunk
+
+
+def make_envs_3(env_id):
+    def _thunk():
+        agent_list = [
+            agents.SimpleAgent(),
+            agents.RandomAgent(),
+            agents.SimpleAgent(),
+            agents.BaseAgent(),
+            # agents.SimpleAgent()
+            # agents.RandomAgent(),
+        ]
+        env = pommerman.make(env_id, agent_list)
+        env.set_training_agent(3)
         return env
     return _thunk
 
@@ -54,7 +102,10 @@ def train():
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     config.gpu_options.allow_growth = True
     num_envs = args.num_env or multiprocessing.cpu_count()
-    envs = [make_envs(args.env) for _ in range(num_envs)]
+    envs = [make_envs_0(args.env) for _ in range(num_envs//4)] + \
+           [make_envs_1(args.env) for _ in range(num_envs//4)] + \
+           [make_envs_2(args.env) for _ in range(num_envs//4)] + \
+           [make_envs_3(args.env) for _ in range(num_envs//4)]
 
     env = SubprocVecEnv(envs)
 

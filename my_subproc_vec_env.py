@@ -14,9 +14,9 @@ def _worker(remote, parent_remote, env_fn_wrapper):
     parent_remote.close()
     env = env_fn_wrapper.var()
 
-    env.set_training_agent(1)  # TODO:记得设置训练智能体的 index
-    teammate = 3
-    enemy = [0, 2]
+    # env.set_training_agent(1)  # TODO:记得设置训练智能体的 index
+    # teammate = 3
+    enemy = [(env.training_agent+1) % 4, (env.training_agent+3) % 4]
 
     """计数相关"""
     step_count = 0
@@ -29,6 +29,7 @@ def _worker(remote, parent_remote, env_fn_wrapper):
     win = 200
 
     is_dead = [False for _ in range(4)]
+    whole_obs = None
     while True:
         try:
             cmd, data = remote.recv()
