@@ -107,17 +107,17 @@ def play():
     # env = env_fn()
     agent_list = [
         agents.SimpleAgent(),
-        agents.RandomAgent(),
+        agents.SimpleAgent(),
         # agents.BaseAgent(),
         agents.SimpleAgent(),
-        agents.SimpleAgent()
+        agents.SimpleAgent(),
         # agents.RandomAgent(),
     ]
     env = pommerman.make(args.env, agent_list)
 
     # 设置训练的 agent 的 index
     train_idx = 1
-    # env.set_training_agent(train_idx)
+    env.set_training_agent(train_idx)
 
     def get_all_actions():
         feature = featurize(obs[train_idx])
@@ -132,7 +132,9 @@ def play():
 
         return some_actions
 
-    for episode in range(15):
+    total_eps = 15
+    lost_eps = 0
+    for episode in range(total_eps):
         obs = env.reset()
         is_dead = False  # 标志我的智能体死没死
         for i in range(1000):
@@ -142,18 +144,21 @@ def play():
             # input(obs[0]['alive'])
             if not is_dead and ((train_idx + 10) not in obs[0]['alive']):
                 print("My agent is dead. ~.~")
+                lost_eps += 1
                 break  # 死了重来~~
 
             if done:
                 break
             env.render()
+    win_rate = (total_eps - lost_eps) / total_eps
+    print("win rate: ", win_rate)
     env.close()
 
 
 if __name__ == '__main__':
     arg_parser = my_arg_parser()
     args, unknown_args = arg_parser.parse_known_args(sys.argv)
-    print("environment：", args.env)
+    print("environment: ", args.env)
 
     # 爬取并存储专家数据
     if args.generate_data:

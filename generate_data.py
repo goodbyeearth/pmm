@@ -32,7 +32,7 @@ def merge_data(dir_path, final_data_path):
         'rewards': rewards,
         'episode_returns': episode_returns,
     }
-    print("以下数据将写入 {}".format(final_data_path))
+    print("data will save in {}".format(final_data_path))
     for key, val in numpy_dict.items():
         print(key, val.shape)
     np.savez(final_data_path, **numpy_dict)
@@ -45,7 +45,7 @@ def generate_expert_data(env_id, n_process=None, n_episodes=250):
     for i, env in zip(range(n_process), envs):
         prefix_path = './dataset_test/e' + str(n_episodes) + '_p' + str(i) + '_a'
         ps.append(multiprocessing.Process(target=worker, args=(CloudpickleWrapper(env), n_episodes, prefix_path)))
-    print('开始取数据，进程数量：', n_process)
+    print('begin，num of process：', n_process)
     for p in ps:
         p.start()
 
@@ -57,7 +57,7 @@ def worker(env_fn_wrapper, n_episodes=100, prefix_path=None):
 
     save_path_list = [prefix_path + str(idx) for idx in record_idx_list]
 
-    print('总回合数：{}, 目标智能体编号：{}'.format(n_episodes, record_idx_list))
+    print('episode：{}, target agents：{}'.format(n_episodes, record_idx_list))
     # 开始爬取并存储数据
     generate_expert_traj_v2(env, record_idx_list, save_path_list, n_episodes=n_episodes)
 
