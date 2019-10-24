@@ -14,7 +14,7 @@ def _worker(remote, parent_remote, env_fn_wrapper):
     parent_remote.close()
     env = env_fn_wrapper.var()
     # TODO:记得设置训练智能体的 index
-    env.set_training_agent(1)  # 设置训练的 agent 的 index
+    env.set_training_agent(0)  # 设置训练的 agent 的 index
     while True:
         try:
             cmd, data = remote.recv()

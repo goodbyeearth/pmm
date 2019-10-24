@@ -107,7 +107,7 @@ class PPO2(ActorCriticRLModel):
         self.n_envs = 1
         self.requires_vec_env = True
         # self.MOD = 0
-        self.old_params = {}
+        self.old_params = []
         # self.old_graph = None
 
         if _init_setup_model:
@@ -330,17 +330,17 @@ class PPO2(ActorCriticRLModel):
               ent_coef=0.01, learning_rate=2.5e-4, vf_coef=0.5,max_grad_norm=0.5, lam=0.95, nminibatches=4,
               noptepochs=4, cliprange=0.2, cliprange_vf=None,):
         # Using new params
-        self.learning_rate = learning_rate
-        self.cliprange = cliprange
-        self.cliprange_vf = cliprange_vf
-        self.n_steps = n_steps
-        self.ent_coef = ent_coef
-        self.vf_coef = vf_coef
-        self.max_grad_norm = max_grad_norm
-        self.gamma = gamma
-        self.lam = lam
-        self.nminibatches = nminibatches
-        self.noptepochs = noptepochs
+        # self.learning_rate = learning_rate
+        # self.cliprange = cliprange
+        # self.cliprange_vf = cliprange_vf
+        # self.n_steps = n_steps
+        # self.ent_coef = ent_coef
+        # self.vf_coef = vf_coef
+        # self.max_grad_norm = max_grad_norm
+        # self.gamma = gamma
+        # self.lam = lam
+        # self.nminibatches = nminibatches
+        # self.noptepochs = noptepochs
         # Init env
         self.init_env(env=env)
 
@@ -445,12 +445,21 @@ class PPO2(ActorCriticRLModel):
                         break
 
             if save_old:
-                print("Save old params", using_PGN)
+                print("Save the learned params", save_old)
                 len_parm = len(self.get_parameters())
+                print('Len of network params', len_parm)
                 params_to_old = self.get_parameters()
+                old = {}
                 for _ in range(len_parm):
-                    key,val = params_to_old.popitem()
-                    self.old_params[key] += val
+                    key, val = params_to_old.popitem()
+                    old[key] = val
+                    # print(key,val.shape)
+                self.old_params.append(old)
+                print("Now we have %d networks" % len(self.old_params))
+                # print('model/pi/b:0',self.old_params[0]['model/pi/b:0'])
+                # print('model/vf/bias:0',self.old_params[0]['model/vf/bias:0'])
+                # print('model/pi/b:0', self.old_params[1]['model/pi/b:0'])
+                # print('model/vf/bias:0', self.old_params[1]['model/vf/bias:0'])
 
             return self
 

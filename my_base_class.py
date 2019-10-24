@@ -10,6 +10,7 @@ import cloudpickle
 import numpy as np
 import gym
 import tensorflow as tf
+import matplotlib.pyplot as plt
 
 from stable_baselines.common import set_global_seeds
 from stable_baselines.common.save_util import (
@@ -223,7 +224,7 @@ class BaseRLModel(ABC):
         pass
 
     def pretrain(self, dataset, n_epochs=10, learning_rate=1e-4,
-                 adam_epsilon=1e-8, val_interval=None):
+                 adam_epsilon=1e-8, val_interval=None,save_index = None):
         """
         Pretrain a model using behavior cloning:
         supervised learning given an expert dataset.
@@ -252,7 +253,7 @@ class BaseRLModel(ABC):
                 val_interval = int(n_epochs / 10)
 
         with self.graph.as_default():
-            with tf.variable_scope('pretrain'):
+            with tf.variable_scope('pretrain',reuse=tf.AUTO_REUSE):
                 if continuous_actions:
                     obs_ph, actions_ph, deterministic_actions_ph = self._get_pretrain_placeholders()
                     loss = tf.reduce_mean(tf.square(actions_ph - deterministic_actions_ph))
@@ -270,7 +271,6 @@ class BaseRLModel(ABC):
                 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate, epsilon=adam_epsilon)
                 # print(self.params)
                 optim_op = optimizer.minimize(loss, var_list=self.params)
-
             self.sess.run(tf.global_variables_initializer())
 
         if self.verbose > 0:
@@ -278,8 +278,10 @@ class BaseRLModel(ABC):
 
         for epoch_idx in tqdm(range(int(n_epochs))):
             train_loss = 0.0
+            x= 0
             # Full pass on the training set
             for _ in range(len(dataset.train_loader)):
+                x += _
                 expert_obs, expert_actions = dataset.get_next_batch('train')
                 feed_dict = {
                     obs_ph: expert_obs,
@@ -289,7 +291,6 @@ class BaseRLModel(ABC):
                 train_loss += train_loss_
 
             train_loss /= len(dataset.train_loader)
-
             if self.verbose > 0 and (epoch_idx + 1) % val_interval == 0:
                 val_loss = 0.0
                 # Full pass on the validation set
@@ -301,22 +302,29 @@ class BaseRLModel(ABC):
 
                 val_loss /= len(dataset.val_loader)
                 if self.verbose > 0:
-                    # print("==== Training progress {:.2f}% ====".format(100 * (epoch_idx + 1) / n_epochs))
-                    # print('Epoch {}'.format(epoch_idx + 1))
                     print("Training loss: {:.6f}, Validation loss: {:.6f}".format(train_loss, val_loss))
                     print()
+            if save_index is not None:
+                if (epoch_idx + 1) % 20 == 0:
+                    print("Save pretrain model",epoch_idx)
+                    self.save('models/pretrain/'+str(save_index)+'_'+str(epoch_idx)+'.zip')
             # Free memory
             del expert_obs, expert_actions
-
         # Record old params
         len_parm = len(self.get_parameters())
+        print('Len of network params',len_parm)
         params_to_old = self.get_parameters()
+        self.old_params = []
+        old = {}
         print("Save pretrain params")
         for _ in range(len_parm):
             key, val = params_to_old.popitem()
-            self.old_params[key] = val
-            # print(key)
-            print(val.shape)
+            old[key] = val
+            # print(key,val.shape)
+        self.old_params.append(old)
+        # print('model/pi/b:0', self.old_params[0]['model/pi/b:0'])
+        # print('model/vf/bias:0', self.old_params[0]['model/vf/bias:0'])
+
         if self.verbose > 0:
             print("Pretraining done.")
         return self

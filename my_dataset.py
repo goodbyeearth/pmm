@@ -9,17 +9,20 @@ from joblib import Parallel, delayed
 from stable_baselines import logger
 from utils import featurize,get_feature_space
 import os
-
+import time
 def merge_data(dir_path):
     files_list = os.listdir(dir_path)
     obs = []
     actions = []
-    for f_name in files_list:
-        f_path = dir_path + f_name
-        sub_data = np.load(f_path, allow_pickle=True)
+    f_name =files_list[0]
+    start = time.time()
+    f_path = dir_path + f_name
+    sub_data = np.load(f_path, allow_pickle=True)
 
-        actions.extend(sub_data['actions'])
-        obs.extend(sub_data['obs'])
+    actions.extend(sub_data['actions'])
+    obs.extend(sub_data['obs'])
+    end = time.time()
+    print(f_name,end-start)
 
     ob = []
     for o in obs:
@@ -67,8 +70,8 @@ class ExpertDataset(object):
         if traj_data is None and expert_path is None:
             raise ValueError("Must specify one of 'traj_data' or 'expert_path'")
         if traj_data is None:
-            # traj_data = np.load(expert_path, allow_pickle=True)
-            traj_data = merge_data(expert_path)
+            traj_data = np.load(expert_path, allow_pickle=True)
+            # traj_data = merge_data(expert_path)
 
         if verbose > 0:
             for key, val in traj_data.items():
@@ -78,15 +81,6 @@ class ExpertDataset(object):
         # episode_starts = traj_data['episode_starts']
 
         traj_limit_idx = len(traj_data['obs'])
-
-        # if traj_limitation > 0:
-        #     n_episodes = 0
-        #     # Retrieve the index corresponding
-        #     # to the traj_limitation trajectory
-        #     for idx, episode_start in enumerate(episode_starts):
-        #         n_episodes += int(episode_start)
-        #         if n_episodes == (traj_limitation + 1):
-        #             traj_limit_idx = idx - 1
 
         observations = traj_data['obs'][:traj_limit_idx]
         actions = traj_data['actions'][:traj_limit_idx]
@@ -105,10 +99,6 @@ class ExpertDataset(object):
 
         self.observations = observations
         self.actions = actions
-
-        # self.returns = traj_data['episode_returns'][:traj_limit_idx]
-        # self.avg_ret = sum(self.returns) / len(self.returns)
-        # self.std_ret = np.std(np.array(self.returns))
         self.verbose = verbose
 
         assert len(self.observations) == len(self.actions), "The number of actions and observations differ " \
@@ -155,8 +145,7 @@ class ExpertDataset(object):
         """
         logger.log("Total trajectories: {}".format(self.num_traj))
         logger.log("Total transitions: {}".format(self.num_transition))
-        # logger.log("Average returns: {}".format(self.avg_ret))
-        # logger.log("Std for returns: {}".format(self.std_ret))
+
 
     def get_next_batch(self, split=None):
         """
@@ -178,18 +167,7 @@ class ExpertDataset(object):
         except StopIteration:
             dataloader = iter(dataloader)
             return next(dataloader)
-        # if dataloader.process is None:
-        #     dataloader.start_process()
-        # try:
-        #     print("INININ")
-        #     return_data = next(dataloader)
-        #     return_data[0].reshape((-1,) + get_feature_space().shape)
-        #     return return_data
-        # except StopIteration:
-        #     dataloader = iter(dataloader)
-        #     return_data = next(dataloader)
-        #     return_data[0].reshape((-1,) + get_feature_space().shape)
-        #     return return_data
+
 
     def plot(self):
         """
@@ -242,18 +220,25 @@ class DataLoader(object):
         if partial_minibatch and len(indices) / batch_size > 0:
             self.n_minibatches += 1
         self.batch_size = batch_size
-        # _obs = []
-        # for ob in observations:
-        #     _obs.append(featurize(ob))
-        # _observations = np.array(_obs)
-        # print(_observations.shape)
-        # _observations.shape=(-1,)+get_feature_space()
-        # print(_observations.shape)
-        self.observations = observations
-        # _actions = np.array(actions)
-        # _actions.shape=(-1,1)
-        # print(_actions.shape)
-        self.actions = actions
+
+        _obs = []
+        for ob in observations:
+            _obs.append(featurize(ob))
+        _observations = np.array(_obs,np.float32)
+        del _obs
+        print(_observations.shape)
+        self.observations = _observations
+        del _observations
+
+        _actions = np.array(actions,dtype=np.float32)
+        _actions.shape=(-1,1)
+        print(_actions.shape)
+        self.actions = _actions
+        del _actions
+
+        # self.observations = observations
+        # self.actions = actions
+
         self.shuffle = shuffle
         self.queue = Queue(max_queue_len)
         self.process = None
@@ -322,22 +307,8 @@ class DataLoader(object):
                 for minibatch_idx in range(self.n_minibatches):
 
                     self.start_idx = minibatch_idx * self.batch_size
-
-                    # print("observations shape：", self.observations.shape)
-                    # print("minibash_indices：", self._minibatch_indices)
-                    # print("minibash_indices shape：", self._minibatch_indices.shape)
                     obs = self.observations[self._minibatch_indices]
-                    # print(obs.shape)
-                    # if self.load_images:
-                    #     if self.n_workers <= 1:
-                    #         obs = [self._make_batch_element(image_path)
-                    #                for image_path in obs]
-                    #
-                    #     else:
-                    #         obs = parallel(delayed(self._make_batch_element)(image_path)
-                    #                        for image_path in obs)
-                    #
-                    #     obs = np.concatenate(obs, axis=0)
+
 
                     actions = self.actions[self._minibatch_indices]
 

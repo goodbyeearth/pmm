@@ -4,7 +4,6 @@ from pommerman import agents
 import sys
 import os
 
-from importlib import import_module
 import multiprocessing
 
 import tensorflow as tf
@@ -14,41 +13,93 @@ from my_subproc_vec_env import SubprocVecEnv
 from my_policies import CustomPolicy
 
 from my_ppo2 import PPO2
-# from stable_baselines import PPO2
-from generate_data import generate_expert_data, merge_data
+from utils import featurize
 
 # TODO：加seed
 def make_envs(env_id):
     def _thunk():
         agent_list = [
             # agents.SimpleAgent(),
+            # agents.SimpleAgent(),
+            # agents.SimpleAgent(),
+            # agents.SimpleAgent()
             agents.RandomAgent(),
-            agents.BaseAgent(),
-            agents.SimpleAgent(),
-            agents.SimpleAgent()
+            agents.RandomAgent(),
+            agents.RandomAgent(),
+            agents.RandomAgent()
         ]
         env = pommerman.make(env_id, agent_list)
         return env
     return _thunk
 
+# def test():
+#     print("INIT CONTINURAL PPO2")
+#     model = PPO2(CustomPolicy, verbose=1)
+#     print("RUN PRETRAIN n_epochs =", 10)
+#     from my_dataset import ExpertDataset
+#     # dataset = ExpertDataset(expert_path='dataset/test.npz')
+#     dataset = ExpertDataset(expert_path='dataset/expert_30/expert_30_0.npz')
+#     model.pretrain(dataset=dataset, n_epochs=1)
+#     model.pretrain(dataset=dataset, n_epochs=1)
+#     # Mutiprocessing
+#     config = tf.ConfigProto()
+#     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+#     config.gpu_options.allow_growth = True
+#     num_envs = args.num_env or multiprocessing.cpu_count()
+#     envs = [make_envs(args.env) for _ in range(num_envs)]
+#     env = SubprocVecEnv(envs)
+#     model.learn(total_timesteps=100,
+#                 seed=args.seed, env=env, using_PGN=True, save_old=True)
+#     model.learn(total_timesteps=100,
+#                 seed=args.seed, env=env, using_PGN=True, save_old=True)
+#     model.save('models/test.zip')
+
 def _pretrain(expert_path,n_epochs):
+
+
+    if args.load_path:
+        print("LOAD MODEL FROM",args.load_path)
+        model = PPO2.load(args.load_path)
+    else:
+        # Init a Continural PPO2 model
+        print("INIT CONTINURAL PPO2")
+        model = PPO2(CustomPolicy, verbose=1, tensorboard_log=args.log_path)
+
     print("IN PRETRAIN")
     from my_dataset import ExpertDataset
     # assert args.expert_path is not None
 
     # load dataset
     print("LOAD DATASET FROM",expert_path)
-    dataset = ExpertDataset(expert_path=expert_path)  # traj_limitation 只能取默认-1
-
-    # Init a Continural PPO2 model
-    print("INIT CONTINURAL PPO2")
-    model = PPO2(CustomPolicy, verbose=1, tensorboard_log=args.log_path)
 
     print("RUN PRETRAIN n_epochs =", n_epochs)
-    model.pretrain(dataset=dataset, n_epochs=n_epochs)
+    # dataset = ExpertDataset(expert_path='dataset/expert_20/expert_20_0.npz')  # traj_limitation 只能取默认-1
+    # model.pretrain(dataset=dataset, n_epochs=n_epochs,save_index=0)
+    # del dataset
+    # print("Save prtrain model0", args.save_path)
 
-    print("Save prtrain model", args.save_path)
-    model.save('./models/model0.zip')
+    dataset = ExpertDataset(expert_path='dataset/expert_20/expert_20_1.npz')
+    model.pretrain(dataset=dataset, n_epochs=n_epochs,save_index=1)
+    del dataset
+    print("Save prtrain model1", args.save_path)
+
+
+    dataset = ExpertDataset(expert_path='dataset/expert_20/expert_20_2.npz')
+    model.pretrain(dataset=dataset, n_epochs=n_epochs,save_index=2)
+    del dataset
+    print("Save prtrain model2", args.save_path)
+
+
+    dataset = ExpertDataset(expert_path='dataset/expert_20/expert_20_3.npz')
+    model.pretrain(dataset=dataset, n_epochs=n_epochs,save_index=3)
+    del dataset
+    print("Save prtrain model3", args.save_path)
+
+    dataset = ExpertDataset(expert_path='dataset/expert_20/expert_20_4.npz')
+    model.pretrain(dataset=dataset, n_epochs=n_epochs,save_index=4)
+    del dataset
+    print("Save prtrain model4", args.save_path)
+
 
 def train():
 
@@ -87,91 +138,99 @@ def play(train_idx):
         print('PLAY NEED --load_path')
         raise ValueError
 
-    from utils import featurize
-
     model = PPO2.load(args.load_path)
-    env_fn = make_envs(args.env)
-    env = env_fn()
+    # print(pommerman.REGISTRY)
+    print('LOAD MODEL FROM', args.load_path)
+    agent_list = [
+        # agents.SimpleNoBombAgent(),
+        agents.SimpleAgent(),
+        agents.SimpleAgent(),
+        agents.SimpleAgent(),
+        agents.SimpleAgent(),
+        # agents.PlayerAgent(agent_control="arrows"),
+        # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12346),
+        # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12345),
+        # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12344),
+        # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12343),
+    ]
+    env = pommerman.make('PommeRadioCompetition-v2',agent_list)
 
     # Index of test agent
-    env.set_training_agent(train_idx)
+    # env.set_training_agent(train_idx)
 
-    def get_all_actions():
-        feature = featurize(obs[train_idx])
-        action, _states = model.predict(feature)
-        action = (action, 0, 0)
-        some_actions = env.act(obs)  # 不包含我的 agent
-        # 如果其他智能体动作不是元组（只有单一动作），改成元组
-        for agent_idx in range(3):
-            if not isinstance(some_actions[agent_idx], tuple):
-                some_actions[agent_idx] = (some_actions[agent_idx], 0, 0)
-        some_actions.insert(train_idx, action)  # 把我的 agent 的动作也加进来
-
-        return some_actions
-
-    for episode in range(1):
+    for episode in range(100):
         obs = env.reset()
-        for i in range(1000):
-            all_actions = get_all_actions()
+        done = False
+        while not done:
+            feature = featurize(obs[train_idx])
+            action, _states = model.predict(feature)
+            print(action)
+            all_actions = env.act(obs)
+            all_actions[train_idx] = int(action)
             obs, rewards, done, info = env.step(all_actions)
-            if done:
-                break
             env.render()
-    env.close()
-
+            if not env._agents[train_idx].is_alive:
+                done = True
 def _evaluate(train_idx,n_episode):
     if not args.load_path:
         print('PLAY NEED --load_path')
         raise ValueError
-
-    from utils import featurize
-
     model = PPO2.load(args.load_path)
-    env_fn = make_envs(args.env)
-    env = env_fn()
 
     # Index of test agent
-    env.set_training_agent(train_idx)
-
-    def get_all_actions():
-        feature = featurize(obs[train_idx])
-        action, _states = model.predict(feature)
-        action = (action, 0, 0)
-        some_actions = env.act(obs)  # 不包含我的 agent
-        # 如果其他智能体动作不是元组（只有单一动作），改成元组
-        for agent_idx in range(3):
-            if not isinstance(some_actions[agent_idx], tuple):
-                some_actions[agent_idx] = (some_actions[agent_idx], 0, 0)
-        some_actions.insert(train_idx, action)  # 把我的 agent 的动作也加进来
-
-        return some_actions
+    print(pommerman.REGISTRY)
+    print('LOAD MODEL FROM', args.load_path)
+    agent_list = [
+        # agents.SimpleNoBombAgent(),
+        agents.SimpleAgent(),
+        agents.SimpleAgent(),
+        agents.SimpleAgent(),
+        agents.SimpleAgent(),
+        # agents.PlayerAgent(agent_control="arrows"),
+        # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12346),
+        # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12345),
+        # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12344),
+        # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12343),
+    ]
+    env = pommerman.make('PommeRadioCompetition-v2', agent_list)
     win = 0
     tie = 0
     loss = 0
     for episode in range(n_episode):
         obs = env.reset()
-        done = True
-        while done:
-            all_actions = get_all_actions()
+        done = False
+        while not done:
+            feature = featurize(obs[train_idx])
+            action, _states = model.predict(feature)
+            all_actions = env.act(obs)
+            # print(train_idx)
+            # print(all_actions)
+            # print(int(action))
+            all_actions[train_idx] = int(action)
             obs, rewards, done, info = env.step(all_actions)
-            if rewards[train_idx] == 1:
-                win += 1
-            elif rewards[train_idx] == -1:
-                loss += 1
-            else:
-                tie += 1
-            env.render()
-        if episode % 1000 == 0:
-            print("win/tie/loss: {}/{}/{}" % win,tie,loss)
+            # env.render()
+        if rewards[train_idx] == 1:
+            win += 1
+        elif rewards[train_idx] == -1:
+            loss += 1
+        else:
+            tie += 1
+        if episode % 100 == 0:
+            print("win / tie / loss")
+            print(" %d  /  %d  /  %d " % (win,tie,loss))
     env.close()
+
 
 if __name__ == '__main__':
     arg_parser = my_arg_parser()
     args, unknown_args = arg_parser.parse_known_args(sys.argv)
 
+    # Test
+    # test()
+
     # Pretrain
     if args.pre_train:
-        _pretrain('dataset/expert_30/',5)
+        _pretrain('dataset/expert_20',200)
 
     # Train
     if args.train:
@@ -179,8 +238,8 @@ if __name__ == '__main__':
 
     # Test
     if args.play:
-        play(3)
-
+        play(0)
+    #
     # Evaluate
     if args.evaluate:
-        _evaluate(3,10000)
+        _evaluate(0,10000)

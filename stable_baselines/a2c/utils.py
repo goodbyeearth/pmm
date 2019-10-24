@@ -78,6 +78,7 @@ def ortho_init(scale=1.0):
                linear
         """
         # lasagne ortho init for tf
+        activ = tf.nn.relu
         shape = tuple(shape)
         if len(shape) == 2:
             flat_shape = shape
@@ -89,7 +90,7 @@ def ortho_init(scale=1.0):
         u, _, v = np.linalg.svd(gaussian_noise, full_matrices=False)
         weights = u if u.shape == flat_shape else v  # pick the one with the correct shape
         weights = weights.reshape(shape)
-        return (scale * weights[:shape[0], :shape[1]]).astype(np.float32)
+        return activ((scale * weights[:shape[0], :shape[1]]).astype(np.float32))
 
     return _ortho_init
 
@@ -137,16 +138,22 @@ def conv(input_tensor, scope, *, n_filters, filter_size, stride,
         weight = tf.get_variable("w", wshape, initializer=ortho_init(init_scale))
         bias = tf.get_variable("b", bias_var_shape, initializer=tf.constant_initializer(0.0))
 
+        weight1 = np.zeros(shape=bshape)
+        weight1 = tf.convert_to_tensor(weight1,dtype=tf.float32)
+        activ = tf.nn.relu
+        # print(bshape)
         if old:
-            ww = tf.convert_to_tensor(old[weight.name], dtype=tf.float32)
-            weight =tf.add(weight, ww)
-
-            bb = tf.convert_to_tensor(old[bias.name],dtype=tf.float32)
-            bias = tf.add(bias,bb)
-
+            for parm in old:
+                ww = tf.convert_to_tensor(parm[weight.name], dtype=tf.float32)
+                bb = tf.convert_to_tensor(parm[bias.name],dtype=tf.float32)
+                if not one_dim_bias and data_format == 'NHWC':
+                    bb = tf.reshape(bias, bshape)
+                weight1 = tf.add(activ(bb + tf.nn.conv2d(input_tensor, ww, strides=strides, padding=pad, data_format=data_format)),weight1)
+                # print(weight1)
         if not one_dim_bias and data_format == 'NHWC':
             bias = tf.reshape(bias, bshape)
-        return bias + tf.nn.conv2d(input_tensor, weight, strides=strides, padding=pad, data_format=data_format)
+
+        return tf.add(activ(bias + tf.nn.conv2d(input_tensor, weight, strides=strides, padding=pad, data_format=data_format)),weight1)
 
 
 def linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0.0, old=None, is_dense=False):
@@ -171,15 +178,51 @@ def linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0.0, old=
         weight = tf.get_variable(w, [n_input, n_hidden], initializer=ortho_init(init_scale))
         bias = tf.get_variable(b, [n_hidden], initializer=tf.constant_initializer(init_bias))
 
+        weight1 = np.zeros(shape=[n_hidden])
+        weight1 = tf.convert_to_tensor(weight1, dtype=tf.float32)
+        # print(weight1)
+        activ = tf.nn.relu
         if old:
-            ww = tf.convert_to_tensor(old[weight.name], dtype=tf.float32)
-            weight = tf.add(weight, ww)
+            for parm in old:
+                ww = tf.convert_to_tensor(parm[weight.name], dtype=tf.float32)
+                bb = tf.convert_to_tensor(parm[bias.name],dtype=tf.float32)
+                weight1 = tf.add(activ(tf.matmul(input_tensor, ww) + bb),weight1)
+                # print(weight1)
 
-            bb = tf.convert_to_tensor(old[bias.name], dtype=tf.float32)
-            bias = tf.add(bias, bb)
+        return tf.add(activ(tf.matmul(input_tensor, weight) + bias),weight1)
 
-        return tf.matmul(input_tensor, weight) + bias
+def noactiv_linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0.0, old=None, is_dense=False):
+    """
+    Creates a fully connected layer for TensorFlow
 
+    :param input_tensor: (TensorFlow Tensor) The input tensor for the fully connected layer
+    :param scope: (str) The TensorFlow variable scope
+    :param n_hidden: (int) The number of hidden neurons
+    :param init_scale: (int) The initialization scale
+    :param init_bias: (int) The initialization offset bias
+    :return: (TensorFlow Tensor) fully connected layer
+    """
+    with tf.variable_scope(scope):
+        if is_dense:
+            w = 'kernel'
+            b = 'bias'
+        else:
+            w = 'w'
+            b = 'b'
+        n_input = input_tensor.get_shape()[1].value
+        weight = tf.get_variable(w, [n_input, n_hidden], initializer=ortho_init(init_scale))
+        bias = tf.get_variable(b, [n_hidden], initializer=tf.constant_initializer(init_bias))
+
+        weight1 = np.zeros(shape=[n_hidden])
+        weight1 = tf.convert_to_tensor(weight1, dtype=tf.float32)
+        if old:
+            for parm in old:
+                ww = tf.convert_to_tensor(parm[weight.name], dtype=tf.float32)
+                bb = tf.convert_to_tensor(parm[bias.name],dtype=tf.float32)
+                weight1 = tf.add((tf.matmul(input_tensor, ww) + bb),weight1)
+                # print(weight1)
+
+        return tf.add((tf.matmul(input_tensor, weight) + bias), weight1)
 
 def batch_to_seq(tensor_batch, n_batch, n_steps, flat=False):
     """
@@ -310,6 +353,7 @@ def conv_to_fc(input_tensor):
     :param input_tensor: (TensorFlow Tensor) The convolutional input tensor
     :return: (TensorFlow Tensor) The fully connected output tensor
     """
+    # print(input_tensor)
     n_hidden = np.prod([v.value for v in input_tensor.get_shape()[1:]])
     input_tensor = tf.reshape(input_tensor, [-1, n_hidden])
     return input_tensor

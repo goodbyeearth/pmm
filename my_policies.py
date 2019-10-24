@@ -2,23 +2,19 @@ import tensorflow as tf
 import numpy as np
 
 from stable_baselines.common.policies import ActorCriticPolicy
-from stable_baselines.a2c.utils import conv, linear, conv_to_fc
+from stable_baselines.a2c.utils import conv, linear, conv_to_fc, noactiv_linear
 
 
 def custom_cnn(scaled_images, old=None, **kwargs):
-    activ = tf.nn.relu
     # TODO: 调
-    layer_1 = activ(
-        conv(scaled_images, 'c1', n_filters=16, filter_size=3, stride=1, init_scale=np.sqrt(2), old=old, **kwargs))
-
-    layer_2 = activ(
-        conv(layer_1, 'c2', n_filters=32, filter_size=3, stride=1, init_scale=np.sqrt(2), old=old, **kwargs))
-
-    layer_3 = activ(
-        conv(layer_2, 'c3', n_filters=64, filter_size=3, stride=1, init_scale=np.sqrt(2), old=old, **kwargs))
+    activ = tf.nn.relu
+    layer_1 = conv(scaled_images, 'c1', n_filters=16, filter_size=3, stride=1, init_scale=np.sqrt(2), old=old, **kwargs)
+    # print(layer_1)
+    layer_2 = conv(layer_1, 'c2', n_filters=32, filter_size=3, stride=1, init_scale=np.sqrt(2), old=old, **kwargs)
+    layer_3 = conv(layer_2, 'c3', n_filters=64, filter_size=3, stride=1, init_scale=np.sqrt(2), old=old, **kwargs)
     layer_3 = conv_to_fc(layer_3)
 
-    return activ(linear(layer_3, 'fc1', n_hidden=256, old=old, init_scale=np.sqrt(2)))
+    return linear(layer_3, 'fc1', n_hidden=256, old=old, init_scale=np.sqrt(2))
 
 
 class CustomPolicy(ActorCriticPolicy):
@@ -34,8 +30,8 @@ class CustomPolicy(ActorCriticPolicy):
             pi_h = extracted_features
             # TODO: 调
             for i, layer_size in enumerate([64, 64]):
-                    pi_h = activ(linear(pi_h, 'pi_fc' + str(i), n_hidden=layer_size, old=old,
-                                        init_scale=np.sqrt(2),is_dense=True))
+                    pi_h = linear(pi_h, 'pi_fc' + str(i), n_hidden=layer_size, old=old,
+                                        init_scale=np.sqrt(2),is_dense=True)
 
             # for i, layer_size in enumerate([64, 64]):
             #         pi_h = activ(tf.layers.dense(pi_h, layer_size, name='pi_fc' + str(i)))
@@ -44,12 +40,12 @@ class CustomPolicy(ActorCriticPolicy):
             vf_h = extracted_features
             # TODO: 调
             for i, layer_size in enumerate([64]):
-                vf_h = activ(linear(vf_h, 'vf_fc' + str(i), n_hidden=layer_size, old=old,
-                                    init_scale=np.sqrt(2),is_dense=True))
+                vf_h = linear(vf_h, 'vf_fc' + str(i), n_hidden=layer_size, old=old,
+                                    init_scale=np.sqrt(2),is_dense=True)
 
             # for i, layer_size in enumerate([64]):
             #     vf_h = activ(tf.layers.dense(vf_h, layer_size, name='vf_fc' + str(i)))
-            value_fn = linear(vf_h, 'vf', n_hidden=1, old=old, init_scale=np.sqrt(2),is_dense=True)
+            value_fn = noactiv_linear(vf_h, 'vf', n_hidden=1, old=old, init_scale=np.sqrt(2),is_dense=True)
             # value_fn = tf.layers.dense(vf_h, 1, name='vf')
             vf_latent = vf_h
 
