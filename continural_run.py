@@ -24,9 +24,9 @@ def make_envs(env_id):
             # agents.SimpleAgent(),
             # agents.SimpleAgent()
             agents.RandomAgent(),
+            agents.SimpleAgent(),
             agents.RandomAgent(),
-            agents.RandomAgent(),
-            agents.RandomAgent()
+            agents.SimpleAgent()
         ]
         env = pommerman.make(env_id, agent_list)
         return env
@@ -55,8 +55,6 @@ def make_envs(env_id):
 #     model.save('models/test.zip')
 
 def _pretrain(expert_path,n_epochs):
-
-
     if args.load_path:
         print("LOAD MODEL FROM",args.load_path)
         model = PPO2.load(args.load_path)
@@ -73,32 +71,10 @@ def _pretrain(expert_path,n_epochs):
     print("LOAD DATASET FROM",expert_path)
 
     print("RUN PRETRAIN n_epochs =", n_epochs)
-    # dataset = ExpertDataset(expert_path='dataset/expert_20/expert_20_0.npz')  # traj_limitation 只能取默认-1
-    # model.pretrain(dataset=dataset, n_epochs=n_epochs,save_index=0)
-    # del dataset
-    # print("Save prtrain model0", args.save_path)
-
-    dataset = ExpertDataset(expert_path='dataset/expert_20/expert_20_1.npz')
-    model.pretrain(dataset=dataset, n_epochs=n_epochs,save_index=1)
+    dataset = ExpertDataset(expert_path=expert_path)  # traj_limitation 只能取默认-1
+    model.pretrain(dataset=dataset, n_epochs=n_epochs)
     del dataset
-    print("Save prtrain model1", args.save_path)
 
-
-    dataset = ExpertDataset(expert_path='dataset/expert_20/expert_20_2.npz')
-    model.pretrain(dataset=dataset, n_epochs=n_epochs,save_index=2)
-    del dataset
-    print("Save prtrain model2", args.save_path)
-
-
-    dataset = ExpertDataset(expert_path='dataset/expert_20/expert_20_3.npz')
-    model.pretrain(dataset=dataset, n_epochs=n_epochs,save_index=3)
-    del dataset
-    print("Save prtrain model3", args.save_path)
-
-    dataset = ExpertDataset(expert_path='dataset/expert_20/expert_20_4.npz')
-    model.pretrain(dataset=dataset, n_epochs=n_epochs,save_index=4)
-    del dataset
-    print("Save prtrain model4", args.save_path)
 
 
 def train():
@@ -230,7 +206,7 @@ if __name__ == '__main__':
 
     # Pretrain
     if args.pre_train:
-        _pretrain('dataset/expert_20',200)
+        _pretrain('dataset/v0/',10000)
 
     # Train
     if args.train:

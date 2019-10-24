@@ -141,15 +141,19 @@ def conv(input_tensor, scope, *, n_filters, filter_size, stride,
         weight1 = np.zeros(shape=bshape)
         weight1 = tf.convert_to_tensor(weight1,dtype=tf.float32)
         activ = tf.nn.relu
+        num = 0
         # print(bshape)
         if old:
             for parm in old:
+                num += 1
+                print("use old conv", weight.name)
                 ww = tf.convert_to_tensor(parm[weight.name], dtype=tf.float32)
                 bb = tf.convert_to_tensor(parm[bias.name],dtype=tf.float32)
                 if not one_dim_bias and data_format == 'NHWC':
                     bb = tf.reshape(bias, bshape)
                 weight1 = tf.add(activ(bb + tf.nn.conv2d(input_tensor, ww, strides=strides, padding=pad, data_format=data_format)),weight1)
                 # print(weight1)
+        print("Num of old conv output",num)
         if not one_dim_bias and data_format == 'NHWC':
             bias = tf.reshape(bias, bshape)
 
@@ -182,13 +186,16 @@ def linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0.0, old=
         weight1 = tf.convert_to_tensor(weight1, dtype=tf.float32)
         # print(weight1)
         activ = tf.nn.relu
+        num = 0
         if old:
             for parm in old:
+                num += 1
+                print("use old linear", weight.name)
                 ww = tf.convert_to_tensor(parm[weight.name], dtype=tf.float32)
                 bb = tf.convert_to_tensor(parm[bias.name],dtype=tf.float32)
                 weight1 = tf.add(activ(tf.matmul(input_tensor, ww) + bb),weight1)
                 # print(weight1)
-
+        print("Num of old conv output", num)
         return tf.add(activ(tf.matmul(input_tensor, weight) + bias),weight1)
 
 def noactiv_linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0.0, old=None, is_dense=False):
@@ -215,13 +222,16 @@ def noactiv_linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0
 
         weight1 = np.zeros(shape=[n_hidden])
         weight1 = tf.convert_to_tensor(weight1, dtype=tf.float32)
+        num = 0
         if old:
+            print("use old noactiv_linear", weight.name)
             for parm in old:
+                num += 1
                 ww = tf.convert_to_tensor(parm[weight.name], dtype=tf.float32)
                 bb = tf.convert_to_tensor(parm[bias.name],dtype=tf.float32)
                 weight1 = tf.add((tf.matmul(input_tensor, ww) + bb),weight1)
                 # print(weight1)
-
+        print("Num of old conv output", num)
         return tf.add((tf.matmul(input_tensor, weight) + bias), weight1)
 
 def batch_to_seq(tensor_batch, n_batch, n_steps, flat=False):

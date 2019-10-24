@@ -20,6 +20,7 @@ from gym import spaces
 from utils import get_feature_space, get_action_space
 from tqdm import tqdm
 
+
 class PPO2(ActorCriticRLModel):
     """
     Proximal Policy Optimization algorithm (GPU version).
@@ -119,7 +120,8 @@ class PPO2(ActorCriticRLModel):
             return policy.obs_ph, self.action_ph, policy.policy
         return policy.obs_ph, self.action_ph, policy.deterministic_action
 
-    def setup_model(self,old = None):
+    def setup_model(self, old=None):
+        print("Init a new network")
         with SetVerbosity(self.verbose):
 
             assert issubclass(self.policy, ActorCriticPolicy), "Error: the input policy for the PPO2 model must be " \
@@ -139,19 +141,19 @@ class PPO2(ActorCriticRLModel):
                 n_batch_step = None
                 n_batch_train = None
                 if issubclass(self.policy, RecurrentActorCriticPolicy):
-                    assert self.n_envs % self.nminibatches == 0, "For recurrent policies, "\
-                        "the number of environments run in parallel should be a multiple of nminibatches."
+                    assert self.n_envs % self.nminibatches == 0, "For recurrent policies, " \
+                                                                 "the number of environments run in parallel should be a multiple of nminibatches."
                     n_batch_step = self.n_envs
                     n_batch_train = self.n_batch // self.nminibatches
 
                 act_model = self.policy(self.sess, self.observation_space, self.action_space, self.n_envs, 1,
-                                        n_batch_step, reuse=False,old=old,**self.policy_kwargs)
+                                        n_batch_step, reuse=False, old=old, **self.policy_kwargs)
                 # print(len(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model')))
                 with tf.variable_scope("train_model", reuse=True,
                                        custom_getter=tf_util.outer_scope_getter("train_model")):
                     train_model = self.policy(self.sess, self.observation_space, self.action_space,
                                               self.n_envs // self.nminibatches, self.n_steps, n_batch_train,
-                                              reuse=True,old=old, **self.policy_kwargs)
+                                              reuse=True, old=old, **self.policy_kwargs)
 
                 with tf.variable_scope("loss", reuse=False):
                     self.action_ph = train_model.pdtype.sample_placeholder([None], name="action_ph")
@@ -188,9 +190,8 @@ class PPO2(ActorCriticRLModel):
                         # Clip the different between old and new value
                         # NOTE: this depends on the reward scaling
                         vpred_clipped = self.old_vpred_ph + \
-                            tf.clip_by_value(train_model.value_flat - self.old_vpred_ph,
-                                             - self.clip_range_vf_ph, self.clip_range_vf_ph)
-
+                                        tf.clip_by_value(train_model.value_flat - self.old_vpred_ph,
+                                                         - self.clip_range_vf_ph, self.clip_range_vf_ph)
 
                     vf_losses1 = tf.square(vpred - self.rewards_ph)
                     vf_losses2 = tf.square(vpred_clipped - self.rewards_ph)
@@ -326,27 +327,15 @@ class PPO2(ActorCriticRLModel):
         return policy_loss, value_loss, policy_entropy, approxkl, clipfrac
 
     def learn(self, total_timesteps, callback=None, seed=None, log_interval=1, tb_log_name="PPO2",
-              reset_num_timesteps=True, env=None, using_PGN=False, save_old =False, gamma=0.99, n_steps=128,
-              ent_coef=0.01, learning_rate=2.5e-4, vf_coef=0.5,max_grad_norm=0.5, lam=0.95, nminibatches=4,
-              noptepochs=4, cliprange=0.2, cliprange_vf=None,):
-        # Using new params
-        # self.learning_rate = learning_rate
-        # self.cliprange = cliprange
-        # self.cliprange_vf = cliprange_vf
-        # self.n_steps = n_steps
-        # self.ent_coef = ent_coef
-        # self.vf_coef = vf_coef
-        # self.max_grad_norm = max_grad_norm
-        # self.gamma = gamma
-        # self.lam = lam
-        # self.nminibatches = nminibatches
-        # self.noptepochs = noptepochs
-        # Init env
+              reset_num_timesteps=True, env=None, using_PGN=False, save_old=False, gamma=0.99, n_steps=128):
+
         self.init_env(env=env)
 
         # MOD: Use new policy
         if using_PGN:
-            print("Using PGN",using_PGN)
+            print("Using PGN", using_PGN)
+            print("Num of old networks", len(self.old_params))
+            print("Num of parms", len(self.old_params[0]))
             self.setup_model(old=self.old_params)
 
         # Transform to callable if needed
@@ -490,7 +479,6 @@ class PPO2(ActorCriticRLModel):
         }
 
         params_to_save = self.get_parameters()
-
         self._save_to_file(save_path, data=data, params=params_to_save, cloudpickle=cloudpickle)
 
     def init_env(self, env=None):
@@ -501,7 +489,7 @@ class PPO2(ActorCriticRLModel):
         :param env:
         :return:
         """
-        self.env=env
+        self.env = env
         if env is not None:
             if isinstance(env, str):
                 if self.verbose >= 1:
@@ -526,6 +514,7 @@ class PPO2(ActorCriticRLModel):
                 self.n_envs = 1
 
             print("INIT ENV self.n_envs", self.n_envs)
+
 
 class Runner(AbstractEnvRunner):
     def __init__(self, *, env, model, n_steps, gamma, lam):
@@ -660,5 +649,3 @@ def safe_mean(arr):
     :return: (float)
     """
     return np.nan if len(arr) == 0 else np.mean(arr)
-
-

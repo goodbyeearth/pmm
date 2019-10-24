@@ -224,7 +224,7 @@ class BaseRLModel(ABC):
         pass
 
     def pretrain(self, dataset, n_epochs=10, learning_rate=1e-4,
-                 adam_epsilon=1e-8, val_interval=None,save_index = None):
+                 adam_epsilon=1e-8, val_interval=None):
         """
         Pretrain a model using behavior cloning:
         supervised learning given an expert dataset.
@@ -291,7 +291,7 @@ class BaseRLModel(ABC):
                 train_loss += train_loss_
 
             train_loss /= len(dataset.train_loader)
-            if self.verbose > 0 and (epoch_idx + 1) % val_interval == 0:
+            if self.verbose > 0 and (epoch_idx + 1) % 10 == 0:
                 val_loss = 0.0
                 # Full pass on the validation set
                 for _ in range(len(dataset.val_loader)):
@@ -304,10 +304,24 @@ class BaseRLModel(ABC):
                 if self.verbose > 0:
                     print("Training loss: {:.6f}, Validation loss: {:.6f}".format(train_loss, val_loss))
                     print()
-            if save_index is not None:
-                if (epoch_idx + 1) % 20 == 0:
-                    print("Save pretrain model",epoch_idx)
-                    self.save('models/pretrain/'+str(save_index)+'_'+str(epoch_idx)+'.zip')
+
+                # Save
+                len_parm = len(self.get_parameters())
+                print('Len of network params', len_parm)
+                params_to_old = self.get_parameters()
+                self.old_params = []
+                old = {}
+                print("Save pretrain params")
+                for _ in range(len_parm):
+                    key, val = params_to_old.popitem()
+                    old[key] = val
+                    # print(key,val.shape)
+                self.old_params.append(old)
+                del  params_to_old
+
+                print("Save pretrain model", epoch_idx + 1)
+                self.save('models/prertain/v0_BC' + '_' + str(epoch_idx + 1) + '.zip')
+                print("Now we have %d networks" % len(self.old_params))
             # Free memory
             del expert_obs, expert_actions
         # Record old params

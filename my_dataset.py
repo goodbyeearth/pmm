@@ -14,22 +14,22 @@ def merge_data(dir_path):
     files_list = os.listdir(dir_path)
     obs = []
     actions = []
-    f_name =files_list[0]
-    start = time.time()
-    f_path = dir_path + f_name
-    sub_data = np.load(f_path, allow_pickle=True)
-
-    actions.extend(sub_data['actions'])
-    obs.extend(sub_data['obs'])
-    end = time.time()
-    print(f_name,end-start)
+    for f_name in files_list:
+        start = time.time()
+        f_path = dir_path + f_name
+        sub_data = np.load(f_path, allow_pickle=True)
+        obs.extend(sub_data['obs'])
+        actions.extend(sub_data['actions'])
+        del sub_data
+        end = time.time()
+        print(f_name,end-start)
 
     ob = []
     for o in obs:
         o = featurize(o)
         ob.append(o)
     obs = np.array(ob)
-
+    del ob
     actions=np.array(actions)
     actions.reshape(-1,1)
 
@@ -70,8 +70,8 @@ class ExpertDataset(object):
         if traj_data is None and expert_path is None:
             raise ValueError("Must specify one of 'traj_data' or 'expert_path'")
         if traj_data is None:
-            traj_data = np.load(expert_path, allow_pickle=True)
-            # traj_data = merge_data(expert_path)
+            # traj_data = np.load(expert_path, allow_pickle=True)
+            traj_data = merge_data(expert_path)
 
         if verbose > 0:
             for key, val in traj_data.items():
@@ -221,23 +221,25 @@ class DataLoader(object):
             self.n_minibatches += 1
         self.batch_size = batch_size
 
-        _obs = []
-        for ob in observations:
-            _obs.append(featurize(ob))
-        _observations = np.array(_obs,np.float32)
-        del _obs
-        print(_observations.shape)
-        self.observations = _observations
-        del _observations
+        # _obs = []
+        # for ob in observations:
+        #     _obs.append(featurize(ob))
+        # _observations = np.array(_obs,np.float32)
+        # del _obs
+        # print(_observations.shape)
+        # self.observations = _observations
+        # del _observations
+        #
+        # _actions = np.array(actions,dtype=np.float32)
+        # _actions.shape=(-1,1)
+        # print(_actions.shape)
+        # self.actions = _actions
+        # del _actions
 
-        _actions = np.array(actions,dtype=np.float32)
-        _actions.shape=(-1,1)
-        print(_actions.shape)
-        self.actions = _actions
-        del _actions
-
-        # self.observations = observations
-        # self.actions = actions
+        self.observations = observations
+        del observations
+        self.actions = actions
+        del actions
 
         self.shuffle = shuffle
         self.queue = Queue(max_queue_len)
