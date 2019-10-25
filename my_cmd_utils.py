@@ -11,7 +11,6 @@ def my_arg_parser():
     parser.add_argument('--pre_train', help='监督学习训练', default=False, action='store_true')
     parser.add_argument('--play', help='跑训练好的算法', default=False, action='store_true')
     parser.add_argument('--using_PGN', help='新建网络', default=False, action='store_true')
-    parser.add_argument('--save_old', help='保存这次的训练参数', default=False, action='store_true')
     parser.add_argument('--evaluate', help='保存这次的训练参数', default=False, action='store_true')
 
     parser.add_argument('--env', help='环境名称', type=str, default='PommeRadioCompetition-v2')

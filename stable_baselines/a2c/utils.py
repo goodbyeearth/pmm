@@ -10,7 +10,6 @@ def sample(logits):
     Creates a sampling Tensor for non deterministic policies
     when using categorical distribution.
     It uses the Gumbel-max trick: http://amid.fish/humble-gumbel
-
     :param logits: (TensorFlow Tensor) The input probability for each action
     :return: (TensorFlow Tensor) The sampled action
     """
@@ -21,7 +20,6 @@ def sample(logits):
 def calc_entropy(logits):
     """
     Calculates the entropy of the output values of the network
-
     :param logits: (TensorFlow Tensor) The input probability for each action
     :return: (TensorFlow Tensor) The Entropy of the output values of the network
     """
@@ -36,7 +34,6 @@ def calc_entropy(logits):
 def calc_entropy_softmax(action_proba):
     """
     Calculates the softmax entropy of the output values of the network
-
     :param action_proba: (TensorFlow Tensor) The input probability for each action
     :return: (TensorFlow Tensor) The softmax entropy of the output values of the network
     """
@@ -46,7 +43,6 @@ def calc_entropy_softmax(action_proba):
 def mse(pred, target):
     """
     Returns the Mean squared error between prediction and target
-
     :param pred: (TensorFlow Tensor) The predicted value
     :param target: (TensorFlow Tensor) The target value
     :return: (TensorFlow Tensor) The Mean squared error between prediction and target
@@ -57,7 +53,6 @@ def mse(pred, target):
 def ortho_init(scale=1.0):
     """
     Orthogonal initialization for the policy weights
-
     :param scale: (float) Scaling factor for the weights.
     :return: (function) an initialization function for the weights
     """
@@ -65,12 +60,10 @@ def ortho_init(scale=1.0):
     # _ortho_init(shape, dtype, partition_info=None)
     def _ortho_init(shape, *_, **_kwargs):
         """Intialize weights as Orthogonal matrix.
-
         Orthogonal matrix initialization [1]_. For n-dimensional shapes where
         n > 2, the n-1 trailing axes are flattened. For convolutional layers, this
         corresponds to the fan-in, so this makes the initialization usable for
         both dense and convolutional layers.
-
         References
         ----------
         .. [1] Saxe, Andrew M., James L. McClelland, and Surya Ganguli.
@@ -78,7 +71,6 @@ def ortho_init(scale=1.0):
                linear
         """
         # lasagne ortho init for tf
-        activ = tf.nn.relu
         shape = tuple(shape)
         if len(shape) == 2:
             flat_shape = shape
@@ -90,16 +82,15 @@ def ortho_init(scale=1.0):
         u, _, v = np.linalg.svd(gaussian_noise, full_matrices=False)
         weights = u if u.shape == flat_shape else v  # pick the one with the correct shape
         weights = weights.reshape(shape)
-        return activ((scale * weights[:shape[0], :shape[1]]).astype(np.float32))
+        return (scale * weights[:shape[0], :shape[1]]).astype(np.float32)
 
     return _ortho_init
 
 
 def conv(input_tensor, scope, *, n_filters, filter_size, stride,
-         pad='VALID', init_scale=1.0, data_format='NHWC', one_dim_bias=False,old=None):
+         pad='VALID', init_scale=1.0, data_format='NHWC', one_dim_bias=False):
     """
     Creates a 2d convolutional layer for TensorFlow
-
     :param input_tensor: (TensorFlow Tensor) The input tensor for the convolution
     :param scope: (str) The TensorFlow variable scope
     :param n_filters: (int) The number of filters
@@ -137,33 +128,14 @@ def conv(input_tensor, scope, *, n_filters, filter_size, stride,
     with tf.variable_scope(scope):
         weight = tf.get_variable("w", wshape, initializer=ortho_init(init_scale))
         bias = tf.get_variable("b", bias_var_shape, initializer=tf.constant_initializer(0.0))
-
-        weight1 = np.zeros(shape=bshape)
-        weight1 = tf.convert_to_tensor(weight1,dtype=tf.float32)
-        activ = tf.nn.relu
-        num = 0
-        # print(bshape)
-        if old:
-            for parm in old:
-                num += 1
-                print("use old conv", weight.name)
-                ww = tf.convert_to_tensor(parm[weight.name], dtype=tf.float32)
-                bb = tf.convert_to_tensor(parm[bias.name],dtype=tf.float32)
-                if not one_dim_bias and data_format == 'NHWC':
-                    bb = tf.reshape(bias, bshape)
-                weight1 = tf.add(activ(bb + tf.nn.conv2d(input_tensor, ww, strides=strides, padding=pad, data_format=data_format)),weight1)
-                # print(weight1)
-        print("Num of old conv output",num)
         if not one_dim_bias and data_format == 'NHWC':
             bias = tf.reshape(bias, bshape)
+        return bias + tf.nn.conv2d(input_tensor, weight, strides=strides, padding=pad, data_format=data_format)
 
-        return tf.add(activ(bias + tf.nn.conv2d(input_tensor, weight, strides=strides, padding=pad, data_format=data_format)),weight1)
 
-
-def linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0.0, old=None, is_dense=False):
+def linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0.0):
     """
     Creates a fully connected layer for TensorFlow
-
     :param input_tensor: (TensorFlow Tensor) The input tensor for the fully connected layer
     :param scope: (str) The TensorFlow variable scope
     :param n_hidden: (int) The number of hidden neurons
@@ -172,36 +144,62 @@ def linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0.0, old=
     :return: (TensorFlow Tensor) fully connected layer
     """
     with tf.variable_scope(scope):
-        if is_dense:
-            w = 'kernel'
-            b = 'bias'
-        else:
-            w = 'w'
-            b = 'b'
         n_input = input_tensor.get_shape()[1].value
-        weight = tf.get_variable(w, [n_input, n_hidden], initializer=ortho_init(init_scale))
-        bias = tf.get_variable(b, [n_hidden], initializer=tf.constant_initializer(init_bias))
+        weight = tf.get_variable("w", [n_input, n_hidden], initializer=ortho_init(init_scale))
+        bias = tf.get_variable("b", [n_hidden], initializer=tf.constant_initializer(init_bias))
+        return tf.matmul(input_tensor, weight) + bias
 
-        weight1 = np.zeros(shape=[n_hidden])
-        weight1 = tf.convert_to_tensor(weight1, dtype=tf.float32)
-        # print(weight1)
-        activ = tf.nn.relu
-        num = 0
-        if old:
-            for parm in old:
-                num += 1
-                print("use old linear", weight.name)
-                ww = tf.convert_to_tensor(parm[weight.name], dtype=tf.float32)
-                bb = tf.convert_to_tensor(parm[bias.name],dtype=tf.float32)
-                weight1 = tf.add(activ(tf.matmul(input_tensor, ww) + bb),weight1)
-                # print(weight1)
-        print("Num of old linear output", num)
-        return tf.add(activ(tf.matmul(input_tensor, weight) + bias),weight1)
+def my_conv(input_tensor, scope, *, n_filters, filter_size, stride,
+         pad='VALID', init_scale=1.0, data_format='NHWC', one_dim_bias=False,ww=None,bb=None):
+    """
+    Creates a 2d convolutional layer for TensorFlow
+    :param input_tensor: (TensorFlow Tensor) The input tensor for the convolution
+    :param scope: (str) The TensorFlow variable scope
+    :param n_filters: (int) The number of filters
+    :param filter_size:  (Union[int, [int], tuple<int, int>]) The filter size for the squared kernel matrix,
+    or the height and width of kernel filter if the input is a list or tuple
+    :param stride: (int) The stride of the convolution
+    :param pad: (str) The padding type ('VALID' or 'SAME')
+    :param init_scale: (int) The initialization scale
+    :param data_format: (str) The data format for the convolution weights
+    :param one_dim_bias: (bool) If the bias should be one dimentional or not
+    :return: (TensorFlow Tensor) 2d convolutional layer
+    """
+    if isinstance(filter_size, list) or isinstance(filter_size, tuple):
+        assert len(filter_size) == 2, \
+            "Filter size must have 2 elements (height, width), {} were given".format(len(filter_size))
+        filter_height = filter_size[0]
+        filter_width = filter_size[1]
+    else:
+        filter_height = filter_size
+        filter_width = filter_size
+    """data 格式"""
+    if data_format == 'NHWC':
+        channel_ax = 3
+        strides = [1, stride, stride, 1]
+        bshape = [1, 1, 1, n_filters]
+    elif data_format == 'NCHW':
+        channel_ax = 1
+        strides = [1, 1, stride, stride]
+        bshape = [1, n_filters, 1, 1]
+    else:
+        raise NotImplementedError
+    bias_var_shape = [n_filters] if one_dim_bias else [1, n_filters, 1, 1]
+    n_input = input_tensor.get_shape()[channel_ax].value
+    wshape = [filter_height, filter_width, n_input, n_filters]
+    weight1 = tf.convert_to_tensor(ww, dtype=tf.float32)
+    bias1 = tf.convert_to_tensor(bb,dtype=tf.float32)
+    with tf.variable_scope(scope):
+        weight = tf.get_variable("w", initializer=weight1,trainable=False)
+        bias = tf.get_variable("b", initializer=bias1,trainable=False)
+        if not one_dim_bias and data_format == 'NHWC':
+            bias = tf.reshape(bias, bshape)
+        return bias + tf.nn.conv2d(input_tensor, weight, strides=strides, padding=pad, data_format=data_format)
 
-def noactiv_linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0.0, old=None, is_dense=False):
+
+def my_linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0.0,ww=None,bb=None):
     """
     Creates a fully connected layer for TensorFlow
-
     :param input_tensor: (TensorFlow Tensor) The input tensor for the fully connected layer
     :param scope: (str) The TensorFlow variable scope
     :param n_hidden: (int) The number of hidden neurons
@@ -210,35 +208,17 @@ def noactiv_linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0
     :return: (TensorFlow Tensor) fully connected layer
     """
     with tf.variable_scope(scope):
-        if is_dense:
-            w = 'kernel'
-            b = 'bias'
-        else:
-            w = 'w'
-            b = 'b'
-        n_input = input_tensor.get_shape()[1].value
-        weight = tf.get_variable(w, [n_input, n_hidden], initializer=ortho_init(init_scale))
-        bias = tf.get_variable(b, [n_hidden], initializer=tf.constant_initializer(init_bias))
+        weight1 = tf.convert_to_tensor(ww, dtype=tf.float32)
+        bias1 = tf.convert_to_tensor(bb, dtype=tf.float32)
+        # n_input = input_tensor.get_shape()[1].value
+        weight = tf.get_variable("w",  initializer=weight1,trainable=False)
+        bias = tf.get_variable("b",  initializer=bias1,trainable=False)
+        return tf.matmul(input_tensor, weight) + bias
 
-        weight1 = np.zeros(shape=[n_hidden])
-        weight1 = tf.convert_to_tensor(weight1, dtype=tf.float32)
-        num = 0
-        if old:
-            print("use old noactiv_linear")
-            print('-->',weight.name,bias.name)
-            for parm in old:
-                num += 1
-                ww = tf.convert_to_tensor(parm[weight.name], dtype=tf.float32)
-                bb = tf.convert_to_tensor(parm[bias.name],dtype=tf.float32)
-                weight1 = tf.add((tf.matmul(input_tensor, ww) + bb),weight1)
-                # print(weight1)
-        print("Num of old noactiv_linear output", num)
-        return tf.add((tf.matmul(input_tensor, weight) + bias), weight1)
 
 def batch_to_seq(tensor_batch, n_batch, n_steps, flat=False):
     """
     Transform a batch of Tensors, into a sequence of Tensors for recurrent policies
-
     :param tensor_batch: (TensorFlow Tensor) The input tensor to unroll
     :param n_batch: (int) The number of batch to run (n_envs * n_steps)
     :param n_steps: (int) The number of steps to run for each environment
@@ -255,7 +235,6 @@ def batch_to_seq(tensor_batch, n_batch, n_steps, flat=False):
 def seq_to_batch(tensor_sequence, flat=False):
     """
     Transform a sequence of Tensors, into a batch of Tensors for recurrent policies
-
     :param tensor_sequence: (TensorFlow Tensor) The input tensor to batch
     :param flat: (bool) If the input Tensor is flat
     :return: (TensorFlow Tensor) batch of Tensors for recurrent policies
@@ -272,7 +251,6 @@ def seq_to_batch(tensor_sequence, flat=False):
 def lstm(input_tensor, mask_tensor, cell_state_hidden, scope, n_hidden, init_scale=1.0, layer_norm=False):
     """
     Creates an Long Short Term Memory (LSTM) cell for TensorFlow
-
     :param input_tensor: (TensorFlow Tensor) The input tensor for the LSTM cell
     :param mask_tensor: (TensorFlow Tensor) The mask tensor for the LSTM cell
     :param cell_state_hidden: (TensorFlow Tensor) The state tensor for the LSTM cell
@@ -326,7 +304,6 @@ def lstm(input_tensor, mask_tensor, cell_state_hidden, scope, n_hidden, init_sca
 def _ln(input_tensor, gain, bias, epsilon=1e-5, axes=None):
     """
     Apply layer normalisation.
-
     :param input_tensor: (TensorFlow Tensor) The input tensor for the Layer normalization
     :param gain: (TensorFlow Tensor) The scale tensor for the Layer normalization
     :param bias: (TensorFlow Tensor) The bias tensor for the Layer normalization
@@ -345,7 +322,6 @@ def _ln(input_tensor, gain, bias, epsilon=1e-5, axes=None):
 def lnlstm(input_tensor, mask_tensor, cell_state, scope, n_hidden, init_scale=1.0):
     """
     Creates a LSTM with Layer Normalization (lnlstm) cell for TensorFlow
-
     :param input_tensor: (TensorFlow Tensor) The input tensor for the LSTM cell
     :param mask_tensor: (TensorFlow Tensor) The mask tensor for the LSTM cell
     :param cell_state: (TensorFlow Tensor) The state tensor for the LSTM cell
@@ -360,11 +336,9 @@ def lnlstm(input_tensor, mask_tensor, cell_state, scope, n_hidden, init_scale=1.
 def conv_to_fc(input_tensor):
     """
     Reshapes a Tensor from a convolutional network to a Tensor for a fully connected network
-
     :param input_tensor: (TensorFlow Tensor) The convolutional input tensor
     :return: (TensorFlow Tensor) The fully connected output tensor
     """
-    # print(input_tensor)
     n_hidden = np.prod([v.value for v in input_tensor.get_shape()[1:]])
     input_tensor = tf.reshape(input_tensor, [-1, n_hidden])
     return input_tensor
@@ -373,7 +347,6 @@ def conv_to_fc(input_tensor):
 def discount_with_dones(rewards, dones, gamma):
     """
     Apply the discount value to the reward, where the environment is not done
-
     :param rewards: ([float]) The rewards
     :param dones: ([bool]) Whether an environment is done or not
     :param gamma: (float) The discount value
@@ -389,7 +362,6 @@ def discount_with_dones(rewards, dones, gamma):
 def make_path(path):
     """
     For a given path, create the folders if they do not exist
-
     :param path: (str) The path
     :return: (bool) Whether or not it finished correctly
     """
@@ -399,7 +371,6 @@ def make_path(path):
 def constant(_):
     """
     Returns a constant value for the Scheduler
-
     :param _: ignored
     :return: (float) 1
     """
@@ -409,7 +380,6 @@ def constant(_):
 def linear_schedule(progress):
     """
     Returns a linear value for the Scheduler
-
     :param progress: (float) Current progress status (in [0, 1])
     :return: (float) 1 - progress
     """
@@ -419,7 +389,6 @@ def linear_schedule(progress):
 def middle_drop(progress):
     """
     Returns a linear value with a drop near the middle to a constant value for the Scheduler
-
     :param progress: (float) Current progress status (in [0, 1])
     :return: (float) 1 - progress if (1 - progress) >= 0.75 else 0.075
     """
@@ -432,7 +401,6 @@ def middle_drop(progress):
 def double_linear_con(progress):
     """
     Returns a linear value (x2) with a flattened tail for the Scheduler
-
     :param progress: (float) Current progress status (in [0, 1])
     :return: (float) 1 - progress*2 if (1 - progress*2) >= 0.125 else 0.125
     """
@@ -446,7 +414,6 @@ def double_linear_con(progress):
 def double_middle_drop(progress):
     """
     Returns a linear value with two drops near the middle to a constant value for the Scheduler
-
     :param progress: (float) Current progress status (in [0, 1])
     :return: (float) if 0.75 <= 1 - p: 1 - p, if 0.25 <= 1 - p < 0.75: 0.75, if 1 - p < 0.25: 0.125
     """
@@ -472,7 +439,6 @@ class Scheduler(object):
     def __init__(self, initial_value, n_values, schedule):
         """
         Update a value every iteration, with a specific curve
-
         :param initial_value: (float) initial value
         :param n_values: (int) the total number of iterations
         :param schedule: (function) the curve you wish to follow for your value
@@ -485,7 +451,6 @@ class Scheduler(object):
     def value(self):
         """
         Update the Scheduler, and return the current value
-
         :return: (float) the current value
         """
         current_value = self.initial_value * self.schedule(self.step / self.nvalues)
@@ -495,7 +460,6 @@ class Scheduler(object):
     def value_steps(self, steps):
         """
         Get a value for a given step
-
         :param steps: (int) The current number of iterations
         :return: (float) the value for the current number of iterations
         """
@@ -506,7 +470,6 @@ class EpisodeStats:
     def __init__(self, n_steps, n_envs):
         """
         Calculates the episode statistics
-
         :param n_steps: (int) The number of steps to run for each environment
         :param n_envs: (int) The number of environments
         """
@@ -521,7 +484,6 @@ class EpisodeStats:
     def feed(self, rewards, masks):
         """
         Update the latest reward and mask
-
         :param rewards: ([float]) The new rewards for the new step
         :param masks: ([float]) The new masks for the new step
         """
@@ -540,7 +502,6 @@ class EpisodeStats:
     def mean_length(self):
         """
         Returns the average length of each episode
-
         :return: (float)
         """
         if self.len_buffer:
@@ -551,7 +512,6 @@ class EpisodeStats:
     def mean_reward(self):
         """
         Returns the average reward of each episode
-
         :return: (float)
         """
         if self.rewbuffer:
@@ -564,7 +524,6 @@ class EpisodeStats:
 def get_by_index(input_tensor, idx):
     """
     Return the input tensor, offset by a certain value
-
     :param input_tensor: (TensorFlow Tensor) The input tensor
     :param idx: (int) The index offset
     :return: (TensorFlow Tensor) the offset tensor
@@ -580,7 +539,6 @@ def get_by_index(input_tensor, idx):
 def check_shape(tensors, shapes):
     """
     Verifies the tensors match the given shape, will raise an error if the shapes do not match
-
     :param tensors: ([TensorFlow Tensor]) The tensors that should be checked
     :param shapes: ([list]) The list of shapes for each tensor
     """
@@ -593,7 +551,6 @@ def check_shape(tensors, shapes):
 def avg_norm(tensor):
     """
     Return an average of the L2 normalization of the batch
-
     :param tensor: (TensorFlow Tensor) The input tensor
     :return: (TensorFlow Tensor) Average L2 normalization of the batch
     """
@@ -603,7 +560,6 @@ def avg_norm(tensor):
 def gradient_add(grad_1, grad_2, param, verbose=0):
     """
     Sum two gradients
-
     :param grad_1: (TensorFlow Tensor) The first gradient
     :param grad_2: (TensorFlow Tensor) The second gradient
     :param param: (TensorFlow parameters) The trainable parameters
@@ -625,7 +581,6 @@ def gradient_add(grad_1, grad_2, param, verbose=0):
 def q_explained_variance(q_pred, q_true):
     """
     Calculates the explained variance of the Q value
-
     :param q_pred: (TensorFlow Tensor) The predicted Q value
     :param q_true: (TensorFlow Tensor) The expected Q value
     :return: (TensorFlow Tensor) the explained variance of the Q value
@@ -639,7 +594,6 @@ def q_explained_variance(q_pred, q_true):
 def total_episode_reward_logger(rew_acc, rewards, masks, writer, steps):
     """
     calculates the cumulated episode reward, and prints to tensorflow log the output
-
     :param rew_acc: (np.array float) the total running reward
     :param rewards: (np.array float) the rewards
     :param masks: (np.array bool) the end of episodes

@@ -107,9 +107,7 @@ class PPO2(ActorCriticRLModel):
         self.action_space = get_action_space()
         self.n_envs = 1
         self.requires_vec_env = True
-        # self.MOD = 0
         self.old_params = []
-        # self.old_graph = None
 
         if _init_setup_model:
             self.setup_model()
@@ -120,7 +118,7 @@ class PPO2(ActorCriticRLModel):
             return policy.obs_ph, self.action_ph, policy.policy
         return policy.obs_ph, self.action_ph, policy.deterministic_action
 
-    def setup_model(self, old=None):
+    def setup_model(self):
         print("Init a new network")
         with SetVerbosity(self.verbose):
 
@@ -147,13 +145,13 @@ class PPO2(ActorCriticRLModel):
                     n_batch_train = self.n_batch // self.nminibatches
 
                 act_model = self.policy(self.sess, self.observation_space, self.action_space, self.n_envs, 1,
-                                        n_batch_step, reuse=False, old=old, **self.policy_kwargs)
+                                        n_batch_step, reuse=False, old_params=self.old_params, **self.policy_kwargs)
                 # print(len(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='model')))
                 with tf.variable_scope("train_model", reuse=True,
                                        custom_getter=tf_util.outer_scope_getter("train_model")):
                     train_model = self.policy(self.sess, self.observation_space, self.action_space,
                                               self.n_envs // self.nminibatches, self.n_steps, n_batch_train,
-                                              reuse=True, old=old, **self.policy_kwargs)
+                                              reuse=True, old_params=self.old_params, **self.policy_kwargs)
 
                 with tf.variable_scope("loss", reuse=False):
                     self.action_ph = train_model.pdtype.sample_placeholder([None], name="action_ph")
@@ -326,24 +324,50 @@ class PPO2(ActorCriticRLModel):
 
         return policy_loss, value_loss, policy_entropy, approxkl, clipfrac
 
+    def clear_old(self):
+        self.old_params = []
+
     def learn(self, total_timesteps, callback=None, seed=None, log_interval=1, tb_log_name="PPO2",
-              reset_num_timesteps=True, env=None, using_PGN=False, save_old=False, gamma=0.99, n_steps=128,
+              reset_num_timesteps=True, env=None, using_PGN=False, gamma=0.99, n_steps=128,
               tensorboard_log=None):
+
         if self.n_envs==1:
             old_nenvs = 1
+        else:
+            old_nenvs = 0
         self.init_env(env=env)
         if old_nenvs ==1 :
             print('old n_batch', self.n_batch)
             self.n_batch *= self.n_envs
         print('n_batch',self.n_batch)
+        print()
         self.tensorboard_log = tensorboard_log
         print("tensorboard_log", self.tensorboard_log)
-        # MOD: Use new policy
+        print()
+
+        # PGN MOD: Use new policy
         if using_PGN:
             print("Using PGN", using_PGN)
-            print("Num of old networks", len(self.old_params))
+            print("Save the learned params")
+            print()
+            len_parm = len(self.get_parameters())
+            print('Len of network params', len_parm)
+            params_to_old = self.get_parameters()
+            old = {}
+            for _ in range(len_parm):
+                key, val = params_to_old.popitem()
+                key = key[6:-2]
+                print(key)
+                old[key] = val
+                # print(key,val.shape)
+            self.old_params.append(old)
+            # print(self.old_params)
+            print()
+            print("Now we have %d networks" % len(self.old_params))
             print("Num of parms", len(self.old_params[0]))
-            self.setup_model(old=self.old_params)
+            print()
+            print("Now init a network")
+            self.setup_model()
 
         # Transform to callable if needed
         self.learning_rate = get_schedule_fn(self.learning_rate)
@@ -440,18 +464,18 @@ class PPO2(ActorCriticRLModel):
                     if callback(locals(), globals()) is False:
                         break
 
-            if save_old:
-                print("Save the learned params", save_old)
-                len_parm = len(self.get_parameters())
-                print('Len of network params', len_parm)
-                params_to_old = self.get_parameters()
-                old = {}
-                for _ in range(len_parm):
-                    key, val = params_to_old.popitem()
-                    old[key] = val
-                    # print(key,val.shape)
-                self.old_params.append(old)
-                print("Now we have %d networks" % len(self.old_params))
+            # if save_old:
+            #     print("Save the learned params", save_old)
+            #     len_parm = len(self.get_parameters())
+            #     print('Len of network params', len_parm)
+            #     params_to_old = self.get_parameters()
+            #     old = {}
+            #     for _ in range(len_parm):
+            #         key, val = params_to_old.popitem()
+            #         old[key] = val
+            #         # print(key,val.shape)
+            #     self.old_params.append(old)
+            #     print("Now we have %d networks" % len(self.old_params))
                 # print('model/pi/b:0',self.old_params[0]['model/pi/b:0'])
                 # print('model/vf/bias:0',self.old_params[0]['model/vf/bias:0'])
                 # print('model/pi/b:0', self.old_params[1]['model/pi/b:0'])

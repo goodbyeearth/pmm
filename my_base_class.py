@@ -306,36 +306,36 @@ class BaseRLModel(ABC):
                     print()
 
                 # Save
-                len_parm = len(self.get_parameters())
-                print('Len of network params', len_parm)
-                params_to_old = self.get_parameters()
-                self.old_params = []
-                old = {}
-                print("Save pretrain params")
-                for _ in range(len_parm):
-                    key, val = params_to_old.popitem()
-                    old[key] = val
-                    # print(key,val.shape)
-                self.old_params.append(old)
-                del  params_to_old
+                # len_parm = len(self.get_parameters())
+                # print('Len of network params', len_parm)
+                # params_to_old = self.get_parameters()
+                # self.old_params = []
+                # old = {}
+                # print("Save pretrain params")
+                # for _ in range(len_parm):
+                #     key, val = params_to_old.popitem()
+                #     old[key] = val
+                #     # print(key,val.shape)
+                # self.old_params.append(old)
+                # del  params_to_old
 
                 print("Save pretrain model", epoch_idx + 1)
                 self.save('models/pretrain/v0_BC' + '_' + str(epoch_idx + 1) + '.zip')
-                print("Now we have %d networks" % len(self.old_params))
+                # print("Now we have %d networks" % len(self.old_params))
             # Free memory
             del expert_obs, expert_actions
         # Record old params
-        len_parm = len(self.get_parameters())
-        print('Len of network params',len_parm)
-        params_to_old = self.get_parameters()
-        self.old_params = []
-        old = {}
-        print("Save pretrain params")
-        for _ in range(len_parm):
-            key, val = params_to_old.popitem()
-            old[key] = val
-            # print(key,val.shape)
-        self.old_params.append(old)
+        # len_parm = len(self.get_parameters())
+        # print('Len of network params',len_parm)
+        # params_to_old = self.get_parameters()
+        # self.old_params = []
+        # old = {}
+        # print("Save pretrain params")
+        # for _ in range(len_parm):
+        #     key, val = params_to_old.popitem()
+        #     old[key] = val
+        #     # print(key,val.shape)
+        # self.old_params.append(old)
         # print('model/pi/b:0', self.old_params[0]['model/pi/b:0'])
         # print('model/vf/bias:0', self.old_params[0]['model/vf/bias:0'])
 

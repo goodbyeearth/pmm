@@ -88,19 +88,21 @@ def train():
 
     if args.load_path:
         print("LOAD A MODEL FOR TRAIN FROM", args.load_path)
+        print()
         model = PPO2.load(args.load_path)
     else:
         print("INIT CONTINURAL PPO2")
+        print()
         model = PPO2(CustomPolicy, verbose=1, tensorboard_log=args.log_path)
 
     print("START TO TRAIN")
     print("USING ENVIRONMEN", args.env)
     print("TOTAL_TIMESTEPS =",total_timesteps)
     print("IS USING PGN",args.using_PGN)
-    print("IS SAVE OLD PARAMS",args.save_old)
+    print()
 
     model.learn(total_timesteps=total_timesteps,
-                seed=args.seed, env=env, using_PGN=args.using_PGN, save_old=args.save_old,tensorboard_log=args.log_path)
+                seed=args.seed, env=env, using_PGN=args.using_PGN, tensorboard_log=args.log_path)
 
     if args.save_path:
         print("SAVE LEARNED MODEL", args.save_path)
