@@ -363,7 +363,7 @@ class PPO2(ActorCriticRLModel):
             self.old_params.append(old)
             # print(self.old_params)
             print()
-            print("Now we have %d networks" % len(self.old_params))
+            print("Now we have %d old networks" % len(self.old_params))
             print("Num of parms", len(self.old_params[0]))
             print()
             print("Now init a network")
@@ -510,6 +510,8 @@ class PPO2(ActorCriticRLModel):
         }
 
         params_to_save = self.get_parameters()
+        print("Save the current network, len of trainable params is",len(params_to_save))
+        print("Save %d old networks" % len(self.old_params))
         self._save_to_file(save_path, data=data, params=params_to_save, cloudpickle=cloudpickle)
 
     def init_env(self, env=None):

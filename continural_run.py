@@ -53,21 +53,23 @@ def make_envs(env_id):
 
 def _pretrain(expert_path,n_epochs):
     if args.load_path:
-        print("LOAD MODEL FROM",args.load_path)
+        print("Load model from",args.load_path)
         model = PPO2.load(args.load_path)
     else:
         # Init a Continural PPO2 model
-        print("INIT CONTINURAL PPO2")
+        print("Init a pgn PPO2")
         model = PPO2(CustomPolicy, verbose=1, tensorboard_log=args.log_path)
 
-    print("IN PRETRAIN")
+    print("In pretrain")
+    print()
     from my_dataset import ExpertDataset
     # assert args.expert_path is not None
 
     # load dataset
-    print("LOAD DATASET FROM",expert_path)
-
-    print("RUN PRETRAIN n_epochs =", n_epochs)
+    print("Load dataset from",expert_path)
+    print()
+    print("Run pretrain n_epochs =", n_epochs)
+    print()
     dataset = ExpertDataset(expert_path=expert_path)  # traj_limitation 只能取默认-1
     model.pretrain(dataset=dataset, n_epochs=n_epochs)
     del dataset
@@ -327,7 +329,7 @@ if __name__ == '__main__':
 
     # Pretrain
     if args.pre_train:
-        _pretrain('dataset/v0/',10000)
+        _pretrain('dataset/red/',10000)
 
     # Train
     if args.train:
