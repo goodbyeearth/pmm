@@ -50,7 +50,7 @@ class CustomPolicy(ActorCriticPolicy):
             vf_latent = vf_h
 
             self._proba_distribution, self._policy, self.q_value = \
-                self.pdtype.proba_distribution_from_latent(pi_latent, vf_latent, init_scale=0.01)
+                self.pdtype.proba_distribution_from_latent(pi_latent, vf_latent, init_scale=0.01,old=old)
 
         self._value_fn = value_fn
         self._setup_init()

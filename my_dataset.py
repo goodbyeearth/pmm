@@ -7,9 +7,11 @@ import numpy as np
 from joblib import Parallel, delayed
 
 from stable_baselines import logger
-from utils import featurize,get_feature_space
+from utils import featurize, get_feature_space
 import os
 import time
+
+
 def merge_data(dir_path):
     files_list = os.listdir(dir_path)
     obs = []
@@ -22,24 +24,28 @@ def merge_data(dir_path):
         actions.extend(sub_data['actions'])
         del sub_data
         end = time.time()
-        print(f_name,end-start)
-
+        print(f_name, end - start)
+    start = time.time()
     ob = []
     for o in obs:
         o = featurize(o)
         ob.append(o)
     obs = np.array(ob)
     del ob
-    actions=np.array(actions)
-    actions.reshape(-1,1)
-
+    actions = np.array(actions)
+    actions = actions.reshape(-1, 1)
+    end = time.time()
+    print("Featurize", end - start)
     numpy_dict = {
         'actions': actions,
         'obs': obs,
     }
-    for key, val in numpy_dict:
-        print(key,val.shape)
-    return  numpy_dict
+    del obs
+    del actions
+    for key, val in numpy_dict.items():
+        print(key, val.shape)
+    return numpy_dict
+
 
 class ExpertDataset(object):
     """
@@ -75,7 +81,7 @@ class ExpertDataset(object):
 
         if verbose > 0:
             for key, val in traj_data.items():
-                print(key, val.shape)
+                print("traj_data", key, val.shape)
 
         # Array of bool where episode_starts[i] = True for each new episode
         # episode_starts = traj_data['episode_starts']
@@ -146,7 +152,6 @@ class ExpertDataset(object):
         logger.log("Total trajectories: {}".format(self.num_traj))
         logger.log("Total transitions: {}".format(self.num_transition))
 
-
     def get_next_batch(self, split=None):
         """
         Get the batch from the dataset.
@@ -167,7 +172,6 @@ class ExpertDataset(object):
         except StopIteration:
             dataloader = iter(dataloader)
             return next(dataloader)
-
 
     def plot(self):
         """
@@ -237,9 +241,7 @@ class DataLoader(object):
         # del _actions
 
         self.observations = observations
-        del observations
         self.actions = actions
-        del actions
 
         self.shuffle = shuffle
         self.queue = Queue(max_queue_len)
@@ -307,10 +309,8 @@ class DataLoader(object):
                     np.random.shuffle(self.indices)
 
                 for minibatch_idx in range(self.n_minibatches):
-
                     self.start_idx = minibatch_idx * self.batch_size
                     obs = self.observations[self._minibatch_indices]
-
 
                     actions = self.actions[self._minibatch_indices]
 

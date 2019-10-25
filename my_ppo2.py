@@ -327,10 +327,17 @@ class PPO2(ActorCriticRLModel):
         return policy_loss, value_loss, policy_entropy, approxkl, clipfrac
 
     def learn(self, total_timesteps, callback=None, seed=None, log_interval=1, tb_log_name="PPO2",
-              reset_num_timesteps=True, env=None, using_PGN=False, save_old=False, gamma=0.99, n_steps=128):
-
+              reset_num_timesteps=True, env=None, using_PGN=False, save_old=False, gamma=0.99, n_steps=128,
+              tensorboard_log=None):
+        if self.n_envs==1:
+            old_nenvs = 1
         self.init_env(env=env)
-
+        if old_nenvs ==1 :
+            print('old n_batch', self.n_batch)
+            self.n_batch *= self.n_envs
+        print('n_batch',self.n_batch)
+        self.tensorboard_log = tensorboard_log
+        print("tensorboard_log", self.tensorboard_log)
         # MOD: Use new policy
         if using_PGN:
             print("Using PGN", using_PGN)

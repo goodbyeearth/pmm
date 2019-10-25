@@ -7,3 +7,5 @@ from .player_agent_blocking import PlayerAgentBlocking
 from .random_agent import RandomAgent
 from .simple_agent import SimpleAgent
 from .tensorforce_agent import TensorForceAgent
+from .simple_nobomb_agent import SimpleNoBombAgent
+from .random1_agent import RandomAgent1

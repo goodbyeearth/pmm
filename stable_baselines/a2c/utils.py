@@ -195,7 +195,7 @@ def linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0.0, old=
                 bb = tf.convert_to_tensor(parm[bias.name],dtype=tf.float32)
                 weight1 = tf.add(activ(tf.matmul(input_tensor, ww) + bb),weight1)
                 # print(weight1)
-        print("Num of old conv output", num)
+        print("Num of old linear output", num)
         return tf.add(activ(tf.matmul(input_tensor, weight) + bias),weight1)
 
 def noactiv_linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0.0, old=None, is_dense=False):
@@ -224,14 +224,15 @@ def noactiv_linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0
         weight1 = tf.convert_to_tensor(weight1, dtype=tf.float32)
         num = 0
         if old:
-            print("use old noactiv_linear", weight.name)
+            print("use old noactiv_linear")
+            print('-->',weight.name,bias.name)
             for parm in old:
                 num += 1
                 ww = tf.convert_to_tensor(parm[weight.name], dtype=tf.float32)
                 bb = tf.convert_to_tensor(parm[bias.name],dtype=tf.float32)
                 weight1 = tf.add((tf.matmul(input_tensor, ww) + bb),weight1)
                 # print(weight1)
-        print("Num of old conv output", num)
+        print("Num of old noactiv_linear output", num)
         return tf.add((tf.matmul(input_tensor, weight) + bias), weight1)
 
 def batch_to_seq(tensor_batch, n_batch, n_steps, flat=False):

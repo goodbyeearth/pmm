@@ -320,7 +320,7 @@ class BaseRLModel(ABC):
                 del  params_to_old
 
                 print("Save pretrain model", epoch_idx + 1)
-                self.save('models/prertain/v0_BC' + '_' + str(epoch_idx + 1) + '.zip')
+                self.save('models/pretrain/v0_BC' + '_' + str(epoch_idx + 1) + '.zip')
                 print("Now we have %d networks" % len(self.old_params))
             # Free memory
             del expert_obs, expert_actions
@@ -886,8 +886,8 @@ class ActorCriticRLModel(BaseRLModel):
         model.__dict__.update(data)
         model.__dict__.update(kwargs)
         # model.set_env(env)
+        # model.setup_model(data['old_params'])
         model.setup_model()
-
         model.load_parameters(params)
 
         return model
@@ -961,7 +961,7 @@ class OffPolicyRLModel(BaseRLModel):
         model.__dict__.update(data)
         model.__dict__.update(kwargs)
         # model.set_env(env)
-        model.setup_model()
+        model.setup_model(old = data['old_params'])
 
         model.load_parameters(params)
 

@@ -14,18 +14,15 @@ from my_policies import CustomPolicy
 
 from my_ppo2 import PPO2
 from utils import featurize
-
+import numpy as np
+import time
 # TODO：加seed
 def make_envs(env_id):
     def _thunk():
         agent_list = [
-            # agents.SimpleAgent(),
-            # agents.SimpleAgent(),
-            # agents.SimpleAgent(),
-            # agents.SimpleAgent()
-            agents.RandomAgent(),
             agents.SimpleAgent(),
-            agents.RandomAgent(),
+            agents.SimpleAgent(),
+            agents.SimpleAgent(),
             agents.SimpleAgent()
         ]
         env = pommerman.make(env_id, agent_list)
@@ -92,6 +89,9 @@ def train():
     if args.load_path:
         print("LOAD A MODEL FOR TRAIN FROM", args.load_path)
         model = PPO2.load(args.load_path)
+    else:
+        print("INIT CONTINURAL PPO2")
+        model = PPO2(CustomPolicy, verbose=1, tensorboard_log=args.log_path)
 
     print("START TO TRAIN")
     print("USING ENVIRONMEN", args.env)
@@ -100,7 +100,7 @@ def train():
     print("IS SAVE OLD PARAMS",args.save_old)
 
     model.learn(total_timesteps=total_timesteps,
-                seed=args.seed, env=env, using_PGN=args.using_PGN, save_old=args.save_old)
+                seed=args.seed, env=env, using_PGN=args.using_PGN, save_old=args.save_old,tensorboard_log=args.log_path)
 
     if args.save_path:
         print("SAVE LEARNED MODEL", args.save_path)
@@ -118,35 +118,43 @@ def play(train_idx):
     # print(pommerman.REGISTRY)
     print('LOAD MODEL FROM', args.load_path)
     agent_list = [
-        # agents.SimpleNoBombAgent(),
+        agents.SimpleNoBombAgent(),
         agents.SimpleAgent(),
-        agents.SimpleAgent(),
+        # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12345),
         agents.SimpleAgent(),
         agents.SimpleAgent(),
         # agents.PlayerAgent(agent_control="arrows"),
-        # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12346),
-        # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12345),
-        # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12344),
-        # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12343),
+        # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12347),
     ]
     env = pommerman.make('PommeRadioCompetition-v2',agent_list)
 
     # Index of test agent
     # env.set_training_agent(train_idx)
-
+    print("train_idx", train_idx)
     for episode in range(100):
         obs = env.reset()
         done = False
         while not done:
-            feature = featurize(obs[train_idx])
-            action, _states = model.predict(feature)
-            print(action)
+            n0, obs[train_idx[0]] = state_map(obs[train_idx[0]])
+            n1, obs[train_idx[1]] = state_map(obs[train_idx[1]])
+            feature0 = featurize(obs[train_idx[0]])
+            feature1 = featurize(obs[train_idx[1]])
+            action0, _states = model.predict(feature0)
+            # print(action0)
+            action1, _states = model.predict(feature1)
+            action0 = act_back(n0, action0)
+            action1 = act_back(n1, action1)
             all_actions = env.act(obs)
-            all_actions[train_idx] = int(action)
+            all_actions[train_idx[0]] = int(action0)
+            all_actions[train_idx[1]] = int(action1)
+            # all_actions[(train_idx + 1) % 4] = 0
+            # all_actions[(train_idx + 3) % 4] = 0
             obs, rewards, done, info = env.step(all_actions)
             env.render()
-            if not env._agents[train_idx].is_alive:
-                done = True
+            # if not env._agents[train_idx].is_alive:
+            #     done = True
+        print(info)
+
 def _evaluate(train_idx,n_episode):
     if not args.load_path:
         print('PLAY NEED --load_path')
@@ -163,39 +171,150 @@ def _evaluate(train_idx,n_episode):
         agents.SimpleAgent(),
         agents.SimpleAgent(),
         # agents.PlayerAgent(agent_control="arrows"),
-        # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12346),
-        # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12345),
-        # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12344),
         # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12343),
     ]
     env = pommerman.make('PommeRadioCompetition-v2', agent_list)
+    print("train_idx", train_idx)
     win = 0
     tie = 0
     loss = 0
     for episode in range(n_episode):
         obs = env.reset()
         done = False
+        start = time.time()
         while not done:
-            feature = featurize(obs[train_idx])
-            action, _states = model.predict(feature)
+            n0, obs[train_idx[0]] = state_map(obs[train_idx[0]])
+            n1, obs[train_idx[1]] = state_map(obs[train_idx[1]])
+            feature0 = featurize(obs[train_idx[0]])
+            feature1 = featurize(obs[train_idx[1]])
+            action0, _states = model.predict(feature0)
+            action1, _states = model.predict(feature1)
+            action0 = act_back(n0, action0)
+            action1 = act_back(n1, action1)
             all_actions = env.act(obs)
-            # print(train_idx)
-            # print(all_actions)
-            # print(int(action))
-            all_actions[train_idx] = int(action)
+            all_actions[train_idx[0]] = int(action0)
+            all_actions[train_idx[1]] = int(action1)
+            # all_actions[(train_idx + 1) % 4] = 0
+            # all_actions[(train_idx + 3) % 4] = 0
             obs, rewards, done, info = env.step(all_actions)
             # env.render()
-        if rewards[train_idx] == 1:
+        if rewards[train_idx[0]] == 1:
             win += 1
-        elif rewards[train_idx] == -1:
+        elif rewards[train_idx[0]] == -1:
             loss += 1
         else:
             tie += 1
-        if episode % 100 == 0:
+        end = time.time()
+        if (episode+1) % 100 == 0:
             print("win / tie / loss")
-            print(" %d  /  %d  /  %d " % (win,tie,loss))
+            print(" %d  /  %d  /  %d  win rate: %f  use time: %f" % (win,tie,loss,(win/(episode+1)),end-start))
     env.close()
 
+def obs_map(j,arr):
+    if j == 0:
+        # print(flip_right(arr))
+        return arr
+    if j == 1:
+        # print(flip_right(arr))
+        return flip_right(arr)
+    if j == 2:
+        # print(flip_right(arr))
+        return flip180(arr)
+    if j == 3:
+        # print(flip_right(arr))
+        return flip_left(arr)
+def act_map(j,act):
+    if j == 0:
+        return act
+    if j == 1:
+        return turn_right(act)
+    if j == 2:
+        return turn_180(act)
+    if j == 3:
+        return turn_left(act)
+def pos_map(j, pos):
+    if j == 0:
+        return pos
+    if j == 1:
+        return pos_right(pos)
+    if j == 2:
+        pos = pos_right(pos)
+        return pos_right(pos)
+    if j == 3:
+        return pos_left(pos)
+def flip180(arr):
+    new_arr = arr.reshape(arr.size)
+    new_arr = new_arr[::-1]
+    new_arr = new_arr.reshape(arr.shape)
+    # print("180")
+    return new_arr
+def flip_left(arr):
+    new_arr = np.transpose(arr)
+    new_arr = new_arr[::-1]
+    # print("left")
+    return new_arr
+def flip_right(arr):
+    new_arr = arr.reshape(arr.size)
+    new_arr = new_arr[::-1]
+    new_arr = new_arr.reshape(arr.shape)
+    new_arr = np.transpose(new_arr)[::-1]
+    # print("right")
+    return new_arr
+def turn_right(act):
+    map = [0,4,3,1,2,5]
+    return map[int(act)]
+def turn_left(act):
+    map = [0,3,4,2,1,5]
+    return map[int(act)]
+def turn_180(act):
+    map = [0,2,1,4,3,5]
+    return map[int(act)]
+def pos_right(pos):
+    x,y = pos
+    x = x-5
+    y = y-5
+    x1 = y
+    y1 = -x
+    x = x1+5
+    y = y1+5
+    return (x,y)
+def pos_left(pos):
+    x,y = pos
+    x = x-5
+    y = y-5
+    x1 = -y
+    y1 = x
+    x = x1+5
+    y = y1+5
+    return (x,y)
+def state_map(obs):
+    # print(obs)
+    n = obs['board'][obs['position']]
+    if n not in [10,11,12,13]:
+        return 0,obs
+    n -= 10
+    # print(n)
+    obs['board'] = obs_map(n, obs['board'])
+    obs['bomb_blast_strength'] = obs_map(n, obs['bomb_blast_strength'])
+    obs['bomb_life'] = obs_map(n, obs['bomb_life'])
+    # print(obs_map(n, obs['bomb_moving_direction']))
+    obs['bomb_moving_direction'] = obs_map(n, obs['bomb_moving_direction'])
+    # print(obs['bomb_moving_direction'])
+    for x in range(11):
+        for y in range(11):
+            obs['bomb_moving_direction'][(x, y)] = act_map(n,obs['bomb_moving_direction'][(x, y)])
+    obs['flame_life'] = obs_map(n, obs['flame_life'])
+    obs['position'] = pos_map(n, obs['position'])
+    return n,obs
+def act_back(n,act):
+    if n == 0:
+        return act
+    if n == 1:
+        return turn_left(act)
+    if n == 2:
+        return turn_180(act)
+    if n == 3:
+        return turn_right(act)
 
 if __name__ == '__main__':
     arg_parser = my_arg_parser()
@@ -214,8 +333,8 @@ if __name__ == '__main__':
 
     # Test
     if args.play:
-        play(0)
+        play((0,2))
     #
     # Evaluate
     if args.evaluate:
-        _evaluate(0,10000)
+        _evaluate((0,2),10000)
