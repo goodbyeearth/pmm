@@ -1,11 +1,12 @@
 import numpy as np
 from gym import spaces
+from tqdm import tqdm
 
-from utils import featurize, get_feature_space, get_action_space
 import random
 
 
 def generate_expert_traj_v1(env=None, agent_idx_list=None, save_path_list=None, n_episodes=100):
+    from utils import featurize, get_feature_space, get_action_space
     """获得所有回合的所有数据"""
     # Check
     assert isinstance(get_feature_space(), spaces.Box)
@@ -103,6 +104,7 @@ def generate_expert_traj_v1(env=None, agent_idx_list=None, save_path_list=None, 
 
 
 def generate_expert_traj_v2(env=None, agent_idx_list=None, save_path_list=None, n_episodes=50000):
+    from utils import featurize, get_feature_space, get_action_space
     """每回合抽取一条的数据"""
     # todo: episode_start 这条数据有问题，暂时别用
     # Check
@@ -211,6 +213,65 @@ def generate_expert_traj_v2(env=None, agent_idx_list=None, save_path_list=None, 
             print(key, val.shape)
         np.savez(save_path_list[i], **numpy_dict)
         print("以上数据写入完成。")
+        print("====================================")
+
+    env.close()
+
+
+def generate_expert_traj_v3(env=None, agent_idx_list=None, path_prefix=None, n_episodes=50, p_idx=None):
+    """每回合抽取一条的数据，不 featurize"""
+    # Check
+    assert env is not None
+    assert agent_idx_list is not None
+    assert path_prefix is not None
+    assert p_idx is not None
+
+    n_record = len(agent_idx_list)         # 同时收集数据的智能体数目
+
+    # 以下为最终保存的数据，每回合只取1条数据
+    actions_list = [[] for _ in range(n_record)]
+    observations_list = [[] for _ in range(n_record)]    # 保存处理后的 feature, 而不是 dict
+
+    # 以下暂时保存一个回合内的所有数据，回合结束将被清空
+    temp_actions_list = [[] for _ in range(n_record)]
+    temp_observations_list = [[] for _ in range(n_record)]  # 保存处理后的 feature, 而不是 dict
+
+    obs = env.reset()
+
+    for _ in tqdm(range(n_episodes)):
+        all_action = env.act(obs)
+        for i, agent_idx in zip(range(n_record), agent_idx_list):
+            if env._agents[agent_idx].is_alive:
+                temp_observations_list[i].append(obs[agent_idx])
+                temp_actions_list[i].append(all_action[agent_idx])
+
+        obs, reward, done, _ = env.step(all_action)    # obs 和 reward 均为长度为4的列表
+
+        if done:
+            obs = env.reset()
+            for i, agent_idx in zip(range(n_record), agent_idx_list):
+                # 一回合里提一条数据
+                sample_idx = random.randint(0, len(temp_actions_list[i])-1)
+                observations_list[i].append(temp_observations_list[i][sample_idx])
+                actions_list[i].append(temp_actions_list[i][sample_idx])
+
+                # 清空当前智能体在当前回合的所有数据
+                temp_observations_list[i] = []
+                temp_actions_list[i] = []
+
+    for i in range(n_record):
+        assert len(observations_list[i]) == len(actions_list[i])    # 确认一下
+
+    # 每个智能体的数据都包装成 numpy dict
+    print("all data will write into {} files".format(n_record))
+    for i in range(n_record):
+        numpy_dict = {
+            'actions': actions_list[i],
+            'obs': observations_list[i],
+        }
+        save_path = path_prefix + 'agent_' + str(i) + '/proc_' + str(p_idx) + '_epis_' + str(n_episodes)
+        np.savez(save_path, **numpy_dict)
+        print("data_{} saved into {}".format(i, save_path))
         print("====================================")
 
     env.close()

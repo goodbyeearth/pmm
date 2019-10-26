@@ -144,7 +144,7 @@ if __name__ == '__main__':
 
     # 爬取并存储专家数据
     if args.generate_data:
-        generate_expert_data(args.env, n_episodes=5000)
+        generate_expert_data(args.env, n_episodes=2)
 
     if args.merge_data:
         merge_data('./dataset_test/', './final_data_test/final_data')

@@ -1,4 +1,4 @@
-from my_record_expert import generate_expert_traj_v2
+from my_record_expert import generate_expert_traj_v3
 import pommerman
 from pommerman import agents
 from stable_baselines.common.vec_env import CloudpickleWrapper
@@ -43,23 +43,20 @@ def generate_expert_data(env_id, n_process=None, n_episodes=250):
     envs = [make_envs(env_id) for _ in range(n_process)]
     ps = []
     for i, env in zip(range(n_process), envs):
-        prefix_path = './dataset_test/e' + str(n_episodes) + '_p' + str(i) + '_a'
-        ps.append(multiprocessing.Process(target=worker, args=(CloudpickleWrapper(env), n_episodes, prefix_path)))
-    print('开始取数据，进程数量：', n_process)
+        prefix_path = './dataset_test/'
+        ps.append(multiprocessing.Process(target=worker, args=(CloudpickleWrapper(env), n_episodes, prefix_path, i)))
+    print('starting generating data...{} processes', n_process)
     for p in ps:
         p.start()
 
 
-def worker(env_fn_wrapper, n_episodes=100, prefix_path=None):
+def worker(env_fn_wrapper, n_episodes=100, prefix_path=None, p_idx=None):
     assert prefix_path is not None
     env = env_fn_wrapper.var()
     record_idx_list = [0, 1, 2, 3]
-
-    save_path_list = [prefix_path + str(idx) for idx in record_idx_list]
-
-    print('总回合数：{}, 目标智能体编号：{}'.format(n_episodes, record_idx_list))
+    print('{} episode, agent index: {}'.format(n_episodes, record_idx_list))
     # 开始爬取并存储数据
-    generate_expert_traj_v2(env, record_idx_list, save_path_list, n_episodes=n_episodes)
+    generate_expert_traj_v3(env, record_idx_list, prefix_path, n_episodes=n_episodes, p_idx=p_idx)
 
 
 def make_envs(env_id):
