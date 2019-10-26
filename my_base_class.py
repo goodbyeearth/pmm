@@ -320,7 +320,7 @@ class BaseRLModel(ABC):
                 # del  params_to_old
 
                 print("Save pretrain model", epoch_idx + 1)
-                self.save('models/pretrain/v0_BC' + '_' + str(epoch_idx + 1) + '.zip')
+                self.save('models/pretrain/v0_red_bc' + '_' + str(epoch_idx + 1) + '.zip')
                 # print("Now we have %d networks" % len(self.old_params))
             # Free memory
             del expert_obs, expert_actions

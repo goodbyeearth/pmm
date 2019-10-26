@@ -154,38 +154,31 @@ class CategoricalProbabilityDistributionType(ProbabilityDistributionType):
         old_pi = []
         for n in range(len(old_params)):
             param = old_params[n]
-            print('Use old model/pi/w & b')
-            old_l = my_linear(old_pi_fc[n], 'old_pi'+str(n), self.n_cat, init_scale=init_scale,
+            # print('Use old model/pi/w & b')
+            old_l = my_linear(old_pi_fc[n], 'old_pi'+str(n),
                             ww=param['pi/w'], bb=param['pi/b'])
-
-            old_pi.append(old_l)
-            print()
-        flag = True
-        for l in old_pi:
-            if flag:
-                sum_pi = l
-                flag = False
+            if n == 0:
+                sum_pi = old_l
             else:
-                sum_pi = tf.add(sum_pi, l)
+                sum_pi=tf.add(sum_pi,old_l)
+            old_pi.append(sum_pi)
+            # print()
         pdparam = tf.add(pdparam,sum_pi)
 
         q_values = linear(vf_latent_vector, 'q', self.n_cat, init_scale=init_scale, init_bias=init_bias)
         old_q = []
         for n in range(len(old_params)):
             param = old_params[n]
-            print('Use old model/1/w & b')
-            old_l = my_linear(old_vf_fc[n], 'old_q'+str(n), self.n_cat, init_scale=init_scale,
+            # print('Use old model/1/w & b')
+            old_l = my_linear(old_vf_fc[n], 'old_q'+str(n),
                               ww=param['q/w'], bb=param['q/b'])
 
             old_q.append(old_l)
-            print()
-        flag = True
-        for l in old_q:
-            if flag:
-                sum_q = l
-                flag = False
+            if n == 0:
+                sum_q=old_l
             else:
-                sum_q = tf.add(sum_q, l)
+                sum_q=tf.add(sum_q,old_l)
+            # print()
         q_values = tf.add(q_values, sum_q)
 
         return self.proba_distribution_from_flat(pdparam), pdparam, q_values

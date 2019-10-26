@@ -265,6 +265,7 @@ class PPO2(ActorCriticRLModel):
                 # writer = tf.summary.FileWriter('../logs/graph',self.graph)
                 # writer.flush()
                 # writer.close()
+        print("Trainable params",len(self.get_parameter_list()))
 
     def _train_step(self, learning_rate, cliprange, obs, returns, masks, actions, values, neglogpacs, update,
                     writer, states=None, cliprange_vf=None):
@@ -546,7 +547,7 @@ class PPO2(ActorCriticRLModel):
                                          " environment.")
                 self.n_envs = 1
 
-            print("INIT ENV self.n_envs", self.n_envs)
+            print("Init envs self.n_envs =", self.n_envs)
 
 
 class Runner(AbstractEnvRunner):

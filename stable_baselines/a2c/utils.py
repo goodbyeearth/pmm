@@ -184,9 +184,9 @@ def my_conv(input_tensor, scope, *, n_filters, filter_size, stride,
         bshape = [1, n_filters, 1, 1]
     else:
         raise NotImplementedError
-    bias_var_shape = [n_filters] if one_dim_bias else [1, n_filters, 1, 1]
-    n_input = input_tensor.get_shape()[channel_ax].value
-    wshape = [filter_height, filter_width, n_input, n_filters]
+    # bias_var_shape = [n_filters] if one_dim_bias else [1, n_filters, 1, 1]
+    # n_input = input_tensor.get_shape()[channel_ax].value
+    # wshape = [filter_height, filter_width, n_input, n_filters]
     weight1 = tf.convert_to_tensor(ww, dtype=tf.float32)
     bias1 = tf.convert_to_tensor(bb,dtype=tf.float32)
     with tf.variable_scope(scope):
@@ -197,7 +197,7 @@ def my_conv(input_tensor, scope, *, n_filters, filter_size, stride,
         return bias + tf.nn.conv2d(input_tensor, weight, strides=strides, padding=pad, data_format=data_format)
 
 
-def my_linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0.0,ww=None,bb=None):
+def my_linear(input_tensor, scope, *, init_scale=1.0, init_bias=0.0,ww=None,bb=None):
     """
     Creates a fully connected layer for TensorFlow
     :param input_tensor: (TensorFlow Tensor) The input tensor for the fully connected layer
