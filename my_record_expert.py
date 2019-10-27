@@ -237,8 +237,8 @@ def generate_expert_traj_v3(env=None, agent_idx_list=None, path_prefix=None, n_e
     temp_observations_list = [[] for _ in range(n_record)]  # 保存处理后的 feature, 而不是 dict
 
     obs = env.reset()
-
-    for _ in tqdm(range(n_episodes)):
+    eps_idx = 0
+    while eps_idx < n_episodes:
         all_action = env.act(obs)
         for i, agent_idx in zip(range(n_record), agent_idx_list):
             if env._agents[agent_idx].is_alive:
@@ -252,12 +252,16 @@ def generate_expert_traj_v3(env=None, agent_idx_list=None, path_prefix=None, n_e
             for i, agent_idx in zip(range(n_record), agent_idx_list):
                 # 一回合里提一条数据
                 sample_idx = random.randint(0, len(temp_actions_list[i])-1)
+                print(sample_idx)
                 observations_list[i].append(temp_observations_list[i][sample_idx])
                 actions_list[i].append(temp_actions_list[i][sample_idx])
 
                 # 清空当前智能体在当前回合的所有数据
                 temp_observations_list[i] = []
                 temp_actions_list[i] = []
+            eps_idx += 1
+            if eps_idx%10 == 0:
+                print('generating data, episode:', eps_idx)
 
     for i in range(n_record):
         assert len(observations_list[i]) == len(actions_list[i])    # 确认一下

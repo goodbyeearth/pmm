@@ -140,11 +140,11 @@ def play():
 if __name__ == '__main__':
     arg_parser = my_arg_parser()
     args, unknown_args = arg_parser.parse_known_args(sys.argv)
-    print("环境：", args.env)
+    print("env: ", args.env)
 
     # 爬取并存储专家数据
     if args.generate_data:
-        generate_expert_data(args.env, n_episodes=2)
+        generate_expert_data(args.env, n_episodes=25000)
 
     if args.merge_data:
         merge_data('./dataset_test/', './final_data_test/final_data')
