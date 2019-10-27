@@ -19,6 +19,11 @@
 
 c0代表默认课程 --> 默认环境
 
+初始化model时不需要建立环境
+
+每次learn的时候可以加入不同的环境，并且不会保存当前环境
+
+
 ### 观察训练模型效果
 观察模型的效果```python continural_run.py --play --load_path=models/v0_simple_e10.zip```  
 
