@@ -25,7 +25,7 @@ def my_arg_parser():
                         default='MlpPolicy')
 
     parser.add_argument('--num_timesteps', help='强化学习算法训练所用步数', type=float, default=1e6),
-    parser.add_argument('--nsteps', type=int, default=5),
+    parser.add_argument('--nsteps', type=int, default=801),
     parser.add_argument('--seed', help='RNG seed', type=int, default=None)
 
     parser.add_argument('--data_episode', type=int, default=None)     # 生成专家数据相关

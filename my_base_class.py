@@ -224,7 +224,7 @@ class BaseRLModel(ABC):
         pass
 
     def pretrain(self, dataset, n_epochs=10, learning_rate=1e-4,
-                 adam_epsilon=1e-8, val_interval=None):
+                 adam_epsilon=1e-8, val_interval=None,save_path=None):
         """
         Pretrain a model using behavior cloning:
         supervised learning given an expert dataset.
@@ -320,24 +320,10 @@ class BaseRLModel(ABC):
                 # del  params_to_old
 
                 print("Save pretrain model", epoch_idx + 1)
-                self.save('models/pretrain/v0_red_bc' + '_' + str(epoch_idx + 1) + '.zip')
+                self.save(save_path +'_e'+str(epoch_idx + 1) + '.zip')
                 # print("Now we have %d networks" % len(self.old_params))
             # Free memory
             del expert_obs, expert_actions
-        # Record old params
-        # len_parm = len(self.get_parameters())
-        # print('Len of network params',len_parm)
-        # params_to_old = self.get_parameters()
-        # self.old_params = []
-        # old = {}
-        # print("Save pretrain params")
-        # for _ in range(len_parm):
-        #     key, val = params_to_old.popitem()
-        #     old[key] = val
-        #     # print(key,val.shape)
-        # self.old_params.append(old)
-        # print('model/pi/b:0', self.old_params[0]['model/pi/b:0'])
-        # print('model/vf/bias:0', self.old_params[0]['model/vf/bias:0'])
 
         if self.verbose > 0:
             print("Pretraining done.")
@@ -860,7 +846,7 @@ class ActorCriticRLModel(BaseRLModel):
         pass
 
     @classmethod
-    def load(cls, load_path, env=None, custom_objects=None, **kwargs):
+    def load(cls, load_path, env=None, custom_objects=None,using_PGN=False, **kwargs):
         """
         Load the model from file
 
@@ -889,7 +875,28 @@ class ActorCriticRLModel(BaseRLModel):
         # model.setup_model(data['old_params'])
         model.setup_model()
         model.load_parameters(params)
-
+        # PGN MOD: Use new policy
+        if using_PGN:
+            print("Using PGN", using_PGN)
+            print("Save the learned params")
+            print()
+            len_parm = len(model.get_parameters())
+            print('Len of network params', len_parm)
+            params_to_old = model.get_parameters()
+            old = {}
+            for _ in range(len_parm):
+                key, val = params_to_old.popitem()
+                key = key[6:-2]
+                print(key)
+                old[key] = val
+                # print(key,val.shape)
+            model.old_params.append(old)
+            # print(self.old_params)
+            print()
+            print("Now we have %d old networks" % len(model.old_params))
+            print("Num of parms", len(model.old_params[0]))
+            print()
+            model.setup_model()
         return model
 
 

@@ -329,7 +329,7 @@ class PPO2(ActorCriticRLModel):
         self.old_params = []
 
     def learn(self, total_timesteps, callback=None, seed=None, log_interval=1, tb_log_name="PPO2",
-              reset_num_timesteps=True, env=None, using_PGN=False, gamma=0.99, n_steps=128,
+              reset_num_timesteps=True, env=None, gamma=0.99,learning_rate=2.5e-4, n_steps=801,
               tensorboard_log=None):
 
         if self.n_envs==1:
@@ -345,30 +345,6 @@ class PPO2(ActorCriticRLModel):
         self.tensorboard_log = tensorboard_log
         print("tensorboard_log", self.tensorboard_log)
         print()
-
-        # PGN MOD: Use new policy
-        if using_PGN:
-            print("Using PGN", using_PGN)
-            print("Save the learned params")
-            print()
-            len_parm = len(self.get_parameters())
-            print('Len of network params', len_parm)
-            params_to_old = self.get_parameters()
-            old = {}
-            for _ in range(len_parm):
-                key, val = params_to_old.popitem()
-                key = key[6:-2]
-                print(key)
-                old[key] = val
-                # print(key,val.shape)
-            self.old_params.append(old)
-            # print(self.old_params)
-            print()
-            print("Now we have %d old networks" % len(self.old_params))
-            print("Num of parms", len(self.old_params[0]))
-            print()
-            print("Now init a network")
-            self.setup_model()
 
         # Transform to callable if needed
         self.learning_rate = get_schedule_fn(self.learning_rate)
@@ -464,23 +440,6 @@ class PPO2(ActorCriticRLModel):
                     # compatibility with callbacks that have no return statement.
                     if callback(locals(), globals()) is False:
                         break
-
-            # if save_old:
-            #     print("Save the learned params", save_old)
-            #     len_parm = len(self.get_parameters())
-            #     print('Len of network params', len_parm)
-            #     params_to_old = self.get_parameters()
-            #     old = {}
-            #     for _ in range(len_parm):
-            #         key, val = params_to_old.popitem()
-            #         old[key] = val
-            #         # print(key,val.shape)
-            #     self.old_params.append(old)
-            #     print("Now we have %d networks" % len(self.old_params))
-                # print('model/pi/b:0',self.old_params[0]['model/pi/b:0'])
-                # print('model/vf/bias:0',self.old_params[0]['model/vf/bias:0'])
-                # print('model/pi/b:0', self.old_params[1]['model/pi/b:0'])
-                # print('model/vf/bias:0', self.old_params[1]['model/vf/bias:0'])
 
             return self
 

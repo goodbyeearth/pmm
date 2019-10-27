@@ -36,12 +36,6 @@ def _featurize0(obs):
     return np.stack(maps, axis=2)  # 11*11*18
 
 
-def get_feature_space():
-    return spaces.Box(low=0, high=1, shape=(11, 11, 33))
-
-
-def get_action_space():
-    return spaces.Discrete(6)
 
 
 def featurize(obs):
@@ -145,8 +139,9 @@ def featurize(obs):
 
     bomb_life = np.where(bomb_life > 0, bomb_life + 3, bomb_life)
     flame_life = np.where(flame_life == 0, 15, flame_life)
+    flame_life = np.where(flame_life == 1, 15, flame_life)
     bomb_life = np.where(flame_life != 15, flame_life, bomb_life)
-    for i in range(1, 13):
+    for i in range(2, 13):
         maps.append(bomb_life == i)
 
     '''将bomb direction编码为one-hot'''
@@ -177,6 +172,23 @@ def featurize(obs):
             break
     maps.append(board == train_agent_idx)
     return np.stack(maps, axis=2)  # 11*11*33
+    # return np.stack(maps, axis=2),bomb_life
+
+def get_feature_space():
+    return spaces.Box(low=0, high=1, shape=(11, 11, 32))
+
+
+def get_action_space():
+    return spaces.Discrete(6)
+
+
+
+
+
+
+
+
+
 
 # def _featurize(obs):
 #     maps = []

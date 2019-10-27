@@ -1,33 +1,30 @@
 # Note
-1、统一**中文注释**吧。  
+1、统一**英文注释** 
 
 2、**把不想传到github的文件放到名称为 ×××\_test的文件夹里。**（.gitignore 已添加 \*\_test/ 这一项，git 不会检查该类文件夹）  
 
 3、**不要改 pommerman 和 stable_baseline 里的东西**，要改的话直接在 my_*.py 里进行。
   
-  
-# 运行方法（具体参数暂时先看 my_cmd_utils.py 吧～～)
-### 爬取数据
-```python run.py --generate_data``` 
 
-(具体保存路径、回合数、目标智能体的设置到 run.py 里的 generate_expert_data() 方法里设置)
+### PPO2
+--load_path 表示读入一个model，配合--using_PGN使用，如果--using_PGN为True，
+则在读入model的基础上保存旧网络，并创建一个初始化新网络
 
-### 合并数据
-```python run.py --merge_data```
+预训练
+```python continural_run.py --pre_train --log_path=logs/ --num_timesteps=1e4 --save_path=models/v0_hako```  
+预训练会每隔10个episode保存一次模型
 
-### 训练PPO2
-```python run.py --train --pre_train --policy_type=CustomPolicy --num_timesteps=1e5 --log_path=./log_test/ --save_path=./save_test/ppo2.zip```  
+训练
+```python continural_run.py  --train --using_PGN --log_path=logs/ --load_path=models/v0_simple_e10.zip --save_path=models/v0_simple_e10_c0.zip --num_timesteps=1e6```
 
-**(pretrain 训练的epoch、模型保存路径等等均在代码里设置，请阅读run.py)**
-
-(如果不需要 pretrain，去掉参数 \-\-pre_train)
+c0代表默认课程 --> 默认环境
 
 ### 观察训练模型效果
-观察预训练好的模型的效果```python run.py --play --load_path=./pretrain_model_test/pretrain_model.zip```  
+观察模型的效果```python continural_run.py --play --load_path=models/v0_simple_e10.zip```  
 
-观察训练好的ppo2模型的效果```python run.py --play --load_path=./save_test/ppo2.zip```  
+评估模型的效果```python continural_run.py --evaluate --load_path=models/v0_simple_e10.zip```  
 
-
+具体还需要在continural_run.py 的 __main__ 里修改一些参数
 
 # observation （其中一个智能体的某一帧的 observation）
 ### 较有可能用到的
