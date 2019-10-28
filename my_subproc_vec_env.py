@@ -19,26 +19,23 @@ def _worker(remote, parent_remote, env_fn_wrapper):
         try:
             cmd, data = remote.recv()
             if cmd == 'step':
-                some_actions = env.act(env.get_observations())     # 得到其他智能体的 action
+                some_actions = env.act(env.get_observations())  # 得到其他智能体的 action
                 # 如果其他智能体动作不是元组（只有单一动作），改成元组
                 for i in range(3):
                     if not isinstance(some_actions[i], tuple):
                         some_actions[i] = (some_actions[i], 0, 0)
 
                 data = (data, 0, 0)
-                some_actions.insert(env.training_agent, data)   # 当前训练的 agent 的动作也加进来
-                whole_obs, whole_rew, done, info = env.step(some_actions)       # 得到所有 agent 的四元组
+                some_actions.insert(env.training_agent, data)  # 当前训练的 agent 的动作也加进来
+                whole_obs, whole_rew, done, info = env.step(some_actions)  # 得到所有 agent 的四元组
 
-                obs = featurize(whole_obs[env.training_agent])    # 对训练智能体的 observation 提取特征
-                rew = whole_rew[env.training_agent]               # 训练智能体的 reward
-
+                obs = featurize(whole_obs[env.training_agent])  # 对训练智能体的 observation 提取特征
+                rew = whole_rew[env.training_agent]  # 训练智能体的 reward
 
                 if done:
-                    info['terminal_observation'] = whole_obs    # 保存终结的 observation，否则 reset 后将丢失
+                    info['terminal_observation'] = whole_obs  # 保存终结的 observation，否则 reset 后将丢失
                     whole_obs = env.reset()
-                    obs = featurize(whole_obs[env.training_agent])   # reset 后的 obs 会被返回
-
-
+                    obs = featurize(whole_obs[env.training_agent])  # reset 后的 obs 会被返回
                     rew = whole_rew[env.training_agent]
 
                 remote.send((obs, rew, done, info))

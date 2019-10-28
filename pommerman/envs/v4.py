@@ -78,13 +78,12 @@ class Pomme(v0.Pomme):
             self._game_type, self._env)
         for obs in self.observations:
             obs['step_count'] = self._step_count
-        return self.observations
 
-        for obs in observations:
+        for obs in self.observations:
             obs['message'] = self._radio_from_agent[obs['teammate']]
 
-        self.observations = observations
-        return observations
+        self.observations = self.observations
+        return self.observations
 
     def reset(self):
         assert (self._agents is not None)
@@ -129,7 +128,63 @@ class Pomme(v0.Pomme):
             self._radio_from_agent[getattr(
                 constants.Item, 'Agent%d' % agent.agent_id)] = radio_actions[-1]
 
-        return super().step(personal_actions)
+        self._intended_actions = personal_actions
+
+        #  Previous frame for agent10
+        from utils import get_bomb_life
+        old_state = self.observations[0]
+        old_board = old_state['board']
+        old_alive = old_state['alive']
+        old_pos = old_state['position']
+        danger = get_bomb_life(old_state)
+        safe = [0,6,7,8]
+        print(old_alive)
+        if 10 in old_alive:
+            # print("in")
+            regret = 1
+        else:
+            regret = -10
+        # up=x-1 down=x+1 left=y-1 right=y+1
+        x,y = old_pos
+        up_pos = (x-1,y)
+        down_pos = (x+1,y)
+        left_pos = (x,y-1)
+        right_pos = (x,y+1)
+        may_pos = [up_pos,down_pos,left_pos,right_pos]
+        for may in may_pos:
+            if old_board[may] in safe:
+                regret += 1
+        ###################
+
+
+        max_blast_strength = self._agent_view_size or 10
+        result = self.model.step(
+            personal_actions,
+            self._board,
+            self._agents,
+            self._bombs,
+            self._items,
+            self._flames,
+            max_blast_strength=max_blast_strength)
+        self._board, self._agents, self._bombs, self._items, self._flames = \
+            result[:5]
+
+        done = self._get_done()
+        obs = self.get_observations()
+        reward = self._get_rewards1(regret)
+        info = self._get_info(done, reward)
+
+        if done:
+            # Callback to let the agents know that the game has ended.
+            for agent in self._agents:
+                agent.episode_end(reward[agent.agent_id])
+
+        self._step_count += 1
+        return obs, reward, done, info
+        # return super().step(personal_actions)
+
+    def _get_rewards1(self,regret):
+        return self.model.get_rewards1(self._agents, self._game_type, self._step_count, self._max_steps,regret)
 
     @staticmethod
     def featurize(obs):

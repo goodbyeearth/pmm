@@ -673,33 +673,3 @@ class ForwardModel(object):
             else:
                 # No team has yet won or lost.
                 return [0] * 4
-
-    @staticmethod
-    def get_rewards1(agents, game_type, step_count, max_steps,regret):
-
-        def any_lst_equal(lst, values):
-            '''Checks if list are equal'''
-            return any([lst == v for v in values])
-
-        alive_agents = [num for num, agent in enumerate(agents) \
-                        if agent.is_alive]
-        extra_reward = 0
-        # print(alive_agents)
-        if regret > 0 and 0 not in alive_agents:
-            extra_reward = -regret
-        # We are playing a team game.
-        if any_lst_equal(alive_agents, [[0, 2], [0], [2]]):
-            # Team [0, 2] wins.
-            return [2+extra_reward, -1, 1, -1]
-        elif any_lst_equal(alive_agents, [[1, 3], [1], [3]]):
-            # Team [1, 3] wins.
-            return [-1+extra_reward, 1, -1, 1]
-        elif step_count >= max_steps:
-            # Game is over by max_steps. All agents tie.
-            return [1+extra_reward] * 4
-        elif len(alive_agents) == 0:
-            # Everyone's dead. All agents tie.
-            return [-1+extra_reward] * 4
-        else:
-            # No team has yet won or lost.
-            return [0+extra_reward] * 4

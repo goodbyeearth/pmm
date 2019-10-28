@@ -181,6 +181,101 @@ def get_feature_space():
 def get_action_space():
     return spaces.Discrete(6)
 
+def get_bomb_life(obs):
+    board = obs['board']
+    bomb_life = obs['bomb_life']
+    bomb_blast_strength = obs['bomb_blast_strength']
+    flame_life = obs['flame_life']
+    # 统一炸弹时间
+    for x in range(11):
+        for y in range(11):
+            if bomb_blast_strength[(x, y)] > 0:
+                for i in range(1, int(bomb_blast_strength[(x, y)])):
+                    pos = (x + i, y)
+                    if x + i > 10:
+                        break
+                    if board[pos] == 1:
+                        break
+                    if board[pos] == 2:
+                        bomb_life[pos] = bomb_life[(x, y)]
+                        break
+                    # if a bomb
+                    if board[pos] == 3:
+                        if bomb_life[(x, y)] < bomb_life[pos]:
+                            bomb_life[pos] = bomb_life[(x, y)]
+                        else:
+                            bomb_life[(x, y)] = bomb_life[pos]
+                    elif bomb_life[pos] != 0:
+                        if bomb_life[(x, y)] < bomb_life[pos]:
+                            bomb_life[pos] = bomb_life[(x, y)]
+                    else:
+                        bomb_life[pos] = bomb_life[(x, y)]
+                for i in range(1, int(bomb_blast_strength[(x, y)])):
+                    pos = (x - i, y)
+                    if x - i < 0:
+                        break
+                    if board[pos] == 1:
+                        break
+                    if board[pos] == 2:
+                        bomb_life[pos] = bomb_life[(x, y)]
+                        break
+                    # if a bomb
+                    if board[pos] == 3:
+                        if bomb_life[(x, y)] < bomb_life[pos]:
+                            bomb_life[pos] = bomb_life[(x, y)]
+                        else:
+                            bomb_life[(x, y)] = bomb_life[pos]
+                    elif bomb_life[pos] != 0:
+                        if bomb_life[(x, y)] < bomb_life[pos]:
+                            bomb_life[pos] = bomb_life[(x, y)]
+                    else:
+                        bomb_life[pos] = bomb_life[(x, y)]
+                for i in range(1, int(bomb_blast_strength[(x, y)])):
+                    pos = (x, y + i)
+                    if y + i > 10:
+                        break
+                    if board[pos] == 1:
+                        break
+                    if board[pos] == 2:
+                        bomb_life[pos] = bomb_life[(x, y)]
+                        break
+                    # if a bomb
+                    if board[pos] == 3:
+                        if bomb_life[(x, y)] < bomb_life[pos]:
+                            bomb_life[pos] = bomb_life[(x, y)]
+                        else:
+                            bomb_life[(x, y)] = bomb_life[pos]
+                    elif bomb_life[pos] != 0:
+                        if bomb_life[(x, y)] < bomb_life[pos]:
+                            bomb_life[pos] = bomb_life[(x, y)]
+                    else:
+                        bomb_life[pos] = bomb_life[(x, y)]
+                for i in range(1, int(bomb_blast_strength[(x, y)])):
+                    pos = (x, y - i)
+                    if y - i < 0:
+                        break
+                    if board[pos] == 1:
+                        break
+                    if board[pos] == 2:
+                        bomb_life[pos] = bomb_life[(x, y)]
+                        break
+                    # if a bomb
+                    if board[pos] == 3:
+                        if bomb_life[(x, y)] < bomb_life[pos]:
+                            bomb_life[pos] = bomb_life[(x, y)]
+                        else:
+                            bomb_life[(x, y)] = bomb_life[pos]
+                    elif bomb_life[pos] != 0:
+                        if bomb_life[(x, y)] < bomb_life[pos]:
+                            bomb_life[pos] = bomb_life[(x, y)]
+                    else:
+                        bomb_life[pos] = bomb_life[(x, y)]
+
+    bomb_life = np.where(bomb_life > 0, bomb_life + 3, bomb_life)
+    flame_life = np.where(flame_life == 0, 15, flame_life)
+    flame_life = np.where(flame_life == 1, 15, flame_life)
+    bomb_life = np.where(flame_life != 15, flame_life, bomb_life)
+    return bomb_life
 
 
 

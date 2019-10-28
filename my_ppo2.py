@@ -329,9 +329,8 @@ class PPO2(ActorCriticRLModel):
         self.old_params = []
 
     def learn(self, total_timesteps, callback=None, seed=None, log_interval=1, tb_log_name="PPO2",
-              reset_num_timesteps=True, env=None, gamma=0.99,learning_rate=2.5e-4, n_steps=801,
+              reset_num_timesteps=True, env=None, gamma=0.99,learning_rate=2.5e-4,
               tensorboard_log=None):
-
         if self.n_envs==1:
             old_nenvs = 1
         else:
