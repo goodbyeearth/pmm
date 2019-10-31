@@ -9,7 +9,7 @@ def my_arg_parser():
     parser.add_argument('--generate_data', help='获取并存储专家数据', default=False, action='store_true')   # 生成专家数据相关
     parser.add_argument('--merge_data', help='合并专家数据', default=False, action='store_true')  # 生成专家数据相关
     parser.add_argument('--pre_train', help='监督学习训练', default=False, action='store_true')
-    parser.add_argument('--play', help='跑训练好的算法', default=False, action='store_true')
+    parser.add_argument('--play', help='跑训练好的算法', type=int, default=-1)
     parser.add_argument('--using_PGN', help='新建网络', default=False, action='store_true')
     parser.add_argument('--evaluate', help='保存这次的训练参数', default=False, action='store_true')
 

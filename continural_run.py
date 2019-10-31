@@ -93,28 +93,25 @@ def train():
     env.close()
 
 
-def play(train_idx):
-    if not args.load_path:
-        print('PLAY NEED --load_path')
-        raise ValueError
+def play0():
+    model0 = PPO2.load('models/simple/agent0/simple1_e30.zip')
 
-    model = PPO2.load(args.load_path)
-    # print(pommerman.REGISTRY)
-    print('LOAD MODEL FROM', args.load_path)
+    model2 = PPO2.load('models/simple/agent2/simple_e10.zip')
+
     agent_list = [
         # agents.SimpleNoBombAgent(),
         agents.SuperAgent(),
         agents.SuperAgent(),
-        agents.SuicideAgent(),
-        agents.SuicideAgent(),
+        agents.SuperAgent(),
+        agents.SuperAgent(),
         # agents.PlayerAgent(agent_control="arrows"),
         # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12347),
     ]
     env = pommerman.make(args.env, agent_list)
 
-    # Index of test agent
-    # env.set_training_agent(train_idx)
-    print("train_idx", train_idx)
+    print('Load model0 from models/simple/agent0/simple1_e30.zip')
+    print('Load model2 from models/simple/agent0/simple_e10.zip')
+    print("train_idx (0,2)")
     for episode in range(100):
         obs = env.reset()
         done = False
@@ -122,19 +119,17 @@ def play(train_idx):
             all_actions = env.act(obs)
 
             # if judge_bomb_4(obs[0]):
-            feature0 = featurize(obs[train_idx[0]])
-            action0, _states = model.predict(feature0)
-            all_actions[train_idx[0]] = int(action0)
-                # print("model", action0)
-            # else:
-            #     print("super", all_actions[0])
+            feature0 = featurize(obs[0])  # model0
+            action0, _states = model0.predict(feature0)
+            all_actions[0] = int(action0)
 
-            # feature1 = featurize(obs[train_idx[1]])
-            # action1, _states = model.predict(feature1)
-            # all_actions[train_idx[1]] = int(action1)
+            feature2 = featurize(obs[2])  # model2
+            action2, _states = model2.predict(feature2)
+            all_actions[2] = int(action2)
 
             # all_actions[(train_idx + 1) % 4] = 0
             # all_actions[(train_idx + 3) % 4] = 0
+
             obs, rewards, done, info = env.step(all_actions)
             env.render()
             if not env._agents[0].is_alive:
@@ -142,26 +137,72 @@ def play(train_idx):
         print(info)
 
 
-def _evaluate(train_idx, n_episode):
-    if not args.load_path:
-        print('PLAY NEED --load_path')
-        raise ValueError
-    model = PPO2.load(args.load_path)
+def play1():
+    model0 = PPO2.load(args.load_path)
 
-    # Index of test agent
-    print(pommerman.REGISTRY)
-    print('LOAD MODEL FROM', args.load_path)
     agent_list = [
         # agents.SimpleNoBombAgent(),
-        agents.SimpleAgent(),
         agents.SuperAgent(),
-        agents.SuicideAgent(),
-        agents.SuicideAgent(),
+        agents.SuperAgent(),
+        agents.SuperAgent(),
+        agents.SuperAgent(),
+        # agents.PlayerAgent(agent_control="arrows"),
+        # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12347),
+    ]
+    env = pommerman.make(args.env, agent_list)
+
+    print('Load model0 from', args.load_path)
+    print("train_idx 0")
+    for episode in range(100):
+        obs = env.reset()
+        done = False
+        flag = True
+        while not done:
+            all_actions = env.act(obs)
+            if judge_bomb_4(obs[0]):
+                feature0 = featurize(obs[0])  # model0
+                action0, _states = model0.predict(feature0)
+                all_actions[0] = int(action0)
+                if flag:
+                    print("===>model:", action0)
+                    flag = False
+                else:
+                    flag = True
+                    print("--->model:", action0)
+            else:
+                print("simple")
+            # feature2 = featurize(obs[2])  # model2
+            # action2, _states = model2.predict(feature2)
+            # all_actions[2] = int(action2)
+
+            # all_actions[(train_idx + 1) % 4] = 0
+            # all_actions[(train_idx + 3) % 4] = 0
+
+            obs, rewards, done, info = env.step(all_actions)
+            env.render()
+            if not env._agents[0].is_alive:
+                done = True
+        print(info)
+
+
+def _evaluate(n_episode=10000):
+    model0 = PPO2.load('models/simple/agent0/simple1_e30.zip')
+
+    model2 = PPO2.load('models/simple/agent2/simple_e10.zip')
+
+    agent_list = [
+        # agents.SimpleNoBombAgent(),
+        agents.SuperAgent(),
+        agents.SuperAgent(),
+        agents.SuperAgent(),
+        agents.SuperAgent(),
         # agents.PlayerAgent(agent_control="arrows"),
         # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12343),
     ]
     env = pommerman.make(args.env, agent_list)
-    print("train_idx", train_idx)
+    print('Load model0 from models/simple/agent0/simple1_e30.zip')
+    print('Load model2 from models/simple/agent0/simple_e10.zip')
+    print("train_idx (0,2)")
     win = 0
     tie = 0
     loss = 0
@@ -170,21 +211,24 @@ def _evaluate(train_idx, n_episode):
         done = False
         start = time.time()
         while not done:
-            feature0 = featurize(obs[train_idx[0]])
-            feature1 = featurize(obs[train_idx[1]])
-            action0, _states = model.predict(feature0)
-            action1, _states = model.predict(feature1)
-            print(action0)
-            all_actions = env.act(obs)
-            all_actions[train_idx[0]] = int(action0)
-            # all_actions[train_idx[1]] = int(action1)
+            all_actions = env.act(obs)  # get all actions
+
+            feature0 = featurize(obs[0])  # model0
+            action0, _states = model0.predict(feature0)
+            all_actions[0] = int(action0)
+
+            feature2 = featurize(obs[2])  # model2
+            action2, _states = model2.predict(feature2)
+            all_actions[2] = int(action2)
+
             # all_actions[(train_idx + 1) % 4] = 0
             # all_actions[(train_idx + 3) % 4] = 0
+
             obs, rewards, done, info = env.step(all_actions)
             # env.render()
-        if rewards[train_idx[0]] == 1:
+        if rewards[0] == 1:
             win += 1
-        elif rewards[train_idx[0]] == -1:
+        elif rewards[0] == -1:
             loss += 1
         else:
             tie += 1
@@ -200,12 +244,9 @@ if __name__ == '__main__':
     arg_parser = my_arg_parser()
     args, unknown_args = arg_parser.parse_known_args(sys.argv)
 
-    # Test
-    # test()
-
     # Pretrain
     if args.pre_train:
-        _pretrain('dataset/simple_agent0/')
+        _pretrain('dataset/simple_agent2/')
 
     # Pretrain_test
     # if args.pre_train:
@@ -216,12 +257,14 @@ if __name__ == '__main__':
         train()
 
     # Test
-    if args.play:
-        play((0, 2))
+    if args.play == 0:
+        play0()
+    elif args.play == 1:
+        play1()
     #
     # Evaluate
     if args.evaluate:
-        _evaluate((0, 2), 10000)
+        _evaluate()
 
     # def obs_map(j,arr):
     #     if j == 0:
