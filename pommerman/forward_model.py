@@ -199,8 +199,8 @@ class ForwardModel(object):
                 desired_position = utility.get_next_position(
                     bomb.position, bomb.moving_direction)
                 if utility.position_on_board(curr_board, desired_position) \
-                   and not utility.position_is_powerup(curr_board, desired_position) \
-                   and not utility.position_is_wall(curr_board, desired_position):
+                        and not utility.position_is_powerup(curr_board, desired_position) \
+                        and not utility.position_is_wall(curr_board, desired_position):
                     desired_bomb_positions[num_bomb] = desired_position
 
         # Position switches:
@@ -267,7 +267,7 @@ class ForwardModel(object):
                 # one bomb is going to this position. In both scenarios, revert
                 # to the original position.
                 if desired_position != curr_position and \
-                      (agent_occupancy[desired_position] > 1 or bomb_occupancy[desired_position] > 1):
+                        (agent_occupancy[desired_position] > 1 or bomb_occupancy[desired_position] > 1):
                     desired_agent_positions[num_agent] = curr_position
                     agent_occupancy[curr_position] += 1
                     change = True
@@ -276,7 +276,7 @@ class ForwardModel(object):
                 desired_position = desired_bomb_positions[num_bomb]
                 curr_position = bomb.position
                 if desired_position != curr_position and \
-                      (bomb_occupancy[desired_position] > 1 or agent_occupancy[desired_position] > 1):
+                        (bomb_occupancy[desired_position] > 1 or agent_occupancy[desired_position] > 1):
                     desired_bomb_positions[num_bomb] = curr_position
                     bomb_occupancy[curr_position] += 1
                     change = True
@@ -330,10 +330,10 @@ class ForwardModel(object):
             target_position = utility.get_next_position(desired_position,
                                                         direction)
             if utility.position_on_board(curr_board, target_position) and \
-                       agent_occupancy[target_position] == 0 and \
-                       bomb_occupancy[target_position] == 0 and \
-                       not utility.position_is_powerup(curr_board, target_position) and \
-                       not utility.position_is_wall(curr_board, target_position):
+                    agent_occupancy[target_position] == 0 and \
+                    bomb_occupancy[target_position] == 0 and \
+                    not utility.position_is_powerup(curr_board, target_position) and \
+                    not utility.position_is_wall(curr_board, target_position):
                 # Ok to update bomb desired location as we won't iterate over it again here
                 # but we can not update bomb_occupancy on target position and need to check it again
                 # However we need to set the bomb count on the current position to zero so
@@ -366,7 +366,7 @@ class ForwardModel(object):
                 # Agents and bombs can only share a square if they are both in their
                 # original position (Agent dropped bomb and has not moved)
                 if desired_position != curr_position and \
-                      (agent_occupancy[desired_position] > 1 or bomb_occupancy[desired_position] != 0):
+                        (agent_occupancy[desired_position] > 1 or bomb_occupancy[desired_position] != 0):
                     # Late collisions resulting from failed kicks force this agent to stay at the
                     # original position. Check if this agent successfully kicked a bomb above and undo
                     # the kick.
@@ -410,7 +410,7 @@ class ForwardModel(object):
 
         for num_bomb, bomb in enumerate(curr_bombs):
             if desired_bomb_positions[num_bomb] == bomb.position and \
-               not num_bomb in agent_indexed_by_kicked_bomb:
+                    not num_bomb in agent_indexed_by_kicked_bomb:
                 # Bomb was not kicked this turn and its desired position is its
                 # current location. Stop it just in case it was moving before.
                 bomb.stop()
@@ -452,7 +452,7 @@ class ForwardModel(object):
                 for _, indices in bomb.explode().items():
                     for r, c in indices:
                         if not all(
-                            [r >= 0, c >= 0, r < board_size, c < board_size]):
+                                [r >= 0, c >= 0, r < board_size, c < board_size]):
                             break
                         if curr_board[r][c] == constants.Item.Rigid.value:
                             break
@@ -505,7 +505,7 @@ class ForwardModel(object):
             for bomb in bombs:
                 x, y = bomb.position
                 if not is_partially_observable \
-                   or in_view_range(position, x, y):
+                        or in_view_range(position, x, y):
                     blast_strengths[(x, y)] = bomb.blast_strength
                     life[(x, y)] = bomb.life
                     if bomb.moving_direction is not None:
@@ -519,7 +519,7 @@ class ForwardModel(object):
             for flame in flames:
                 x, y = flame.position
                 if not is_partially_observable \
-                   or in_view_range(position, x, y):
+                        or in_view_range(position, x, y):
                     # +1 needed because flame removal check is done
                     # before flame is ticked down, i.e. flame life
                     # in environment is 2 -> 1 -> 0 -> dead
@@ -571,6 +571,76 @@ class ForwardModel(object):
 
         return observations
 
+    def get_full_observations(self, curr_board, agents, bombs, flames,
+                         is_partially_observable, agent_view_size,
+                         game_type, game_env):
+        """Gets the observations as an np.array of the visible squares.
+
+        The agent gets to choose whether it wants to keep the fogged part in
+        memory.
+        """
+        board_size = len(curr_board)
+
+        def make_bomb_maps(position):
+            ''' Makes an array of an agents bombs and the bombs attributes '''
+            blast_strengths = np.zeros((board_size, board_size))
+            life = np.zeros((board_size, board_size))
+            moving_direction = np.zeros((board_size, board_size))
+
+            for bomb in bombs:
+                x, y = bomb.position
+
+                blast_strengths[(x, y)] = bomb.blast_strength
+                life[(x, y)] = bomb.life
+                if bomb.moving_direction is not None:
+                    moving_direction[(x, y)] = bomb.moving_direction.value
+            return blast_strengths, life, moving_direction
+
+        def make_flame_map(position):
+            ''' Makes an array of an agents flame life'''
+            life = np.zeros((board_size, board_size))
+
+            for flame in flames:
+                x, y = flame.position
+
+                # +1 needed because flame removal check is done
+                # before flame is ticked down, i.e. flame life
+                # in environment is 2 -> 1 -> 0 -> dead
+                life[(x, y)] = flame.life + 1
+            return life
+
+
+        attrs = [
+            'position', 'blast_strength', 'can_kick', 'teammate', 'ammo',
+            'enemies'
+        ]
+        alive_agents = [
+            utility.agent_value(agent.agent_id)
+            for agent in agents
+            if agent.is_alive
+        ]
+
+        observations = []
+        for agent in agents:
+            agent_obs = {'alive': alive_agents}
+            board = curr_board
+            agent_obs['board'] = board
+            bomb_blast_strengths, bomb_life, bomb_moving_direction = make_bomb_maps(agent.position)
+            agent_obs['bomb_blast_strength'] = bomb_blast_strengths
+            agent_obs['bomb_life'] = bomb_life
+            agent_obs['bomb_moving_direction'] = bomb_moving_direction
+            flame_life = make_flame_map(agent.position)
+            agent_obs['flame_life'] = flame_life
+            agent_obs['game_type'] = game_type.value
+            agent_obs['game_env'] = game_env
+
+            for attr in attrs:
+                assert hasattr(agent, attr)
+                agent_obs[attr] = getattr(agent, attr)
+            observations.append(agent_obs)
+
+        return observations
+
     @staticmethod
     def get_done(agents, step_count, max_steps, game_type, training_agent):
         alive = [agent for agent in agents if agent.is_alive]
@@ -582,9 +652,9 @@ class ForwardModel(object):
                 return True
             return len(alive) <= 1
         elif any([
-                len(alive_ids) <= 1,
-                alive_ids == [0, 2],
-                alive_ids == [1, 3],
+            len(alive_ids) <= 1,
+            alive_ids == [0, 2],
+            alive_ids == [1, 3],
         ]):
             return True
         return False
@@ -675,7 +745,7 @@ class ForwardModel(object):
                 return [0] * 4
 
     @staticmethod
-    def get_rewards1(agents, game_type, step_count, max_steps,regret):
+    def get_rewards1(agents, game_type, step_count, max_steps, curr_state, old_state, train_idx):
 
         def any_lst_equal(lst, values):
             '''Checks if list are equal'''
@@ -683,23 +753,219 @@ class ForwardModel(object):
 
         alive_agents = [num for num, agent in enumerate(agents) \
                         if agent.is_alive]
+
+        # Set the regret of death
+        from utils import get_bomb_life
+        bomb_zone = get_bomb_life(curr_state[train_idx])
+        danger = []
+        for i in range(11):
+            for j in range(11):
+                if bomb_zone[(i, j)] in [2, 3, 4]:
+                    danger.append((i, j))
+        cant_go = []
+        if curr_state[train_idx]['can_kick']:
+            cant_go_zone = [1, 2, (train_idx + 1) % 4, (train_idx + 2) % 4,
+                                                              (train_idx + 3) % 4]
+        else:
+            cant_go_zone = [1, 2, 3, (train_idx + 1) % 4, (train_idx + 2) % 4,
+                            (train_idx + 3) % 4]
+        for i in range(11):
+            for j in range(11):
+                if curr_state[train_idx]['board'][(i, j)] in cant_go_zone:
+                    cant_go.append((i, j))
+        cant_go.extend(danger)
+
+        if train_idx + 10 in old_state[train_idx]['alive'] and train_idx not in alive_agents:
+            regret = 7
+        else:
+            regret = 0
+        x, y = old_state[train_idx]['position']
+        # up=x-1 down=x+1 left=y-1 right=y+1
+        up_pos = (x - 1, y) if x - 1 >= 0 else (x, y)
+        down_pos = (x + 1, y) if x + 1 < 11 else (x, y)
+        left_pos = (x, y - 1) if y - 1 >= 0 else (x, y)
+        right_pos = (x, y + 1) if y + 1 < 11 else (x, y)
+        temp_may_pos = [old_state[train_idx]['position'], up_pos, down_pos, left_pos, right_pos]
+        may_pos = [old_state[train_idx]['position']]
+        for tp in temp_may_pos:
+            if tp != old_state[train_idx]['position']:
+                may_pos.append(tp)
+        for may in may_pos:
+            if may in cant_go:
+                regret -= 1
         extra_reward = 0
         # print(alive_agents)
-        if regret > 0 and 0 not in alive_agents:
+        if regret > 0 and train_idx not in alive_agents:
             extra_reward = -regret
+
         # We are playing a team game.
-        if any_lst_equal(alive_agents, [[0, 2], [0], [2]]):
+        if any_lst_equal(alive_agents, [[0, 2], [0]]):
             # Team [0, 2] wins.
-            return [2+extra_reward, -1, 1, -1]
+            return [2 + extra_reward, -1, 1, -1]
+        elif any_lst_equal(alive_agents, [[2]]):
+            # Team [0, 2] wins.
+            return [0 + extra_reward, -1, 1, -1]
         elif any_lst_equal(alive_agents, [[1, 3], [1], [3]]):
             # Team [1, 3] wins.
-            return [-1+extra_reward, 1, -1, 1]
+            return [-1 + extra_reward, 1, -1, 1]
         elif step_count >= max_steps:
             # Game is over by max_steps. All agents tie.
-            return [1+extra_reward] * 4
+            return [1 + extra_reward] * 4
         elif len(alive_agents) == 0:
             # Everyone's dead. All agents tie.
-            return [-1+extra_reward] * 4
+            return [-1 + extra_reward] * 4
         else:
             # No team has yet won or lost.
-            return [0+extra_reward] * 4
+            return [0 + extra_reward] * 4
+
+    @staticmethod
+    def get_rewards2(agents, game_type, step_count, max_steps, curr_state, old_state, train_idx):
+
+        def any_lst_equal(lst, values):
+            '''Checks if list are equal'''
+            return any([lst == v for v in values])
+
+        alive_agents = [num for num, agent in enumerate(agents) \
+                        if agent.is_alive]
+
+        x, y = curr_state[train_idx]['position']
+        e1_curr_state = curr_state[(train_idx + 1) % 4]
+        e2_curr_state = curr_state[(train_idx + 3) % 4]
+        e1_curr_pos = e1_curr_state['position']
+        e2_curr_pos = e2_curr_state['position']
+        e1_x, e1_y = e1_curr_pos
+        e2_x, e2_y = e2_curr_pos
+        d1 = 10000
+        d2 = 10000
+        if (train_idx + 1) % 4 in curr_state[train_idx]['board']:
+            d1 = abs(e1_x - x) + abs(e1_y - y)
+        if (train_idx + 3) % 4 in curr_state[train_idx]['board']:
+            d2 = abs(e2_x - x) + abs(e2_y - y)
+        kill_e1 = 0
+        kill_e2 = 0
+        if (train_idx + 1) % 4 not in alive_agents:
+            kill_e1 = 6 - d1 if d1 < 7 and ((train_idx + 1) % 4) + 10 in old_state[train_idx]['alive'] else 0
+        if (train_idx + 3) % 4 not in alive_agents:
+            kill_e2 = 6 - d2 if d2 < 7 and ((train_idx + 3) % 4) + 10 in old_state[train_idx]['alive'] else 0
+        extra_reward = kill_e1 + kill_e2
+
+        # We are playing a team game.
+        if any_lst_equal(alive_agents, [[0, 2], [0]]):
+            # Team [0, 2] wins.
+            return [1 + extra_reward, -1, 1, -1]
+        elif any_lst_equal(alive_agents, [[2]]):
+            # Team [0, 2] wins.
+            return [0 + extra_reward, -1, 1, -1]
+        elif any_lst_equal(alive_agents, [[1, 3], [1], [3]]):
+            # Team [1, 3] wins.
+            return [-1 + extra_reward, 1, -1, 1]
+        elif step_count >= max_steps:
+            # Game is over by max_steps. All agents tie.
+            return [-1 + extra_reward] * 4
+        elif len(alive_agents) == 0:
+            # Everyone's dead. All agents tie.
+            return [-1 + extra_reward] * 4
+        else:
+            # No team has yet won or lost.
+            return [0 + extra_reward] * 4
+
+    @staticmethod
+    def get_rewards3(agents, game_type, step_count, max_steps, curr_state, old_state, train_idx):
+
+        def any_lst_equal(lst, values):
+            '''Checks if list are equal'''
+            return any([lst == v for v in values])
+
+        alive_agents = [num for num, agent in enumerate(agents) \
+                        if agent.is_alive]
+
+        powerup = [6, 7, 8]
+        rewards = [0,0,0,0]
+        extra_reward = 0
+        if old_state[train_idx]['board'][curr_state[train_idx]['position']] in powerup:
+            extra_reward += 1
+
+        e1 = (train_idx + 1) % 4
+        e2 = (train_idx + 3) % 4
+        old_alive = old_state[train_idx]['alive']
+        if e1+10 in old_alive and e1 not in alive_agents:
+            extra_reward+=2
+        if e2 + 10 in old_alive and e2 not in alive_agents:
+            extra_reward += 2
+
+        # compute regret
+        from utils import get_bomb_life
+        bomb_zone = get_bomb_life(curr_state[train_idx])
+        danger = []
+        for i in range(11):
+            for j in range(11):
+                if bomb_zone[(i, j)] in [2, 3, 4]:
+                    danger.append((i, j))
+        cant_go = []
+        if curr_state[train_idx]['can_kick']:
+            cant_go_zone = [1, 2, (train_idx + 1) % 4, (train_idx + 2) % 4,
+                            (train_idx + 3) % 4]
+        else:
+            cant_go_zone = [1, 2, 3, (train_idx + 1) % 4, (train_idx + 2) % 4,
+                            (train_idx + 3) % 4]
+        for i in range(11):
+            for j in range(11):
+                if curr_state[train_idx]['board'][(i, j)] in cant_go_zone:
+                    cant_go.append((i, j))
+        cant_go.extend(danger)
+        if train_idx + 10 in old_state[train_idx]['alive'] and train_idx not in alive_agents:
+            regret = 7
+        else:
+            regret = 0
+        x, y = old_state[train_idx]['position']
+        # up=x-1 down=x+1 left=y-1 right=y+1
+        up_pos = (x - 1, y) if x - 1 >= 0 else (x, y)
+        down_pos = (x + 1, y) if x + 1 < 11 else (x, y)
+        left_pos = (x, y - 1) if y - 1 >= 0 else (x, y)
+        right_pos = (x, y + 1) if y + 1 < 11 else (x, y)
+        temp_may_pos = [old_state[train_idx]['position'], up_pos, down_pos, left_pos, right_pos]
+        may_pos = [old_state[train_idx]['position']]
+        for tp in temp_may_pos:
+            if tp != old_state[train_idx]['position']:
+                may_pos.append(tp)
+        for may in may_pos:
+            if may in cant_go:
+                regret -= 1
+        if regret > 0 and train_idx not in alive_agents:
+            extra_reward -= regret
+
+        rewards[0] += extra_reward
+        return rewards
+
+    @staticmethod
+    def get_rewards4(agents, game_type, step_count, max_steps, curr_state, old_state,  train_idx):
+
+        def any_lst_equal(lst, values):
+            '''Checks if list are equal'''
+            return any([lst == v for v in values])
+
+        alive_agents = [num for num, agent in enumerate(agents) \
+                        if agent.is_alive]
+
+        # We are playing a team game.
+        if train_idx not in alive_agents:
+            # If dead
+            return [-1, -1, 1, -1]
+        elif any_lst_equal(alive_agents, [[0, 2], [0]]):
+            # Team [0, 2] wins.
+            return [3, -1, 1, -1]
+        elif any_lst_equal(alive_agents, [[2]]):
+            # Team [0, 2] wins.
+            return [0, -1, 1, -1]
+        elif any_lst_equal(alive_agents, [[1, 3], [1], [3]]):
+            # Team [1, 3] wins.
+            return [-1, 1, -1, 1]
+        elif step_count >= max_steps:
+            # Game is over by max_steps. All agents tie.
+            return [2] * 4
+        elif len(alive_agents) == 0:
+            # Everyone's dead. All agents tie.
+            return [-1] * 4
+        else:
+            # No team has yet won or lost.
+            return [0] * 4

@@ -54,7 +54,7 @@ class PPO2(ActorCriticRLModel):
         WARNING: this logging can take a lot of space quickly
     """
 
-    def __init__(self, policy, gamma=0.99, n_steps=128, ent_coef=0.01, learning_rate=2.5e-4, vf_coef=0.5,
+    def __init__(self, policy, gamma=0.99, n_steps=800, ent_coef=0.01, learning_rate=2.5e-4, vf_coef=0.5,
                  max_grad_norm=0.5, lam=0.95, nminibatches=4, noptepochs=4, cliprange=0.2, cliprange_vf=None,
                  verbose=0, tensorboard_log=None, _init_setup_model=True, policy_kwargs=None,
                  full_tensorboard_log=False):
@@ -265,7 +265,7 @@ class PPO2(ActorCriticRLModel):
                 # writer = tf.summary.FileWriter('../logs/graph',self.graph)
                 # writer.flush()
                 # writer.close()
-        print("Trainable params",len(self.get_parameter_list()))
+        print("Trainable params", len(self.get_parameter_list()))
 
     def _train_step(self, learning_rate, cliprange, obs, returns, masks, actions, values, neglogpacs, update,
                     writer, states=None, cliprange_vf=None):
@@ -329,20 +329,25 @@ class PPO2(ActorCriticRLModel):
         self.old_params = []
 
     def learn(self, total_timesteps, callback=None, seed=None, log_interval=1, tb_log_name="PPO2",
-              reset_num_timesteps=True, env=None, gamma=0.99,learning_rate=2.5e-4,
-              tensorboard_log=None):
-        if self.n_envs==1:
+              reset_num_timesteps=True, env=None, learning_rate=2.5e-4, n_steps=128, gamma=0.99):
+        # temp params
+        n_steps = 32
+
+        self.n_steps = n_steps
+        print("n_steps = ", self.n_steps)
+        self.gamma = gamma
+        print("gamma = ", self.gamma)
+        self.learning_rate = learning_rate
+        print("learning_rate = ", self.learning_rate)
+        if self.n_envs == 1:
             old_nenvs = 1
         else:
             old_nenvs = 0
         self.init_env(env=env)
-        if old_nenvs ==1 :
-            print('old n_batch', self.n_batch)
-            self.n_batch *= self.n_envs
-        print('n_batch',self.n_batch)
-        print()
-        self.tensorboard_log = tensorboard_log
-        print("tensorboard_log", self.tensorboard_log)
+        if old_nenvs == 1:
+            print('Old n_batch = ', self.n_batch)
+            self.n_batch = self.n_envs * self.n_steps
+        print('Current n_batch = ', self.n_batch)
         print()
 
         # Transform to callable if needed
@@ -469,7 +474,7 @@ class PPO2(ActorCriticRLModel):
         }
 
         params_to_save = self.get_parameters()
-        print("Save the current network, len of trainable params is",len(params_to_save))
+        print("Save the current network, len of trainable params is", len(params_to_save))
         print("Save %d old networks" % len(self.old_params))
         self._save_to_file(save_path, data=data, params=params_to_save, cloudpickle=cloudpickle)
 

@@ -13,7 +13,7 @@ from my_subproc_vec_env import SubprocVecEnv
 from my_policies import CustomPolicy
 
 from my_ppo2 import PPO2
-from utils import featurize
+from utils import *
 import numpy as np
 import time
 
@@ -22,9 +22,9 @@ import time
 def make_envs(env_id):
     def _thunk():
         agent_list = [
+            agents.SuperAgent(),
             agents.SimpleAgent(),
-            agents.SimpleAgent(),
-            agents.SimpleAgent(),
+            agents.SuperAgent(),
             agents.SimpleAgent()
         ]
         env = pommerman.make(env_id, agent_list)
@@ -53,7 +53,7 @@ def _pretrain(expert_path):
     print("Run pretrain n_epochs =", int(args.num_timesteps))
     print()
     dataset = ExpertDataset(expert_path=expert_path)  # traj_limitation 只能取默认-1
-    model.pretrain(dataset=dataset, n_epochs=int(args.num_timesteps),save_path=args.save_path)
+    model.pretrain(dataset=dataset, n_epochs=int(args.num_timesteps), save_path=args.save_path)
     del dataset
 
 
@@ -71,7 +71,7 @@ def train():
     if args.load_path:
         print("LOAD A MODEL FOR TRAIN FROM", args.load_path)
         print()
-        model = PPO2.load(args.load_path, using_PGN=args.using_PGN)
+        model = PPO2.load(args.load_path, using_PGN=args.using_PGN, tensorboard_log=args.log_path)
     else:
         print("INIT CONTINURAL PPO2")
         print()
@@ -84,7 +84,7 @@ def train():
     print()
 
     model.learn(total_timesteps=total_timesteps,
-                seed=args.seed, env=env, tensorboard_log=args.log_path)
+                seed=args.seed, env=env)
 
     if args.save_path:
         print("SAVE LEARNED MODEL", args.save_path)
@@ -103,15 +103,14 @@ def play(train_idx):
     print('LOAD MODEL FROM', args.load_path)
     agent_list = [
         # agents.SimpleNoBombAgent(),
-        agents.SimpleAgent(),
-        agents.SimpleAgent(),
-        # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12345),
-        agents.SimpleAgent(),
-        agents.SimpleAgent(),
+        agents.SuperAgent(),
+        agents.SuperAgent(),
+        agents.SuicideAgent(),
+        agents.SuicideAgent(),
         # agents.PlayerAgent(agent_control="arrows"),
         # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12347),
     ]
-    env = pommerman.make('PommeRadioCompetition-v2', agent_list)
+    env = pommerman.make(args.env, agent_list)
 
     # Index of test agent
     # env.set_training_agent(train_idx)
@@ -120,20 +119,26 @@ def play(train_idx):
         obs = env.reset()
         done = False
         while not done:
-            feature0 = featurize(obs[train_idx[0]])
-            feature1 = featurize(obs[train_idx[1]])
-            action0, _states = model.predict(feature0)
-            # print(action0)
-            action1, _states = model.predict(feature1)
             all_actions = env.act(obs)
+
+            # if judge_bomb_4(obs[0]):
+            feature0 = featurize(obs[train_idx[0]])
+            action0, _states = model.predict(feature0)
             all_actions[train_idx[0]] = int(action0)
-            all_actions[train_idx[1]] = int(action1)
+                # print("model", action0)
+            # else:
+            #     print("super", all_actions[0])
+
+            # feature1 = featurize(obs[train_idx[1]])
+            # action1, _states = model.predict(feature1)
+            # all_actions[train_idx[1]] = int(action1)
+
             # all_actions[(train_idx + 1) % 4] = 0
             # all_actions[(train_idx + 3) % 4] = 0
             obs, rewards, done, info = env.step(all_actions)
             env.render()
-            # if not env._agents[train_idx].is_alive:
-            #     done = True
+            if not env._agents[0].is_alive:
+                done = True
         print(info)
 
 
@@ -149,13 +154,13 @@ def _evaluate(train_idx, n_episode):
     agent_list = [
         # agents.SimpleNoBombAgent(),
         agents.SimpleAgent(),
-        agents.SimpleAgent(),
-        agents.SimpleAgent(),
-        agents.SimpleAgent(),
+        agents.SuperAgent(),
+        agents.SuicideAgent(),
+        agents.SuicideAgent(),
         # agents.PlayerAgent(agent_control="arrows"),
         # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12343),
     ]
-    env = pommerman.make('PommeRadioCompetition-v2', agent_list)
+    env = pommerman.make(args.env, agent_list)
     print("train_idx", train_idx)
     win = 0
     tie = 0
@@ -169,9 +174,10 @@ def _evaluate(train_idx, n_episode):
             feature1 = featurize(obs[train_idx[1]])
             action0, _states = model.predict(feature0)
             action1, _states = model.predict(feature1)
+            print(action0)
             all_actions = env.act(obs)
             all_actions[train_idx[0]] = int(action0)
-            all_actions[train_idx[1]] = int(action1)
+            # all_actions[train_idx[1]] = int(action1)
             # all_actions[(train_idx + 1) % 4] = 0
             # all_actions[(train_idx + 3) % 4] = 0
             obs, rewards, done, info = env.step(all_actions)
@@ -199,7 +205,7 @@ if __name__ == '__main__':
 
     # Pretrain
     if args.pre_train:
-        _pretrain('dataset/all/')
+        _pretrain('dataset/simple_agent0/')
 
     # Pretrain_test
     # if args.pre_train:

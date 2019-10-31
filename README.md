@@ -5,7 +5,7 @@
 
 3、**不要改 pommerman 和 stable_baseline 里的东西**，要改的话直接在 my_*.py 里进行。
   
-
+4、**当前死亡后会提前结束**
 ### PPO2
 --load_path 表示读入一个model，配合--using_PGN使用，如果--using_PGN为True，
 则在读入model的基础上保存旧网络，并创建一个初始化新网络

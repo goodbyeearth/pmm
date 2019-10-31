@@ -148,36 +148,37 @@ class CategoricalProbabilityDistributionType(ProbabilityDistributionType):
     def probability_distribution_class(self):
         return CategoricalProbabilityDistribution
 
-    def proba_distribution_from_latent_pgn(self, pi_latent_vector, vf_latent_vector, init_scale=1.0, init_bias=0.0,old_pi_fc=None,old_vf_fc=None,old_params=None):
+    def proba_distribution_from_latent_pgn(self, pi_latent_vector, vf_latent_vector, init_scale=1.0, init_bias=0.0,
+                                           old_pi_fc=None, old_vf_fc=None, old_params=None):
         from stable_baselines.a2c.utils import my_linear
         pdparam = linear(pi_latent_vector, 'pi', self.n_cat, init_scale=init_scale, init_bias=init_bias)
         old_pi = []
         for n in range(len(old_params)):
             param = old_params[n]
             # print('Use old model/pi/w & b')
-            old_l = my_linear(old_pi_fc[n], 'old_pi'+str(n),
-                            ww=param['pi/w'], bb=param['pi/b'])
+            old_l = my_linear(old_pi_fc[n], 'old_pi' + str(n),
+                              ww=param['pi/w'], bb=param['pi/b'])
             if n == 0:
                 sum_pi = old_l
             else:
-                sum_pi=tf.add(sum_pi,old_l)
+                sum_pi = tf.add(sum_pi, old_l)
             old_pi.append(sum_pi)
             # print()
-        pdparam = tf.add(pdparam,sum_pi)
+        pdparam = tf.add(pdparam, sum_pi)
 
         q_values = linear(vf_latent_vector, 'q', self.n_cat, init_scale=init_scale, init_bias=init_bias)
         old_q = []
         for n in range(len(old_params)):
             param = old_params[n]
             # print('Use old model/1/w & b')
-            old_l = my_linear(old_vf_fc[n], 'old_q'+str(n),
+            old_l = my_linear(old_vf_fc[n], 'old_q' + str(n),
                               ww=param['q/w'], bb=param['q/b'])
 
             old_q.append(old_l)
             if n == 0:
-                sum_q=old_l
+                sum_q = old_l
             else:
-                sum_q=tf.add(sum_q,old_l)
+                sum_q = tf.add(sum_q, old_l)
             # print()
         q_values = tf.add(q_values, sum_q)
 

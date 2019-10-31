@@ -1,7 +1,7 @@
 '''An agent that preforms a random action each step'''
 from . import BaseAgent
 
-class RandomAgent1(BaseAgent):
+class SuicideAgent(BaseAgent):
     """The Random Agent that returns random actions given an action_space."""
 
     def act(self, obs, action_space):

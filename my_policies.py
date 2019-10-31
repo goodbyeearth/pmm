@@ -13,7 +13,7 @@ def compute_old_conv(input=None, old_params=None, scop=None, n_fil=None, **kwarg
         # print("Use old model/" + scop + "/w & b")
         old_c = activ(
             my_conv(input[n], 'old_' + scop + str(n), n_filters=n_fil, filter_size=3, stride=1,
-                    ww=param[scop + '/w'], bb=param[scop + '/b'], **kwargs))
+                    ww=param[scop + '/w'], bb=param[scop + '/b'], pad='SAME', **kwargs))
         if n == 0:
             sumc = old_c
         else:
@@ -37,18 +37,20 @@ def compute_old_linear(input=None, old_params=None, scop=None):
         old_linear.append(suml)
     return old_linear, suml
 
+
 def custom_cnn_pgn(scaled_images, old_params=None, **kwargs):
     activ = tf.nn.relu
 
-    layer_1 = activ(conv(scaled_images, 'c1', n_filters=16, filter_size=3, stride=1, init_scale=np.sqrt(2), **kwargs))
+    layer_1 = activ(
+        conv(scaled_images, 'c1', n_filters=32, filter_size=3, stride=1, init_scale=np.sqrt(2), pad='SAME', **kwargs))
     old_conv = []
     for n in range(len(old_params)):
         param = old_params[n]
         # print(type(param))
         # print("Use old model/c1/w & b")
         old_c = activ(
-            my_conv(scaled_images, 'old_c1' + str(n), n_filters=16, filter_size=3, stride=1,
-                    ww=param['c1/w'], bb=param['c1/b'], **kwargs))
+            my_conv(scaled_images, 'old_c1' + str(n), n_filters=32, filter_size=3, stride=1,
+                    ww=param['c1/w'], bb=param['c1/b'], pad='SAME', **kwargs))
         if n == 0:
             sumc = old_c
         else:
@@ -56,12 +58,14 @@ def custom_cnn_pgn(scaled_images, old_params=None, **kwargs):
         old_conv.append(sumc)
 
     layer_2 = activ(
-        conv(tf.add(layer_1, sumc), 'c2', n_filters=32, filter_size=3, stride=1, init_scale=np.sqrt(2), **kwargs))
-    old_conv, sumc = compute_old_conv(input=old_conv, old_params=old_params, n_fil=32, scop='c2')
+        conv(tf.add(layer_1, sumc), 'c2', n_filters=64, filter_size=3, stride=1, init_scale=np.sqrt(2), pad='SAME',
+             **kwargs))
+    old_conv, sumc = compute_old_conv(input=old_conv, old_params=old_params, n_fil=64, scop='c2')
 
     layer_3 = activ(
-        conv(tf.add(layer_2, sumc), 'c3', n_filters=64, filter_size=3, stride=1, init_scale=np.sqrt(2), **kwargs))
-    old_conv, sumc = compute_old_conv(input=old_conv, old_params=old_params, n_fil=64, scop='c3')
+        conv(tf.add(layer_2, sumc), 'c3', n_filters=128, filter_size=3, stride=1, init_scale=np.sqrt(2), pad='SAME',
+             **kwargs))
+    old_conv, sumc = compute_old_conv(input=old_conv, old_params=old_params, n_fil=128, scop='c3')
     sumc = conv_to_fc(sumc)
     layer_3 = conv_to_fc(layer_3)
     for i in range(len(old_conv)):
@@ -70,15 +74,17 @@ def custom_cnn_pgn(scaled_images, old_params=None, **kwargs):
     layer_4 = activ(linear(tf.add(layer_3, sumc), 'fc1', n_hidden=256, init_scale=np.sqrt(2)))
     old_linear, suml = compute_old_linear(input=old_conv, scop='fc1', old_params=old_params)
 
-
     return layer_4, old_linear, suml
 
 
 def custom_cnn(scaled_images, **kwargs):
     activ = tf.nn.relu
-    layer_1 = activ(conv(scaled_images, 'c1', n_filters=16, filter_size=3, stride=1, init_scale=np.sqrt(2), **kwargs))
-    layer_2 = activ(conv(layer_1, 'c2', n_filters=32, filter_size=3, stride=1, init_scale=np.sqrt(2), **kwargs))
-    layer_3 = activ(conv(layer_2, 'c3', n_filters=64, filter_size=3, stride=1, init_scale=np.sqrt(2), **kwargs))
+    layer_1 = activ(
+        conv(scaled_images, 'c1', n_filters=32, filter_size=3, stride=1, init_scale=np.sqrt(2), pad='SAME', **kwargs))
+    layer_2 = activ(
+        conv(layer_1, 'c2', n_filters=64, filter_size=3, stride=1, init_scale=np.sqrt(2), pad='SAME', **kwargs))
+    layer_3 = activ(
+        conv(layer_2, 'c3', n_filters=128, filter_size=3, stride=1, init_scale=np.sqrt(2), pad='SAME', **kwargs))
     layer_3 = conv_to_fc(layer_3)
     return activ(linear(layer_3, 'fc1', n_hidden=256, init_scale=np.sqrt(2)))
 
@@ -95,22 +101,23 @@ class CustomPolicy(ActorCriticPolicy):
                 print("Num of old networks", len(old_params))
                 print()
                 """CNN提取后的特征"""
-                extracted_features, old_fc1, sum_fc1 = custom_cnn_pgn(self.processed_obs, old_params=old_params, **kwargs)
+                extracted_features, old_fc1, sum_fc1 = custom_cnn_pgn(self.processed_obs, old_params=old_params,
+                                                                      **kwargs)
                 extracted_features = tf.layers.flatten(extracted_features)
                 for fc in range(len(old_fc1)):
                     old_fc1[fc] = tf.layers.flatten(old_fc1[fc])
                 sum_fc1 = tf.layers.flatten(sum_fc1)
 
                 pi_h = extracted_features
-                layer_size = 64
+                layer_size = 128
                 pi_h = activ(linear(tf.add(pi_h, sum_fc1), 'pi_fc0', n_hidden=layer_size))
                 old_pi_fc0, sum_pi_fc0 = compute_old_linear(input=old_fc1, scop='pi_fc0', old_params=old_params)
 
-                pi_h = activ(linear(tf.add(pi_h, sum_pi_fc0), 'pi_fc1', layer_size))
+                pi_h = activ(linear(tf.add(pi_h, sum_pi_fc0), 'pi_fc1', 64))
                 old_pi_fc1, sum_pi_fc1 = compute_old_linear(input=old_pi_fc0, scop='pi_fc1', old_params=old_params)
 
                 pi_latent = tf.add(pi_h, sum_pi_fc1)
-                
+
                 vf_h = extracted_features
                 vf_h = activ(linear(tf.add(vf_h, sum_fc1), 'vf_fc0', n_hidden=layer_size))
                 old_vf_fc0, sum_vf_fc0 = compute_old_linear(input=old_fc1, scop='vf_fc0', old_params=old_params)
@@ -135,13 +142,13 @@ class CustomPolicy(ActorCriticPolicy):
 
                 pi_h = extracted_features
                 # TODO: 调
-                for i, layer_size in enumerate([64, 64]):
+                for i, layer_size in enumerate([128, 64]):
                     pi_h = activ(linear(pi_h, 'pi_fc' + str(i), n_hidden=layer_size))
                 pi_latent = pi_h
 
                 vf_h = extracted_features
                 # TODO: 调
-                for i, layer_size in enumerate([64]):
+                for i, layer_size in enumerate([128]):
                     vf_h = activ(linear(vf_h, 'vf_fc' + str(i), n_hidden=layer_size))
                 value_fn = linear(vf_h, 'vf', n_hidden=1)
                 vf_latent = vf_h

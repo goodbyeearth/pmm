@@ -14,35 +14,57 @@ def _worker(remote, parent_remote, env_fn_wrapper):
     parent_remote.close()
     env = env_fn_wrapper.var()
     # TODO:记得设置训练智能体的 index
-    env.set_training_agent(0)  # 设置训练的 agent 的 index
+    train_idx = 0  # 设置训练的 agent 的 index
     while True:
         try:
             cmd, data = remote.recv()
             if cmd == 'step':
-                some_actions = env.act(env.get_observations())  # 得到其他智能体的 action
+                whole_obs = env.get_observations()
+                # print("recv:",whole_obs[train_idx])
+                all_actions = env.act(env.get_observations())  # 得到智能体的 actions
                 # 如果其他智能体动作不是元组（只有单一动作），改成元组
                 for i in range(3):
-                    if not isinstance(some_actions[i], tuple):
-                        some_actions[i] = (some_actions[i], 0, 0)
+                    if not isinstance(all_actions[i], tuple):
+                        all_actions[i] = (all_actions[i], 0, 0)
 
                 data = (data, 0, 0)
-                some_actions.insert(env.training_agent, data)  # 当前训练的 agent 的动作也加进来
-                whole_obs, whole_rew, done, info = env.step(some_actions)  # 得到所有 agent 的四元组
+                all_actions[train_idx] = data  # 当前训练的 agent 的动作也加进来
 
-                obs = featurize(whole_obs[env.training_agent])  # 对训练智能体的 observation 提取特征
-                rew = whole_rew[env.training_agent]  # 训练智能体的 reward
+                whole_obs, whole_rew, done, info = env.step(all_actions)  # 得到所有 agent 的四元组
 
+                rew = whole_rew[train_idx]  # 训练智能体的 reward
+                if not env._agents[train_idx].is_alive:  # 如果死亡，提前结束
+                    done = True
                 if done:
                     info['terminal_observation'] = whole_obs  # 保存终结的 observation，否则 reset 后将丢失
                     whole_obs = env.reset()
-                    obs = featurize(whole_obs[env.training_agent])  # reset 后的 obs 会被返回
-                    rew = whole_rew[env.training_agent]
+                flag = False
+                while not judge_bomb_4(whole_obs[train_idx]):  # 判断是否周围有威胁
+                    all_actions = env.act(env.get_observations())
+                    whole_obs, whole_rew, reset_done, info = env.step(all_actions)
+                    if not env._agents[train_idx].is_alive or reset_done:  # 如果死亡或者结束，重新开始一局
+                        whole_obs = env.reset()
+                        if reset_done == True and flag == False:  # 如果执行第一局结束，则把reward置为结局reward
+                            done = True
+                            rew = whole_rew[0]
+                            flag = True
+                # print("send:",whole_obs[train_idx])
+                obs = featurize(whole_obs[train_idx])
+
 
                 remote.send((obs, rew, done, info))
 
             elif cmd == 'reset':
                 whole_obs = env.reset()
-                obs = featurize(whole_obs[env.training_agent])
+
+                while not judge_bomb_4(whole_obs[train_idx]):  # 如果没有威胁，在后台自己走
+                    all_actions = env.act(env.get_observations())
+                    whole_obs, whole_rew, done, info = env.step(all_actions)
+                    if not env._agents[train_idx].is_alive or done:  # 如果训练智能体死亡或者游戏结束，重新开始一局
+                        whole_obs = env.reset()
+                # print("reset:",whole_obs[train_idx])
+                obs = featurize(whole_obs[train_idx])
+
                 remote.send(obs)
 
             elif cmd == 'render':

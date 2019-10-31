@@ -78,12 +78,23 @@ class Pomme(v0.Pomme):
             self._game_type, self._env)
         for obs in self.observations:
             obs['step_count'] = self._step_count
-
         for obs in self.observations:
             obs['message'] = self._radio_from_agent[obs['teammate']]
 
-        self.observations = self.observations
         return self.observations
+
+    def get_full_observations(self):
+        self.full_observations = self.model.get_full_observations(
+            self._board, self._agents, self._bombs, self._flames,
+            self._is_partially_observable, self._agent_view_size,
+            self._game_type, self._env)
+        for obs in self.full_observations:
+            obs['step_count'] = self._step_count
+        for obs in self.full_observations:
+            obs['message'] = self._radio_from_agent[obs['teammate']]
+        self.full_observations[0]['my_bomb'] = []
+        return self.full_observations
+
 
     def reset(self):
         assert (self._agents is not None)
@@ -103,8 +114,10 @@ class Pomme(v0.Pomme):
                 col = pos[1][0]
                 agent.set_start_position((row, col))
                 agent.reset()
-
-        return self.get_observations()
+        full_obs = self.get_full_observations()
+        obs = self.get_observations()
+        obs[0] = full_obs[0]
+        return obs
 
     def act(self, obs):
         agents = [agent for agent in self._agents \
@@ -130,31 +143,8 @@ class Pomme(v0.Pomme):
 
         self._intended_actions = personal_actions
 
-        #  Previous frame for agent10
-        from utils import get_bomb_life
-        old_state = self.observations[0]
-        old_board = old_state['board']
-        old_alive = old_state['alive']
-        old_pos = old_state['position']
-        danger = get_bomb_life(old_state)
-        safe = [0,6,7,8]
-        print(old_alive)
-        if 10 in old_alive:
-            # print("in")
-            regret = 1
-        else:
-            regret = -10
-        # up=x-1 down=x+1 left=y-1 right=y+1
-        x,y = old_pos
-        up_pos = (x-1,y)
-        down_pos = (x+1,y)
-        left_pos = (x,y-1)
-        right_pos = (x,y+1)
-        may_pos = [up_pos,down_pos,left_pos,right_pos]
-        for may in may_pos:
-            if old_board[may] in safe:
-                regret += 1
-        ###################
+        # get previous state
+        old_state = self.get_observations()
 
 
         max_blast_strength = self._agent_view_size or 10
@@ -171,7 +161,14 @@ class Pomme(v0.Pomme):
 
         done = self._get_done()
         obs = self.get_observations()
-        reward = self._get_rewards1(regret)
+        curr_full_obs = self.get_full_observations()
+        # reward = self._get_rewards()
+        reward1 = self._get_rewards1(obs,old_state)
+        reward2 = self._get_rewards2(obs,old_state)
+        reward3 = self._get_rewards3(obs,old_state)
+        reward4 = self._get_rewards4(obs,old_state)
+        reward = reward4
+        # reward = list(np.array(reward1)+np.array(reward2)+np.array(reward3))
         info = self._get_info(done, reward)
 
         if done:
@@ -180,11 +177,24 @@ class Pomme(v0.Pomme):
                 agent.episode_end(reward[agent.agent_id])
 
         self._step_count += 1
+
+        # change to full obs
+        # obs[0] = curr_full_obs[0]
         return obs, reward, done, info
         # return super().step(personal_actions)
 
-    def _get_rewards1(self,regret):
-        return self.model.get_rewards1(self._agents, self._game_type, self._step_count, self._max_steps,regret)
+    # self define reward function
+    # need to modify the return reward
+    # now is for agent0
+    def _get_rewards1(self,curr_state,old_state):
+        return self.model.get_rewards1(self._agents, self._game_type, self._step_count, self._max_steps,curr_state,old_state,0)
+    def _get_rewards2(self,curr_state,old_state):
+        return self.model.get_rewards2(self._agents, self._game_type, self._step_count, self._max_steps,curr_state,old_state,0)
+    def _get_rewards3(self,curr_state,old_state):
+        return self.model.get_rewards3(self._agents, self._game_type, self._step_count, self._max_steps,curr_state,old_state,0)
+    def _get_rewards4(self,curr_state,old_state,):
+        return self.model.get_rewards4(self._agents, self._game_type, self._step_count,
+                                       self._max_steps,curr_state,old_state,0)
 
     @staticmethod
     def featurize(obs):

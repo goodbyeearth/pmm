@@ -12,13 +12,13 @@ from .. import constants
 from .. import utility
 
 
-class SimpleAgent(BaseAgent):
+class SuperAgent(BaseAgent):
     """This is a baseline agent. After you can beat it, submit your agent to
     compete.
     """
 
     def __init__(self, *args, **kwargs):
-        super(SimpleAgent, self).__init__(*args, **kwargs)
+        super(SuperAgent, self).__init__(*args, **kwargs)
 
         # Keep track of recently visited uninteresting positions so that we
         # don't keep visiting the same places.
@@ -111,35 +111,35 @@ class SimpleAgent(BaseAgent):
 
         # modify simple agent's action
         act = random.choice(directions).value
-        #
-        # def modify_act(obs, act):
-        #     from utils import get_bomb_life
-        #     bomb_life = get_bomb_life(obs)
-        #     simple_pos = obs['position']
-        #     simple_x, simple_y = simple_pos
-        #     if act == 1 and simple_x > 0:
-        #         simple_x = simple_x - 1
-        #     elif act == 2 and simple_x < 10:
-        #         simple_x = simple_x + 1
-        #     elif act == 3 and simple_y > 0:
-        #         simple_y = simple_y - 1
-        #     elif act == 4 and simple_y < 10:
-        #         simple_y = simple_y + 1
-        #     simple_pos = (simple_x, simple_y)
-        #     if bomb_life[simple_pos] in [2, 3, 4]:
-        #         return True
-        #     else:
-        #         return False
-        #
-        # flag = modify_act(obs, act)
-        # count = 0
-        # while flag:
-        #     # print("modify")
-        #     count += 1
-        #     if count > 30:
-        #         break
-        #     act = random.choice(directions).value
-        #     flag = modify_act(obs, act)
+
+        def modify_act(obs, act):
+            from utils import get_bomb_life
+            bomb_life = get_bomb_life(obs)
+            simple_pos = obs['position']
+            simple_x, simple_y = simple_pos
+            if act == 1 and simple_x > 0:
+                simple_x = simple_x - 1
+            elif act == 2 and simple_x < 10:
+                simple_x = simple_x + 1
+            elif act == 3 and simple_y > 0:
+                simple_y = simple_y - 1
+            elif act == 4 and simple_y < 10:
+                simple_y = simple_y + 1
+            simple_pos = (simple_x, simple_y)
+            if bomb_life[simple_pos] in [2, 3, 4]:
+                return True
+            else:
+                return False
+
+        flag = modify_act(obs, act)
+        count = 0
+        while flag:
+            # print("modify")
+            count += 1
+            if count > 30:
+                break
+            act = random.choice(directions).value
+            flag = modify_act(obs, act)
         return act
 
     @staticmethod

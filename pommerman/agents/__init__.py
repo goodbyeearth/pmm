@@ -8,4 +8,5 @@ from .random_agent import RandomAgent
 from .simple_agent import SimpleAgent
 from .tensorforce_agent import TensorForceAgent
 from .simple_nobomb_agent import SimpleNoBombAgent
-from .random1_agent import RandomAgent1
+from .suicide_agent import SuicideAgent
+from .super_agent import SuperAgent

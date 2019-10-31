@@ -305,20 +305,6 @@ class BaseRLModel(ABC):
                     print("Training loss: {:.6f}, Validation loss: {:.6f}".format(train_loss, val_loss))
                     print()
 
-                # Save
-                # len_parm = len(self.get_parameters())
-                # print('Len of network params', len_parm)
-                # params_to_old = self.get_parameters()
-                # self.old_params = []
-                # old = {}
-                # print("Save pretrain params")
-                # for _ in range(len_parm):
-                #     key, val = params_to_old.popitem()
-                #     old[key] = val
-                #     # print(key,val.shape)
-                # self.old_params.append(old)
-                # del  params_to_old
-
                 print("Save pretrain model", epoch_idx + 1)
                 self.save(save_path +'_e'+str(epoch_idx + 1) + '.zip')
                 # print("Now we have %d networks" % len(self.old_params))
@@ -846,7 +832,7 @@ class ActorCriticRLModel(BaseRLModel):
         pass
 
     @classmethod
-    def load(cls, load_path, env=None, custom_objects=None,using_PGN=False, **kwargs):
+    def load(cls, load_path, env=None, custom_objects=None,using_PGN=False,tensorboard_log=None, **kwargs):
         """
         Load the model from file
 
@@ -874,6 +860,7 @@ class ActorCriticRLModel(BaseRLModel):
         # model.set_env(env)
         # model.setup_model(data['old_params'])
         model.setup_model()
+        model.tensorboard_log = tensorboard_log
         model.load_parameters(params)
         # PGN MOD: Use new policy
         if using_PGN:
