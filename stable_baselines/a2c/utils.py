@@ -149,6 +149,24 @@ def linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0.0):
         bias = tf.get_variable("b", [n_hidden], initializer=tf.constant_initializer(init_bias))
         return tf.matmul(input_tensor, weight) + bias
 
+def vf_linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0.0,ww=None,bb=None):
+    """
+    Creates a fully connected layer for TensorFlow
+    :param input_tensor: (TensorFlow Tensor) The input tensor for the fully connected layer
+    :param scope: (str) The TensorFlow variable scope
+    :param n_hidden: (int) The number of hidden neurons
+    :param init_scale: (int) The initialization scale
+    :param init_bias: (int) The initialization offset bias
+    :return: (TensorFlow Tensor) fully connected layer
+    """
+    with tf.variable_scope(scope):
+        # weight1 = tf.convert_to_tensor(ww, dtype=tf.float32)
+        # bias1 = tf.convert_to_tensor(bb, dtype=tf.float32)
+        n_input = input_tensor.get_shape()[1].value
+        weight = tf.get_variable("w", [n_input, n_hidden], initializer=tf.constant_initializer(ww))
+        bias = tf.get_variable("b", [n_hidden], initializer=tf.constant_initializer(bb))
+        return tf.matmul(input_tensor, weight) + bias
+
 def my_conv(input_tensor, scope, *, n_filters, filter_size, stride,
          pad='VALID', init_scale=1.0, data_format='NHWC', one_dim_bias=False,ww=None,bb=None):
     """

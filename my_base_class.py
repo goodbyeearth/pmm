@@ -24,6 +24,7 @@ from stable_baselines import logger
 # from pommerman import agents
 from tqdm import tqdm
 
+
 class BaseRLModel(ABC):
     """
     The base RL model
@@ -224,7 +225,7 @@ class BaseRLModel(ABC):
         pass
 
     def pretrain(self, dataset, n_epochs=10, learning_rate=1e-4,
-                 adam_epsilon=1e-8, val_interval=None,save_path=None):
+                 adam_epsilon=1e-8, val_interval=None, save_path=None):
         """
         Pretrain a model using behavior cloning:
         supervised learning given an expert dataset.
@@ -253,7 +254,7 @@ class BaseRLModel(ABC):
                 val_interval = int(n_epochs / 10)
 
         with self.graph.as_default():
-            with tf.variable_scope('pretrain',reuse=tf.AUTO_REUSE):
+            with tf.variable_scope('pretrain', reuse=tf.AUTO_REUSE):
                 if continuous_actions:
                     obs_ph, actions_ph, deterministic_actions_ph = self._get_pretrain_placeholders()
                     loss = tf.reduce_mean(tf.square(actions_ph - deterministic_actions_ph))
@@ -278,7 +279,7 @@ class BaseRLModel(ABC):
 
         for epoch_idx in tqdm(range(int(n_epochs))):
             train_loss = 0.0
-            x= 0
+            x = 0
             # Full pass on the training set
             for _ in range(len(dataset.train_loader)):
                 x += _
@@ -306,7 +307,7 @@ class BaseRLModel(ABC):
                     print()
 
                 print("Save pretrain model", epoch_idx + 1)
-                self.save(save_path +'_e'+str(epoch_idx + 1) + '.zip')
+                self.save(save_path + '_e' + str(epoch_idx + 1) + '.zip')
                 # print("Now we have %d networks" % len(self.old_params))
             # Free memory
             del expert_obs, expert_actions
@@ -777,7 +778,7 @@ class ActorCriticRLModel(BaseRLModel):
                 # Discrete action probability, over multiple categories
                 actions = np.swapaxes(actions, 0, 1)  # swap axis for easier categorical split
                 prob = np.prod([proba[np.arange(act.shape[0]), act]
-                                         for proba, act in zip(actions_proba, actions)], axis=0)
+                                for proba, act in zip(actions_proba, actions)], axis=0)
 
             elif isinstance(self.action_space, gym.spaces.MultiBinary):
                 actions = actions.reshape((-1, self.action_space.n))
@@ -787,12 +788,12 @@ class ActorCriticRLModel(BaseRLModel):
                 prob = np.prod(actions_proba * actions + (1 - actions_proba) * (1 - actions), axis=1)
 
             elif isinstance(self.action_space, gym.spaces.Box):
-                actions = actions.reshape((-1, ) + self.action_space.shape)
+                actions = actions.reshape((-1,) + self.action_space.shape)
                 mean, logstd = actions_proba
                 std = np.exp(logstd)
 
                 n_elts = np.prod(mean.shape[1:])  # first dimension is batch size
-                log_normalizer = n_elts/2 * np.log(2 * np.pi) + 1/2 * np.sum(logstd, axis=1)
+                log_normalizer = n_elts / 2 * np.log(2 * np.pi) + 1 / 2 * np.sum(logstd, axis=1)
 
                 # Diagonal Gaussian action probability, for every action
                 logprob = -np.sum(np.square(actions - mean) / (2 * std), axis=1) - log_normalizer
@@ -832,7 +833,7 @@ class ActorCriticRLModel(BaseRLModel):
         pass
 
     @classmethod
-    def load(cls, load_path, env=None, custom_objects=None,using_PGN=False,tensorboard_log=None, **kwargs):
+    def load(cls, load_path, env=None, custom_objects=None, using_PGN=False, tensorboard_log=None, **kwargs):
         """
         Load the model from file
 
@@ -955,11 +956,12 @@ class OffPolicyRLModel(BaseRLModel):
         model.__dict__.update(data)
         model.__dict__.update(kwargs)
         # model.set_env(env)
-        model.setup_model(old = data['old_params'])
+        model.setup_model(old=data['old_params'])
 
         model.load_parameters(params)
 
         return model
+
 
 class _UnvecWrapper(VecEnvWrapper):
     def __init__(self, venv):

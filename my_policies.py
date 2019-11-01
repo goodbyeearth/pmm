@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 
 from stable_baselines.common.policies import ActorCriticPolicy
-from stable_baselines.a2c.utils import conv, linear, conv_to_fc, my_conv, my_linear
+from stable_baselines.a2c.utils import conv, linear, conv_to_fc, my_conv, my_linear, vf_linear
 
 
 def compute_old_conv(input=None, old_params=None, scop=None, n_fil=None, **kwargs):
@@ -21,7 +21,6 @@ def compute_old_conv(input=None, old_params=None, scop=None, n_fil=None, **kwarg
         old_conv.append(sumc)
     return old_conv, sumc
 
-
 def compute_old_linear(input=None, old_params=None, scop=None):
     activ = tf.nn.relu
     old_linear = []
@@ -36,7 +35,6 @@ def compute_old_linear(input=None, old_params=None, scop=None):
             suml = tf.add(suml, old_l)
         old_linear.append(suml)
     return old_linear, suml
-
 
 def custom_cnn_pgn(scaled_images, old_params=None, **kwargs):
     activ = tf.nn.relu
@@ -71,10 +69,12 @@ def custom_cnn_pgn(scaled_images, old_params=None, **kwargs):
         conv(tf.add(layer_12, sumc), 'c2', n_filters=64, filter_size=3, stride=1, init_scale=np.sqrt(2), pad='SAME',
              **kwargs))
     old_conv, sumc = compute_old_conv(input=old_conv, old_params=old_params, n_fil=64, scop='c2')
+
     layer_21 = activ(
         conv(tf.add(layer_2, sumc), 'c21', n_filters=64, filter_size=3, stride=1, init_scale=np.sqrt(2), pad='SAME',
              **kwargs))
     old_conv, sumc = compute_old_conv(input=old_conv, old_params=old_params, n_fil=64, scop='c21')
+
     layer_22 = activ(
         conv(tf.add(layer_21, sumc), 'c22', n_filters=64, filter_size=3, stride=1, init_scale=np.sqrt(2), pad='SAME',
              **kwargs))
@@ -84,10 +84,12 @@ def custom_cnn_pgn(scaled_images, old_params=None, **kwargs):
         conv(tf.add(layer_22, sumc), 'c3', n_filters=128, filter_size=3, stride=1, init_scale=np.sqrt(2), pad='SAME',
              **kwargs))
     old_conv, sumc = compute_old_conv(input=old_conv, old_params=old_params, n_fil=128, scop='c3')
+
     layer_31 = activ(
         conv(tf.add(layer_3, sumc), 'c31', n_filters=128, filter_size=3, stride=1, init_scale=np.sqrt(2), pad='SAME',
              **kwargs))
     old_conv, sumc = compute_old_conv(input=old_conv, old_params=old_params, n_fil=128, scop='c31')
+
     layer_32 = activ(
         conv(tf.add(layer_31, sumc), 'c32', n_filters=128, filter_size=3, stride=1, init_scale=np.sqrt(2), pad='SAME',
              **kwargs))
@@ -102,7 +104,6 @@ def custom_cnn_pgn(scaled_images, old_params=None, **kwargs):
     old_linear, suml = compute_old_linear(input=old_conv, scop='fc1', old_params=old_params)
 
     return layer_4, old_linear, suml
-
 
 def custom_cnn(scaled_images, **kwargs):
     activ = tf.nn.relu
@@ -130,7 +131,6 @@ def custom_cnn(scaled_images, **kwargs):
     layer_32 = conv_to_fc(layer_32)
     return activ(linear(layer_32, 'fc1', n_hidden=256, init_scale=np.sqrt(2)))
 
-
 class CustomPolicy(ActorCriticPolicy):
     def __init__(self, sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse=False, old_params=None, **kwargs):
         super(CustomPolicy, self).__init__(sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse=reuse, scale=True)
@@ -152,33 +152,29 @@ class CustomPolicy(ActorCriticPolicy):
 
                 pi_h = extracted_features
 
-                pi_h = activ(linear(tf.add(pi_h, sum_fc1), 'pi_fc0', n_hidden=128))
+                pi_h = activ(linear(tf.add(pi_h, sum_fc1), 'pi_fc0', n_hidden=256))
                 old_pi_fc0, sum_pi_fc0 = compute_old_linear(input=old_fc1, scop='pi_fc0', old_params=old_params)
 
-                pi_h = activ(linear(tf.add(pi_h, sum_pi_fc0), 'pi_fc1', 64))
-                old_pi_fc1, sum_pi_fc1 = compute_old_linear(input=old_pi_fc0, scop='pi_fc1', old_params=old_params)
+                # pi_h = activ(linear(tf.add(pi_h, sum_pi_fc0), 'pi_fc1', 64))
+                # old_pi_fc1, sum_pi_fc1 = compute_old_linear(input=old_pi_fc0, scop='pi_fc1', old_params=old_params)
 
-                pi_latent = tf.add(pi_h, sum_pi_fc1)
+                pi_latent = tf.add(pi_h, sum_pi_fc0)
 
                 vf_h = extracted_features
+                param = old_params[-1]
+                vf_h = activ(vf_linear(tf.add(vf_h, sum_fc1), 'vf_fc0', n_hidden=256, ww=param['vf_fc0/w'],
+                                       bb=param['vf_fc0/b']))
+                # vf_h = activ(vf_linear(vf_h, 'vf_fc1', n_hidden=64, ww=param['vf_fc1/w'], bb=param['vf_fc1/b']))
 
-                vf_h = activ(linear(tf.add(vf_h, sum_fc1), 'vf_fc0', n_hidden=128))
-                old_vf_fc0, sum_vf_fc0 = compute_old_linear(input=old_fc1, scop='vf_fc0', old_params=old_params)
+                vf_latent = vf_h
 
-                vf_h = activ(linear(tf.add(vf_h, sum_vf_fc0), 'vf_fc1', n_hidden=64))
-                old_vf_fc1, sum_vf_fc1 = compute_old_linear(input=old_vf_fc0, scop='vf_fc1', old_params=old_params)
-
-                value_fn = linear(tf.add(vf_h, sum_vf_fc1), 'vf', n_hidden=1)
-                old_vf, sum_vf = compute_old_linear(input=old_vf_fc1, scop='vf', old_params=old_params)
-
-                vf_latent = tf.add(vf_h, sum_vf_fc1)
+                value_fn = vf_linear(vf_h, 'vf', n_hidden=1, ww=param['vf/w'], bb=param['vf/b'])
 
                 self._proba_distribution, self._policy, self.q_value = \
                     self.pdtype.proba_distribution_from_latent_pgn(pi_latent, vf_latent, init_scale=0.01,
-                                                                   old_pi_fc=old_pi_fc1, old_vf_fc=old_vf_fc1,
-                                                                   old_params=old_params)
+                                                                   old_pi_fc=old_pi_fc0, old_params=old_params)
 
-                self._value_fn = tf.add(value_fn, sum_vf)
+                self._value_fn = value_fn
                 self._setup_init()
             else:
                 print("No old networks")
@@ -188,13 +184,13 @@ class CustomPolicy(ActorCriticPolicy):
 
                 pi_h = extracted_features
                 # TODO: 调
-                for i, layer_size in enumerate([128, 64]):
+                for i, layer_size in enumerate([256]):
                     pi_h = activ(linear(pi_h, 'pi_fc' + str(i), n_hidden=layer_size))
                 pi_latent = pi_h
 
                 vf_h = extracted_features
                 # TODO: 调
-                for i, layer_size in enumerate([128, 64]):
+                for i, layer_size in enumerate([256]):
                     vf_h = activ(linear(vf_h, 'vf_fc' + str(i), n_hidden=layer_size))
                 value_fn = linear(vf_h, 'vf', n_hidden=1)
                 vf_latent = vf_h

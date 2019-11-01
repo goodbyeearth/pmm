@@ -23,9 +23,9 @@ def make_envs(env_id):
     def _thunk():
         agent_list = [
             agents.SuperAgent(),
-            agents.SimpleAgent(),
             agents.SuperAgent(),
-            agents.SimpleAgent()
+            agents.SuicideAgent(),
+            agents.SuicideAgent()
         ]
         env = pommerman.make(env_id, agent_list)
         return env
@@ -94,9 +94,10 @@ def train():
 
 
 def play0():
-    model0 = PPO2.load('models/simple/agent0/simple1_e30.zip')
-
-    model2 = PPO2.load('models/simple/agent2/simple_e10.zip')
+    model0_path = 'models/simple/agent0/simple_e40.zip'
+    model2_path = 'models/simple/agent2/simple_e40.zip'
+    model0 = PPO2.load(model0_path)
+    model2 = PPO2.load(model2_path)
 
     agent_list = [
         # agents.SimpleNoBombAgent(),
@@ -108,10 +109,10 @@ def play0():
         # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12347),
     ]
     env = pommerman.make(args.env, agent_list)
-
-    print('Load model0 from models/simple/agent0/simple1_e30.zip')
-    print('Load model2 from models/simple/agent0/simple_e10.zip')
-    print("train_idx (0,2)")
+    env._max_steps = 500
+    print('Load model0 from', model0_path)
+    print('Load model2 from', model2_path)
+    print("play0 --> train_idx (0,2)")
     for episode in range(100):
         obs = env.reset()
         done = False
@@ -132,8 +133,8 @@ def play0():
 
             obs, rewards, done, info = env.step(all_actions)
             env.render()
-            if not env._agents[0].is_alive:
-                done = True
+            # if not env._agents[0].is_alive:
+            #     done = True
         print(info)
 
 
@@ -143,16 +144,16 @@ def play1():
     agent_list = [
         # agents.SimpleNoBombAgent(),
         agents.SuperAgent(),
+        agents.SimpleAgent(),
         agents.SuperAgent(),
-        agents.SuperAgent(),
-        agents.SuperAgent(),
+        agents.SimpleAgent(),
         # agents.PlayerAgent(agent_control="arrows"),
         # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12347),
     ]
     env = pommerman.make(args.env, agent_list)
-
+    env._max_steps = 500
     print('Load model0 from', args.load_path)
-    print("train_idx 0")
+    print("play1 --> train_idx 0")
     for episode in range(100):
         obs = env.reset()
         done = False
@@ -163,14 +164,14 @@ def play1():
                 feature0 = featurize(obs[0])  # model0
                 action0, _states = model0.predict(feature0)
                 all_actions[0] = int(action0)
-                if flag:
-                    print("===>model:", action0)
-                    flag = False
-                else:
-                    flag = True
-                    print("--->model:", action0)
-            else:
-                print("simple")
+                # if flag:
+                #     print(">>>> model:", action0)
+                #     flag = False
+                # else:
+                #     flag = True
+                #     print("<<<< model:", action0)
+            # else:
+                # print("simple")
             # feature2 = featurize(obs[2])  # model2
             # action2, _states = model2.predict(feature2)
             # all_actions[2] = int(action2)
@@ -182,27 +183,31 @@ def play1():
             env.render()
             if not env._agents[0].is_alive:
                 done = True
+                print("death")
         print(info)
 
 
 def _evaluate(n_episode=10000):
-    model0 = PPO2.load('models/simple/agent0/simple1_e30.zip')
-
-    model2 = PPO2.load('models/simple/agent2/simple_e10.zip')
+    from pommerman import constants
+    model0_path = 'models/simple/agent0/simple_e40.zip'
+    model2_path = 'models/simple/agent2/simple_e40.zip'
+    model0 = PPO2.load(model0_path)
+    model2 = PPO2.load(model2_path)
 
     agent_list = [
         # agents.SimpleNoBombAgent(),
-        agents.SuperAgent(),
-        agents.SuperAgent(),
-        agents.SuperAgent(),
-        agents.SuperAgent(),
+        agents.SimpleAgent(),
+        agents.SimpleAgent(),
+        agents.SimpleAgent(),
+        agents.SimpleAgent(),
         # agents.PlayerAgent(agent_control="arrows"),
         # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12343),
     ]
     env = pommerman.make(args.env, agent_list)
-    print('Load model0 from models/simple/agent0/simple1_e30.zip')
-    print('Load model2 from models/simple/agent0/simple_e10.zip')
-    print("train_idx (0,2)")
+    print('Load model0 from', model0_path)
+    print('Load model2 from', model2_path)
+    print("evaluate --> train_idx (0,2)")
+    print("super vs simple")
     win = 0
     tie = 0
     loss = 0
@@ -226,12 +231,12 @@ def _evaluate(n_episode=10000):
 
             obs, rewards, done, info = env.step(all_actions)
             # env.render()
-        if rewards[0] == 1:
-            win += 1
-        elif rewards[0] == -1:
-            loss += 1
-        else:
+        if info['result'] == constants.Result.Tie:
             tie += 1
+        elif info['winners'] == [0, 2]:
+            win += 1
+        else:
+            loss += 1
         end = time.time()
         if (episode + 1) % 100 == 0:
             print("win / tie / loss")

@@ -150,7 +150,7 @@ class CategoricalProbabilityDistributionType(ProbabilityDistributionType):
 
     def proba_distribution_from_latent_pgn(self, pi_latent_vector, vf_latent_vector, init_scale=1.0, init_bias=0.0,
                                            old_pi_fc=None, old_vf_fc=None, old_params=None):
-        from stable_baselines.a2c.utils import my_linear
+        from stable_baselines.a2c.utils import my_linear, vf_linear
         pdparam = linear(pi_latent_vector, 'pi', self.n_cat, init_scale=init_scale, init_bias=init_bias)
         old_pi = []
         for n in range(len(old_params)):
@@ -166,21 +166,22 @@ class CategoricalProbabilityDistributionType(ProbabilityDistributionType):
             # print()
         pdparam = tf.add(pdparam, sum_pi)
 
-        q_values = linear(vf_latent_vector, 'q', self.n_cat, init_scale=init_scale, init_bias=init_bias)
-        old_q = []
-        for n in range(len(old_params)):
-            param = old_params[n]
-            # print('Use old model/1/w & b')
-            old_l = my_linear(old_vf_fc[n], 'old_q' + str(n),
-                              ww=param['q/w'], bb=param['q/b'])
-
-            old_q.append(old_l)
-            if n == 0:
-                sum_q = old_l
-            else:
-                sum_q = tf.add(sum_q, old_l)
-            # print()
-        q_values = tf.add(q_values, sum_q)
+        param = old_params[-1]
+        q_values = vf_linear(vf_latent_vector, 'q', self.n_cat, ww=param['q/w'], bb=param['q/b'])
+        # old_q = []
+        # for n in range(len(old_params)):
+        #     param = old_params[n]
+        #     # print('Use old model/1/w & b')
+        #     old_l = my_linear(old_vf_fc[n], 'old_q' + str(n),
+        #                       ww=param['q/w'], bb=param['q/b'])
+        #
+        #     old_q.append(old_l)
+        #     if n == 0:
+        #         sum_q = old_l
+        #     else:
+        #         sum_q = tf.add(sum_q, old_l)
+        # print()
+        q_values = q_values
 
         return self.proba_distribution_from_flat(pdparam), pdparam, q_values
 

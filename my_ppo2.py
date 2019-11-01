@@ -332,6 +332,7 @@ class PPO2(ActorCriticRLModel):
               reset_num_timesteps=True, env=None, learning_rate=2.5e-4, n_steps=128, gamma=0.99):
         # temp params
         n_steps = 32
+        # learning_rate = 2.5e-3
 
         self.n_steps = n_steps
         print("n_steps = ", self.n_steps)

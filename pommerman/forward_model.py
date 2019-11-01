@@ -962,7 +962,7 @@ class ForwardModel(object):
             return [-1, 1, -1, 1]
         elif step_count >= max_steps:
             # Game is over by max_steps. All agents tie.
-            return [2] * 4
+            return [0] * 4
         elif len(alive_agents) == 0:
             # Everyone's dead. All agents tie.
             return [-1] * 4
