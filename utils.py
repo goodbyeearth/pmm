@@ -2,13 +2,13 @@ import numpy as np
 from gym import spaces
 
 def get_feature_space():
-    return spaces.Box(low=0, high=1, shape=(11, 11, 20))
+    return spaces.Box(low=0, high=1, shape=(11, 11, 30))
 
 def get_action_space():
     return spaces.Discrete(6)
 
-# 11*11*20
-def featurize(obs):
+#11*11*20
+def featurize_bak1(obs):
     maps = []
     board = obs['board']
     """棋盘物体 one hot"""
@@ -154,132 +154,8 @@ def featurize(obs):
 
     return np.stack(maps, axis=2)  # 11*11*20
 
-def get_bomb_life(obs):
-    board = obs['board']
-    bomb_life = obs['bomb_life']
-    bomb_blast_strength = obs['bomb_blast_strength']
-    flame_life = obs['flame_life']
-    # 统一炸弹时间
-    for x in range(11):
-        for y in range(11):
-            if bomb_blast_strength[(x, y)] > 0:
-                for i in range(1, int(bomb_blast_strength[(x, y)])):
-                    pos = (x + i, y)
-                    if x + i > 10:
-                        break
-                    if board[pos] == 1:
-                        break
-                    if board[pos] == 2:
-                        bomb_life[pos] = bomb_life[(x, y)]
-                        break
-                    # if a bomb
-                    if board[pos] == 3:
-                        if bomb_life[(x, y)] < bomb_life[pos]:
-                            bomb_life[pos] = bomb_life[(x, y)]
-                        else:
-                            bomb_life[(x, y)] = bomb_life[pos]
-                    elif bomb_life[pos] != 0:
-                        if bomb_life[(x, y)] < bomb_life[pos]:
-                            bomb_life[pos] = bomb_life[(x, y)]
-                    else:
-                        bomb_life[pos] = bomb_life[(x, y)]
-                for i in range(1, int(bomb_blast_strength[(x, y)])):
-                    pos = (x - i, y)
-                    if x - i < 0:
-                        break
-                    if board[pos] == 1:
-                        break
-                    if board[pos] == 2:
-                        bomb_life[pos] = bomb_life[(x, y)]
-                        break
-                    # if a bomb
-                    if board[pos] == 3:
-                        if bomb_life[(x, y)] < bomb_life[pos]:
-                            bomb_life[pos] = bomb_life[(x, y)]
-                        else:
-                            bomb_life[(x, y)] = bomb_life[pos]
-                    elif bomb_life[pos] != 0:
-                        if bomb_life[(x, y)] < bomb_life[pos]:
-                            bomb_life[pos] = bomb_life[(x, y)]
-                    else:
-                        bomb_life[pos] = bomb_life[(x, y)]
-                for i in range(1, int(bomb_blast_strength[(x, y)])):
-                    pos = (x, y + i)
-                    if y + i > 10:
-                        break
-                    if board[pos] == 1:
-                        break
-                    if board[pos] == 2:
-                        bomb_life[pos] = bomb_life[(x, y)]
-                        break
-                    # if a bomb
-                    if board[pos] == 3:
-                        if bomb_life[(x, y)] < bomb_life[pos]:
-                            bomb_life[pos] = bomb_life[(x, y)]
-                        else:
-                            bomb_life[(x, y)] = bomb_life[pos]
-                    elif bomb_life[pos] != 0:
-                        if bomb_life[(x, y)] < bomb_life[pos]:
-                            bomb_life[pos] = bomb_life[(x, y)]
-                    else:
-                        bomb_life[pos] = bomb_life[(x, y)]
-                for i in range(1, int(bomb_blast_strength[(x, y)])):
-                    pos = (x, y - i)
-                    if y - i < 0:
-                        break
-                    if board[pos] == 1:
-                        break
-                    if board[pos] == 2:
-                        bomb_life[pos] = bomb_life[(x, y)]
-                        break
-                    # if a bomb
-                    if board[pos] == 3:
-                        if bomb_life[(x, y)] < bomb_life[pos]:
-                            bomb_life[pos] = bomb_life[(x, y)]
-                        else:
-                            bomb_life[(x, y)] = bomb_life[pos]
-                    elif bomb_life[pos] != 0:
-                        if bomb_life[(x, y)] < bomb_life[pos]:
-                            bomb_life[pos] = bomb_life[(x, y)]
-                    else:
-                        bomb_life[pos] = bomb_life[(x, y)]
-
-    bomb_life = np.where(bomb_life > 0, bomb_life + 3, bomb_life)
-    flame_life = np.where(flame_life == 0, 15, flame_life)
-    flame_life = np.where(flame_life == 1, 15, flame_life)
-    bomb_life = np.where(flame_life != 15, flame_life, bomb_life)
-    return bomb_life
-
-def judge_bomb(obs):
-    pos = next_pos(obs['position'])
-    bomb_life = get_bomb_life(obs)
-    for p in pos:
-        if bomb_life[p] > 0:
-            return True
-    return False
-
-# def judge_bomb(obs):
-#     bomb_life = get_bomb_life(obs)
-#     if (bomb_life > 0).any():
-#         return True  # 有爆炸威胁
-#     else:
-#         return False  # 无爆炸威胁
-
-# 判断周围有无爆炸威胁
-
-
-
-def next_pos(pos):
-    x, y = pos
-    up = (np.clip(x - 1, 0, 10), y)
-    down = (np.clip(x + 1, 0, 10), y)
-    left = (x, np.clip(y - 1, 0, 10))
-    right = (x, np.clip(y + 1, 0, 10))
-    return [pos, up, down, left, right]
-
-
 # 11*11*30
-def featurize_bak1(obs):
+def featurize(obs):
     maps = []
     board = obs['board']
     """棋盘物体 one hot"""
@@ -917,3 +793,129 @@ def featurize_bak4(obs):  # no one-hot
     maps.append(board == train_agent_idx)
 
     return np.stack(maps, axis=2)  # 11*11*16
+
+def get_bomb_life(obs):
+    board = obs['board']
+    bomb_life = obs['bomb_life']
+    bomb_blast_strength = obs['bomb_blast_strength']
+    flame_life = obs['flame_life']
+    # 统一炸弹时间
+    for x in range(11):
+        for y in range(11):
+            if bomb_blast_strength[(x, y)] > 0:
+                for i in range(1, int(bomb_blast_strength[(x, y)])):
+                    pos = (x + i, y)
+                    if x + i > 10:
+                        break
+                    if board[pos] == 1:
+                        break
+                    if board[pos] == 2:
+                        bomb_life[pos] = bomb_life[(x, y)]
+                        break
+                    # if a bomb
+                    if board[pos] == 3:
+                        if bomb_life[(x, y)] < bomb_life[pos]:
+                            bomb_life[pos] = bomb_life[(x, y)]
+                        else:
+                            bomb_life[(x, y)] = bomb_life[pos]
+                    elif bomb_life[pos] != 0:
+                        if bomb_life[(x, y)] < bomb_life[pos]:
+                            bomb_life[pos] = bomb_life[(x, y)]
+                    else:
+                        bomb_life[pos] = bomb_life[(x, y)]
+                for i in range(1, int(bomb_blast_strength[(x, y)])):
+                    pos = (x - i, y)
+                    if x - i < 0:
+                        break
+                    if board[pos] == 1:
+                        break
+                    if board[pos] == 2:
+                        bomb_life[pos] = bomb_life[(x, y)]
+                        break
+                    # if a bomb
+                    if board[pos] == 3:
+                        if bomb_life[(x, y)] < bomb_life[pos]:
+                            bomb_life[pos] = bomb_life[(x, y)]
+                        else:
+                            bomb_life[(x, y)] = bomb_life[pos]
+                    elif bomb_life[pos] != 0:
+                        if bomb_life[(x, y)] < bomb_life[pos]:
+                            bomb_life[pos] = bomb_life[(x, y)]
+                    else:
+                        bomb_life[pos] = bomb_life[(x, y)]
+                for i in range(1, int(bomb_blast_strength[(x, y)])):
+                    pos = (x, y + i)
+                    if y + i > 10:
+                        break
+                    if board[pos] == 1:
+                        break
+                    if board[pos] == 2:
+                        bomb_life[pos] = bomb_life[(x, y)]
+                        break
+                    # if a bomb
+                    if board[pos] == 3:
+                        if bomb_life[(x, y)] < bomb_life[pos]:
+                            bomb_life[pos] = bomb_life[(x, y)]
+                        else:
+                            bomb_life[(x, y)] = bomb_life[pos]
+                    elif bomb_life[pos] != 0:
+                        if bomb_life[(x, y)] < bomb_life[pos]:
+                            bomb_life[pos] = bomb_life[(x, y)]
+                    else:
+                        bomb_life[pos] = bomb_life[(x, y)]
+                for i in range(1, int(bomb_blast_strength[(x, y)])):
+                    pos = (x, y - i)
+                    if y - i < 0:
+                        break
+                    if board[pos] == 1:
+                        break
+                    if board[pos] == 2:
+                        bomb_life[pos] = bomb_life[(x, y)]
+                        break
+                    # if a bomb
+                    if board[pos] == 3:
+                        if bomb_life[(x, y)] < bomb_life[pos]:
+                            bomb_life[pos] = bomb_life[(x, y)]
+                        else:
+                            bomb_life[(x, y)] = bomb_life[pos]
+                    elif bomb_life[pos] != 0:
+                        if bomb_life[(x, y)] < bomb_life[pos]:
+                            bomb_life[pos] = bomb_life[(x, y)]
+                    else:
+                        bomb_life[pos] = bomb_life[(x, y)]
+
+    bomb_life = np.where(bomb_life > 0, bomb_life + 3, bomb_life)
+    flame_life = np.where(flame_life == 0, 15, flame_life)
+    flame_life = np.where(flame_life == 1, 15, flame_life)
+    bomb_life = np.where(flame_life != 15, flame_life, bomb_life)
+    return bomb_life
+
+def judge_bomb(obs):
+    pos = next_pos(obs['position'])
+    bomb_life = get_bomb_life(obs)
+    for p in pos:
+        if bomb_life[p] > 0:
+            return True
+    return False
+
+def judge_enemy(obs):
+    if (obs['board'] == 11).any() or (obs['board'] == 13).any():
+        return True
+    return False
+
+# def judge_bomb(obs):
+#     bomb_life = get_bomb_life(obs)
+#     if (bomb_life > 0).any():
+#         return True  # 有爆炸威胁
+#     else:
+#         return False  # 无爆炸威胁
+
+# 判断周围有无爆炸威胁
+
+def next_pos(pos):
+    x, y = pos
+    up = (np.clip(x - 1, 0, 10), y)
+    down = (np.clip(x + 1, 0, 10), y)
+    left = (x, np.clip(y - 1, 0, 10))
+    right = (x, np.clip(y + 1, 0, 10))
+    return [pos, up, down, left, right]

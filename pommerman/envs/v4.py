@@ -167,7 +167,7 @@ class Pomme(v0.Pomme):
         reward2 = self._get_rewards2()
         # reward3 = self._get_rewards3(obs,old_state)
         # reward4 = self._get_rewards4(obs,old_state)
-        reward = reward1
+        reward = reward2
         # reward = list(np.array(reward1)+np.array(reward2)+np.array(reward3))
         info = self._get_info(done, reward)
 

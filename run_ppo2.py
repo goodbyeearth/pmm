@@ -23,9 +23,9 @@ def make_envs(env_id):
     def _thunk():
         agent_list = [
             agents.SuperAgent(),
-            agents.SuperAgent(),
+            agents.StopAgent(),
             agents.SuicideAgent(),
-            agents.SuicideAgent()
+            agents.StopAgent()
         ]
         env = pommerman.make(env_id, agent_list)
         return env
@@ -146,8 +146,8 @@ def play1():
         # agents.SimpleNoBombAgent(),
         agents.SuperAgent(),
         agents.SuperAgent(),
-        agents.SuicideAgent(),
-        agents.SuicideAgent(),
+        agents.SuperAgent(),
+        agents.SuperAgent(),
         # agents.PlayerAgent(agent_control="arrows"),
         # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12347),
     ]
@@ -161,7 +161,7 @@ def play1():
         flag = True
         while not done:
             all_actions = env.act(obs)
-            if judge_bomb_4(obs[0]):
+            if judge_bomb(obs[0]):
                 feature0 = featurize(obs[0])  # model0
                 action0, _states = model0.predict(feature0)
                 all_actions[0] = int(action0)

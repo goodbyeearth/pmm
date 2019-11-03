@@ -39,7 +39,7 @@ def _worker(remote, parent_remote, env_fn_wrapper):
                     info['terminal_observation'] = whole_obs  # 保存终结的 observation，否则 reset 后将丢失
                     whole_obs = env.reset()
                 flag = False
-                while not judge_bomb(whole_obs[train_idx]):  # 判断是否周围有威胁
+                while not judge_enemy(whole_obs[train_idx]) or not judge_bomb(whole_obs[train_idx]):  # 判断是否周围有威胁 或者 有敌人
                     all_actions = env.act(env.get_observations())
                     whole_obs, whole_rew, reset_done, info = env.step(all_actions)
                     if not env._agents[train_idx].is_alive or reset_done:  # 如果死亡或者结束，重新开始一局
@@ -57,7 +57,7 @@ def _worker(remote, parent_remote, env_fn_wrapper):
             elif cmd == 'reset':
                 whole_obs = env.reset()
 
-                while not judge_bomb(whole_obs[train_idx]):  # 如果没有威胁，在后台自己走
+                while not judge_enemy(whole_obs[train_idx]) or not judge_bomb(whole_obs[train_idx]):  # 如果没有威胁，在后台自己走
                     all_actions = env.act(env.get_observations())
                     whole_obs, whole_rew, done, info = env.step(all_actions)
                     if not env._agents[train_idx].is_alive or done:  # 如果训练智能体死亡或者游戏结束，重新开始一局
