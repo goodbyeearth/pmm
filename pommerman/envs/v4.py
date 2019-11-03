@@ -163,11 +163,11 @@ class Pomme(v0.Pomme):
         obs = self.get_observations()
         curr_full_obs = self.get_full_observations()
         # reward = self._get_rewards()
-        reward1 = self._get_rewards1(obs,old_state)
-        reward2 = self._get_rewards2(obs,old_state)
-        reward3 = self._get_rewards3(obs,old_state)
-        reward4 = self._get_rewards4(obs,old_state)
-        reward = reward4
+        reward1 = self._get_rewards1()
+        reward2 = self._get_rewards2()
+        # reward3 = self._get_rewards3(obs,old_state)
+        # reward4 = self._get_rewards4(obs,old_state)
+        reward = reward1
         # reward = list(np.array(reward1)+np.array(reward2)+np.array(reward3))
         info = self._get_info(done, reward)
 
@@ -186,15 +186,15 @@ class Pomme(v0.Pomme):
     # self define reward function
     # need to modify the return reward
     # now is for agent0
-    def _get_rewards1(self,curr_state,old_state):
-        return self.model.get_rewards1(self._agents, self._game_type, self._step_count, self._max_steps,curr_state,old_state,0)
-    def _get_rewards2(self,curr_state,old_state):
-        return self.model.get_rewards2(self._agents, self._game_type, self._step_count, self._max_steps,curr_state,old_state,0)
-    def _get_rewards3(self,curr_state,old_state):
-        return self.model.get_rewards3(self._agents, self._game_type, self._step_count, self._max_steps,curr_state,old_state,0)
-    def _get_rewards4(self,curr_state,old_state,):
-        return self.model.get_rewards4(self._agents, self._game_type, self._step_count,
-                                       self._max_steps,curr_state,old_state,0)
+    def _get_rewards1(self):
+        return self.model.get_rewards1(self._agents, self._game_type, self._step_count, self._max_steps,0)
+    def _get_rewards2(self):
+        return self.model.get_rewards2(self._agents, self._game_type, self._step_count, self._max_steps,0)
+    # def _get_rewards3(self,curr_state,old_state):
+    #     return self.model.get_rewards3(self._agents, self._game_type, self._step_count, self._max_steps,curr_state,old_state,0)
+    # def _get_rewards4(self,curr_state,old_state,):
+    #     return self.model.get_rewards4(self._agents, self._game_type, self._step_count,
+    #                                    self._max_steps,curr_state,old_state,0)
 
     @staticmethod
     def featurize(obs):
