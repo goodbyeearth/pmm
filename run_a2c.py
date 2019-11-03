@@ -12,7 +12,7 @@ from my_cmd_utils import my_arg_parser
 from my_subproc_vec_env import SubprocVecEnv
 from my_policies import CustomPolicy
 
-from my_ppo2 import PPO2
+from my_a2c import A2C
 from utils import *
 import numpy as np
 import time
@@ -33,14 +33,15 @@ def make_envs(env_id):
     return _thunk
 
 
-def _pretrain(expert_path):
+def _pretrain():
+    expert_path = 'dataset/simple_agent2/'
     if args.load_path:
         print("Load model from", args.load_path)
-        model = PPO2.load(args.load_path, using_PGN=args.using_PGN)
+        model = A2C.load(args.load_path, using_PGN=args.using_PGN)
     else:
-        # Init a Continural PPO2 model
-        print("Init a pgn PPO2")
-        model = PPO2(CustomPolicy, verbose=1, tensorboard_log=args.log_path)
+        # Init a Continural A2C model
+        print("Init a pgn A2C")
+        model = A2C(CustomPolicy, verbose=1, tensorboard_log=args.log_path)
 
     print("In pretrain")
     print()
@@ -71,11 +72,11 @@ def train():
     if args.load_path:
         print("LOAD A MODEL FOR TRAIN FROM", args.load_path)
         print()
-        model = PPO2.load(args.load_path, using_PGN=args.using_PGN, tensorboard_log=args.log_path)
+        model = A2C.load(args.load_path, using_PGN=args.using_PGN, tensorboard_log=args.log_path)
     else:
-        print("INIT CONTINURAL PPO2")
+        print("INIT CONTINURAL A2C")
         print()
-        model = PPO2(CustomPolicy, verbose=1, tensorboard_log=args.log_path)
+        model = A2C(CustomPolicy, verbose=1, tensorboard_log=args.log_path)
 
     print("START TO TRAIN")
     print("USING ENVIRONMEN", args.env)
@@ -96,8 +97,8 @@ def train():
 def play0():
     model0_path = 'models/simple/agent0/simple_e40.zip'
     model2_path = 'models/simple/agent2/simple_e40.zip'
-    model0 = PPO2.load(model0_path)
-    model2 = PPO2.load(model2_path)
+    model0 = A2C.load(model0_path)
+    model2 = A2C.load(model2_path)
 
     agent_list = [
         # agents.SimpleNoBombAgent(),
@@ -139,14 +140,14 @@ def play0():
 
 
 def play1():
-    model0 = PPO2.load(args.load_path)
+    model0 = A2C.load(args.load_path)
 
     agent_list = [
         # agents.SimpleNoBombAgent(),
         agents.SuperAgent(),
-        agents.SimpleAgent(),
         agents.SuperAgent(),
-        agents.SimpleAgent(),
+        agents.SuicideAgent(),
+        agents.SuicideAgent(),
         # agents.PlayerAgent(agent_control="arrows"),
         # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12347),
     ]
@@ -164,14 +165,15 @@ def play1():
                 feature0 = featurize(obs[0])  # model0
                 action0, _states = model0.predict(feature0)
                 all_actions[0] = int(action0)
-                # if flag:
-                #     print(">>>> model:", action0)
-                #     flag = False
-                # else:
-                #     flag = True
-                #     print("<<<< model:", action0)
+            #     if flag:
+            #         print(">>>> model:", action0)
+            #         flag = False
+            #     else:
+            #         flag = True
+            #         print("<<<< model:", action0)
             # else:
-                # print("simple")
+            #     print("simple")
+
             # feature2 = featurize(obs[2])  # model2
             # action2, _states = model2.predict(feature2)
             # all_actions[2] = int(action2)
@@ -189,10 +191,10 @@ def play1():
 
 def _evaluate(n_episode=10000):
     from pommerman import constants
-    model0_path = 'models/simple/agent0/simple_e40.zip'
-    model2_path = 'models/simple/agent2/simple_e40.zip'
-    model0 = PPO2.load(model0_path)
-    model2 = PPO2.load(model2_path)
+    model0_path = 'models/simple/agent0/simple_e10.zip'
+    model2_path = 'models/simple/agent2/simple_e10.zip'
+    model0 = A2C.load(model0_path)
+    model2 = A2C.load(model2_path)
 
     agent_list = [
         # agents.SimpleNoBombAgent(),
@@ -207,7 +209,7 @@ def _evaluate(n_episode=10000):
     print('Load model0 from', model0_path)
     print('Load model2 from', model2_path)
     print("evaluate --> train_idx (0,2)")
-    print("super vs simple")
+    print("my agents vs simple")
     win = 0
     tie = 0
     loss = 0
@@ -251,7 +253,7 @@ if __name__ == '__main__':
 
     # Pretrain
     if args.pre_train:
-        _pretrain('dataset/simple_agent2/')
+        _pretrain()
 
     # Pretrain_test
     # if args.pre_train:
@@ -378,8 +380,8 @@ if __name__ == '__main__':
     #         return turn_right(act)
 
     # def test():
-    #     print("INIT CONTINURAL PPO2")
-    #     model = PPO2(CustomPolicy, verbose=1)
+    #     print("INIT CONTINURAL A2C")
+    #     model = A2C(CustomPolicy, verbose=1)
     #     print("RUN PRETRAIN n_epochs =", 10)
     #     from my_dataset import ExpertDataset
     #     # dataset = ExpertDataset(expert_path='dataset/test.npz')

@@ -136,7 +136,7 @@ class SuperAgent(BaseAgent):
         while flag:
             # print("modify")
             count += 1
-            if count > 30:
+            if count > 50:
                 break
             act = random.choice(directions).value
             flag = modify_act(obs, act)

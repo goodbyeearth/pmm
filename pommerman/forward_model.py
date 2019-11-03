@@ -744,201 +744,201 @@ class ForwardModel(object):
                 # No team has yet won or lost.
                 return [0] * 4
 
+    # @staticmethod
+    # def get_rewards1(agents, game_type, step_count, max_steps, curr_state, old_state, train_idx):
+    #
+    #     def any_lst_equal(lst, values):
+    #         '''Checks if list are equal'''
+    #         return any([lst == v for v in values])
+    #
+    #     alive_agents = [num for num, agent in enumerate(agents) \
+    #                     if agent.is_alive]
+    #
+    #     # Set the regret of death
+    #     from utils import get_bomb_life
+    #     bomb_zone = get_bomb_life(curr_state[train_idx])
+    #     danger = []
+    #     for i in range(11):
+    #         for j in range(11):
+    #             if bomb_zone[(i, j)] in [2, 3, 4]:
+    #                 danger.append((i, j))
+    #     cant_go = []
+    #     if curr_state[train_idx]['can_kick']:
+    #         cant_go_zone = [1, 2, (train_idx + 1) % 4, (train_idx + 2) % 4,
+    #                                                           (train_idx + 3) % 4]
+    #     else:
+    #         cant_go_zone = [1, 2, 3, (train_idx + 1) % 4, (train_idx + 2) % 4,
+    #                         (train_idx + 3) % 4]
+    #     for i in range(11):
+    #         for j in range(11):
+    #             if curr_state[train_idx]['board'][(i, j)] in cant_go_zone:
+    #                 cant_go.append((i, j))
+    #     cant_go.extend(danger)
+    #
+    #     if train_idx + 10 in old_state[train_idx]['alive'] and train_idx not in alive_agents:
+    #         regret = 7
+    #     else:
+    #         regret = 0
+    #     x, y = old_state[train_idx]['position']
+    #     # up=x-1 down=x+1 left=y-1 right=y+1
+    #     up_pos = (x - 1, y) if x - 1 >= 0 else (x, y)
+    #     down_pos = (x + 1, y) if x + 1 < 11 else (x, y)
+    #     left_pos = (x, y - 1) if y - 1 >= 0 else (x, y)
+    #     right_pos = (x, y + 1) if y + 1 < 11 else (x, y)
+    #     temp_may_pos = [old_state[train_idx]['position'], up_pos, down_pos, left_pos, right_pos]
+    #     may_pos = [old_state[train_idx]['position']]
+    #     for tp in temp_may_pos:
+    #         if tp != old_state[train_idx]['position']:
+    #             may_pos.append(tp)
+    #     for may in may_pos:
+    #         if may in cant_go:
+    #             regret -= 1
+    #     extra_reward = 0
+    #     # print(alive_agents)
+    #     if regret > 0 and train_idx not in alive_agents:
+    #         extra_reward = -regret
+    #
+    #     # We are playing a team game.
+    #     if any_lst_equal(alive_agents, [[0, 2], [0]]):
+    #         # Team [0, 2] wins.
+    #         return [2 + extra_reward, -1, 1, -1]
+    #     elif any_lst_equal(alive_agents, [[2]]):
+    #         # Team [0, 2] wins.
+    #         return [0 + extra_reward, -1, 1, -1]
+    #     elif any_lst_equal(alive_agents, [[1, 3], [1], [3]]):
+    #         # Team [1, 3] wins.
+    #         return [-1 + extra_reward, 1, -1, 1]
+    #     elif step_count >= max_steps:
+    #         # Game is over by max_steps. All agents tie.
+    #         return [1 + extra_reward] * 4
+    #     elif len(alive_agents) == 0:
+    #         # Everyone's dead. All agents tie.
+    #         return [-1 + extra_reward] * 4
+    #     else:
+    #         # No team has yet won or lost.
+    #         return [0 + extra_reward] * 4
+    #
+    # @staticmethod
+    # def get_rewards2(agents, game_type, step_count, max_steps, curr_state, old_state, train_idx):
+    #
+    #     def any_lst_equal(lst, values):
+    #         '''Checks if list are equal'''
+    #         return any([lst == v for v in values])
+    #
+    #     alive_agents = [num for num, agent in enumerate(agents) \
+    #                     if agent.is_alive]
+    #
+    #     x, y = curr_state[train_idx]['position']
+    #     e1_curr_state = curr_state[(train_idx + 1) % 4]
+    #     e2_curr_state = curr_state[(train_idx + 3) % 4]
+    #     e1_curr_pos = e1_curr_state['position']
+    #     e2_curr_pos = e2_curr_state['position']
+    #     e1_x, e1_y = e1_curr_pos
+    #     e2_x, e2_y = e2_curr_pos
+    #     d1 = 10000
+    #     d2 = 10000
+    #     if (train_idx + 1) % 4 in curr_state[train_idx]['board']:
+    #         d1 = abs(e1_x - x) + abs(e1_y - y)
+    #     if (train_idx + 3) % 4 in curr_state[train_idx]['board']:
+    #         d2 = abs(e2_x - x) + abs(e2_y - y)
+    #     kill_e1 = 0
+    #     kill_e2 = 0
+    #     if (train_idx + 1) % 4 not in alive_agents:
+    #         kill_e1 = 6 - d1 if d1 < 7 and ((train_idx + 1) % 4) + 10 in old_state[train_idx]['alive'] else 0
+    #     if (train_idx + 3) % 4 not in alive_agents:
+    #         kill_e2 = 6 - d2 if d2 < 7 and ((train_idx + 3) % 4) + 10 in old_state[train_idx]['alive'] else 0
+    #     extra_reward = kill_e1 + kill_e2
+    #
+    #     # We are playing a team game.
+    #     if any_lst_equal(alive_agents, [[0, 2], [0]]):
+    #         # Team [0, 2] wins.
+    #         return [1 + extra_reward, -1, 1, -1]
+    #     elif any_lst_equal(alive_agents, [[2]]):
+    #         # Team [0, 2] wins.
+    #         return [0 + extra_reward, -1, 1, -1]
+    #     elif any_lst_equal(alive_agents, [[1, 3], [1], [3]]):
+    #         # Team [1, 3] wins.
+    #         return [-1 + extra_reward, 1, -1, 1]
+    #     elif step_count >= max_steps:
+    #         # Game is over by max_steps. All agents tie.
+    #         return [-1 + extra_reward] * 4
+    #     elif len(alive_agents) == 0:
+    #         # Everyone's dead. All agents tie.
+    #         return [-1 + extra_reward] * 4
+    #     else:
+    #         # No team has yet won or lost.
+    #         return [0 + extra_reward] * 4
+    #
+    # @staticmethod
+    # def get_rewards3(agents, game_type, step_count, max_steps, curr_state, old_state, train_idx):
+    #
+    #     def any_lst_equal(lst, values):
+    #         '''Checks if list are equal'''
+    #         return any([lst == v for v in values])
+    #
+    #     alive_agents = [num for num, agent in enumerate(agents) \
+    #                     if agent.is_alive]
+    #
+    #     powerup = [6, 7, 8]
+    #     rewards = [0,0,0,0]
+    #     extra_reward = 0
+    #     if old_state[train_idx]['board'][curr_state[train_idx]['position']] in powerup:
+    #         extra_reward += 1
+    #
+    #     e1 = (train_idx + 1) % 4
+    #     e2 = (train_idx + 3) % 4
+    #     old_alive = old_state[train_idx]['alive']
+    #     if e1+10 in old_alive and e1 not in alive_agents:
+    #         extra_reward+=2
+    #     if e2 + 10 in old_alive and e2 not in alive_agents:
+    #         extra_reward += 2
+    #
+    #     # compute regret
+    #     from utils import get_bomb_life
+    #     bomb_zone = get_bomb_life(curr_state[train_idx])
+    #     danger = []
+    #     for i in range(11):
+    #         for j in range(11):
+    #             if bomb_zone[(i, j)] in [2, 3, 4]:
+    #                 danger.append((i, j))
+    #     cant_go = []
+    #     if curr_state[train_idx]['can_kick']:
+    #         cant_go_zone = [1, 2, (train_idx + 1) % 4, (train_idx + 2) % 4,
+    #                         (train_idx + 3) % 4]
+    #     else:
+    #         cant_go_zone = [1, 2, 3, (train_idx + 1) % 4, (train_idx + 2) % 4,
+    #                         (train_idx + 3) % 4]
+    #     for i in range(11):
+    #         for j in range(11):
+    #             if curr_state[train_idx]['board'][(i, j)] in cant_go_zone:
+    #                 cant_go.append((i, j))
+    #     cant_go.extend(danger)
+    #     if train_idx + 10 in old_state[train_idx]['alive'] and train_idx not in alive_agents:
+    #         regret = 7
+    #     else:
+    #         regret = 0
+    #     x, y = old_state[train_idx]['position']
+    #     # up=x-1 down=x+1 left=y-1 right=y+1
+    #     up_pos = (x - 1, y) if x - 1 >= 0 else (x, y)
+    #     down_pos = (x + 1, y) if x + 1 < 11 else (x, y)
+    #     left_pos = (x, y - 1) if y - 1 >= 0 else (x, y)
+    #     right_pos = (x, y + 1) if y + 1 < 11 else (x, y)
+    #     temp_may_pos = [old_state[train_idx]['position'], up_pos, down_pos, left_pos, right_pos]
+    #     may_pos = [old_state[train_idx]['position']]
+    #     for tp in temp_may_pos:
+    #         if tp != old_state[train_idx]['position']:
+    #             may_pos.append(tp)
+    #     for may in may_pos:
+    #         if may in cant_go:
+    #             regret -= 1
+    #     if regret > 0 and train_idx not in alive_agents:
+    #         extra_reward -= regret
+    #
+    #     rewards[0] += extra_reward
+    #     return rewards
     @staticmethod
-    def get_rewards1(agents, game_type, step_count, max_steps, curr_state, old_state, train_idx):
-
-        def any_lst_equal(lst, values):
-            '''Checks if list are equal'''
-            return any([lst == v for v in values])
-
-        alive_agents = [num for num, agent in enumerate(agents) \
-                        if agent.is_alive]
-
-        # Set the regret of death
-        from utils import get_bomb_life
-        bomb_zone = get_bomb_life(curr_state[train_idx])
-        danger = []
-        for i in range(11):
-            for j in range(11):
-                if bomb_zone[(i, j)] in [2, 3, 4]:
-                    danger.append((i, j))
-        cant_go = []
-        if curr_state[train_idx]['can_kick']:
-            cant_go_zone = [1, 2, (train_idx + 1) % 4, (train_idx + 2) % 4,
-                                                              (train_idx + 3) % 4]
-        else:
-            cant_go_zone = [1, 2, 3, (train_idx + 1) % 4, (train_idx + 2) % 4,
-                            (train_idx + 3) % 4]
-        for i in range(11):
-            for j in range(11):
-                if curr_state[train_idx]['board'][(i, j)] in cant_go_zone:
-                    cant_go.append((i, j))
-        cant_go.extend(danger)
-
-        if train_idx + 10 in old_state[train_idx]['alive'] and train_idx not in alive_agents:
-            regret = 7
-        else:
-            regret = 0
-        x, y = old_state[train_idx]['position']
-        # up=x-1 down=x+1 left=y-1 right=y+1
-        up_pos = (x - 1, y) if x - 1 >= 0 else (x, y)
-        down_pos = (x + 1, y) if x + 1 < 11 else (x, y)
-        left_pos = (x, y - 1) if y - 1 >= 0 else (x, y)
-        right_pos = (x, y + 1) if y + 1 < 11 else (x, y)
-        temp_may_pos = [old_state[train_idx]['position'], up_pos, down_pos, left_pos, right_pos]
-        may_pos = [old_state[train_idx]['position']]
-        for tp in temp_may_pos:
-            if tp != old_state[train_idx]['position']:
-                may_pos.append(tp)
-        for may in may_pos:
-            if may in cant_go:
-                regret -= 1
-        extra_reward = 0
-        # print(alive_agents)
-        if regret > 0 and train_idx not in alive_agents:
-            extra_reward = -regret
-
-        # We are playing a team game.
-        if any_lst_equal(alive_agents, [[0, 2], [0]]):
-            # Team [0, 2] wins.
-            return [2 + extra_reward, -1, 1, -1]
-        elif any_lst_equal(alive_agents, [[2]]):
-            # Team [0, 2] wins.
-            return [0 + extra_reward, -1, 1, -1]
-        elif any_lst_equal(alive_agents, [[1, 3], [1], [3]]):
-            # Team [1, 3] wins.
-            return [-1 + extra_reward, 1, -1, 1]
-        elif step_count >= max_steps:
-            # Game is over by max_steps. All agents tie.
-            return [1 + extra_reward] * 4
-        elif len(alive_agents) == 0:
-            # Everyone's dead. All agents tie.
-            return [-1 + extra_reward] * 4
-        else:
-            # No team has yet won or lost.
-            return [0 + extra_reward] * 4
-
-    @staticmethod
-    def get_rewards2(agents, game_type, step_count, max_steps, curr_state, old_state, train_idx):
-
-        def any_lst_equal(lst, values):
-            '''Checks if list are equal'''
-            return any([lst == v for v in values])
-
-        alive_agents = [num for num, agent in enumerate(agents) \
-                        if agent.is_alive]
-
-        x, y = curr_state[train_idx]['position']
-        e1_curr_state = curr_state[(train_idx + 1) % 4]
-        e2_curr_state = curr_state[(train_idx + 3) % 4]
-        e1_curr_pos = e1_curr_state['position']
-        e2_curr_pos = e2_curr_state['position']
-        e1_x, e1_y = e1_curr_pos
-        e2_x, e2_y = e2_curr_pos
-        d1 = 10000
-        d2 = 10000
-        if (train_idx + 1) % 4 in curr_state[train_idx]['board']:
-            d1 = abs(e1_x - x) + abs(e1_y - y)
-        if (train_idx + 3) % 4 in curr_state[train_idx]['board']:
-            d2 = abs(e2_x - x) + abs(e2_y - y)
-        kill_e1 = 0
-        kill_e2 = 0
-        if (train_idx + 1) % 4 not in alive_agents:
-            kill_e1 = 6 - d1 if d1 < 7 and ((train_idx + 1) % 4) + 10 in old_state[train_idx]['alive'] else 0
-        if (train_idx + 3) % 4 not in alive_agents:
-            kill_e2 = 6 - d2 if d2 < 7 and ((train_idx + 3) % 4) + 10 in old_state[train_idx]['alive'] else 0
-        extra_reward = kill_e1 + kill_e2
-
-        # We are playing a team game.
-        if any_lst_equal(alive_agents, [[0, 2], [0]]):
-            # Team [0, 2] wins.
-            return [1 + extra_reward, -1, 1, -1]
-        elif any_lst_equal(alive_agents, [[2]]):
-            # Team [0, 2] wins.
-            return [0 + extra_reward, -1, 1, -1]
-        elif any_lst_equal(alive_agents, [[1, 3], [1], [3]]):
-            # Team [1, 3] wins.
-            return [-1 + extra_reward, 1, -1, 1]
-        elif step_count >= max_steps:
-            # Game is over by max_steps. All agents tie.
-            return [-1 + extra_reward] * 4
-        elif len(alive_agents) == 0:
-            # Everyone's dead. All agents tie.
-            return [-1 + extra_reward] * 4
-        else:
-            # No team has yet won or lost.
-            return [0 + extra_reward] * 4
-
-    @staticmethod
-    def get_rewards3(agents, game_type, step_count, max_steps, curr_state, old_state, train_idx):
-
-        def any_lst_equal(lst, values):
-            '''Checks if list are equal'''
-            return any([lst == v for v in values])
-
-        alive_agents = [num for num, agent in enumerate(agents) \
-                        if agent.is_alive]
-
-        powerup = [6, 7, 8]
-        rewards = [0,0,0,0]
-        extra_reward = 0
-        if old_state[train_idx]['board'][curr_state[train_idx]['position']] in powerup:
-            extra_reward += 1
-
-        e1 = (train_idx + 1) % 4
-        e2 = (train_idx + 3) % 4
-        old_alive = old_state[train_idx]['alive']
-        if e1+10 in old_alive and e1 not in alive_agents:
-            extra_reward+=2
-        if e2 + 10 in old_alive and e2 not in alive_agents:
-            extra_reward += 2
-
-        # compute regret
-        from utils import get_bomb_life
-        bomb_zone = get_bomb_life(curr_state[train_idx])
-        danger = []
-        for i in range(11):
-            for j in range(11):
-                if bomb_zone[(i, j)] in [2, 3, 4]:
-                    danger.append((i, j))
-        cant_go = []
-        if curr_state[train_idx]['can_kick']:
-            cant_go_zone = [1, 2, (train_idx + 1) % 4, (train_idx + 2) % 4,
-                            (train_idx + 3) % 4]
-        else:
-            cant_go_zone = [1, 2, 3, (train_idx + 1) % 4, (train_idx + 2) % 4,
-                            (train_idx + 3) % 4]
-        for i in range(11):
-            for j in range(11):
-                if curr_state[train_idx]['board'][(i, j)] in cant_go_zone:
-                    cant_go.append((i, j))
-        cant_go.extend(danger)
-        if train_idx + 10 in old_state[train_idx]['alive'] and train_idx not in alive_agents:
-            regret = 7
-        else:
-            regret = 0
-        x, y = old_state[train_idx]['position']
-        # up=x-1 down=x+1 left=y-1 right=y+1
-        up_pos = (x - 1, y) if x - 1 >= 0 else (x, y)
-        down_pos = (x + 1, y) if x + 1 < 11 else (x, y)
-        left_pos = (x, y - 1) if y - 1 >= 0 else (x, y)
-        right_pos = (x, y + 1) if y + 1 < 11 else (x, y)
-        temp_may_pos = [old_state[train_idx]['position'], up_pos, down_pos, left_pos, right_pos]
-        may_pos = [old_state[train_idx]['position']]
-        for tp in temp_may_pos:
-            if tp != old_state[train_idx]['position']:
-                may_pos.append(tp)
-        for may in may_pos:
-            if may in cant_go:
-                regret -= 1
-        if regret > 0 and train_idx not in alive_agents:
-            extra_reward -= regret
-
-        rewards[0] += extra_reward
-        return rewards
-
-    @staticmethod
-    def get_rewards4(agents, game_type, step_count, max_steps, curr_state, old_state,  train_idx):
+    
+    def get_rewards1(agents, game_type, step_count, max_steps, curr_state, old_state,  train_idx):
 
         def any_lst_equal(lst, values):
             '''Checks if list are equal'''
@@ -953,16 +953,16 @@ class ForwardModel(object):
             return [-1, -1, 1, -1]
         elif any_lst_equal(alive_agents, [[0, 2], [0]]):
             # Team [0, 2] wins.
-            return [3, -1, 1, -1]
+            return [1, -1, 1, -1]
         elif any_lst_equal(alive_agents, [[2]]):
             # Team [0, 2] wins.
-            return [0, -1, 1, -1]
+            return [-1, -1, 1, -1]
         elif any_lst_equal(alive_agents, [[1, 3], [1], [3]]):
             # Team [1, 3] wins.
             return [-1, 1, -1, 1]
         elif step_count >= max_steps:
             # Game is over by max_steps. All agents tie.
-            return [0] * 4
+            return [1] * 4
         elif len(alive_agents) == 0:
             # Everyone's dead. All agents tie.
             return [-1] * 4

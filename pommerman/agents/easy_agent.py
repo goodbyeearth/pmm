@@ -12,13 +12,13 @@ from .. import constants
 from .. import utility
 
 
-class SimpleAgent(BaseAgent):
+class EasyAgent(BaseAgent):
     """This is a baseline agent. After you can beat it, submit your agent to
     compete.
     """
 
     def __init__(self, *args, **kwargs):
-        super(SimpleAgent, self).__init__(*args, **kwargs)
+        super(EasyAgent, self).__init__(*args, **kwargs)
 
         # Keep track of recently visited uninteresting positions so that we
         # don't keep visiting the same places.
@@ -109,8 +109,11 @@ class SimpleAgent(BaseAgent):
         self._recently_visited_positions = self._recently_visited_positions[
                                            -self._recently_visited_length:]
 
-
         act = random.choice(directions).value
+        rand = random.sample(range(0, 100), 1)
+        if rand[0] < 50:
+            # return action_space.sample()
+            act = 0
         return act
 
     @staticmethod

@@ -10,3 +10,5 @@ from .tensorforce_agent import TensorForceAgent
 from .simple_nobomb_agent import SimpleNoBombAgent
 from .suicide_agent import SuicideAgent
 from .super_agent import SuperAgent
+from .stop_agent import StopAgent
+from .easy_agent import EasyAgent
