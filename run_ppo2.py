@@ -34,7 +34,7 @@ def make_envs(env_id):
 
 
 def _pretrain():
-    expert_path = 'dataset/simple/agent_2/'
+    expert_path = 'dataset/hako/agent_0/'
     if args.load_path:
         print("Load model from", args.load_path)
         model = PPO2.load(args.load_path, using_PGN=args.using_PGN)
@@ -95,8 +95,8 @@ def train():
 
 
 def play0():
-    model0_path = 'models/simple/agent0/simple_e40.zip'
-    model2_path = 'models/simple/agent2/simple_e40.zip'
+    model0_path = 'models/hako/agent_0/hako_e10.zip'
+    model2_path = 'models/hako/agent_0/hako_e10.zip'
     model0 = PPO2.load(model0_path)
     model2 = PPO2.load(model2_path)
 
@@ -146,8 +146,8 @@ def play1():
         # agents.SimpleNoBombAgent(),
         agents.SuperAgent(),
         agents.SuperAgent(),
-        agents.SuperAgent(),
-        agents.SuperAgent(),
+        agents.SuicideAgent(),
+        agents.SuicideAgent(),
         # agents.PlayerAgent(agent_control="arrows"),
         # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12347),
     ]

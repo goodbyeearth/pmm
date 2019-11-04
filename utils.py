@@ -8,7 +8,7 @@ def get_action_space():
     return spaces.Discrete(6)
 
 #11*11*20
-def featurize_bak1(obs):
+def featurize_bak(obs):
     maps = []
     board = obs['board']
     """棋盘物体 one hot"""
@@ -313,10 +313,10 @@ def featurize(obs):
     maps.append(eboard)
 
     return np.stack(maps, axis=2)  # 11*11*31
-    # return np.stack(maps, axis=2),bomb_life
+    # return np.stack(maps, axis=2),bomb_lifes
 
 # 11*11*9
-def featurize_bak2(obs):  # no one-hot
+def featurize_bak(obs):  # no one-hot
     maps = []
     board = obs['board']
     maps.append(board)
@@ -457,7 +457,7 @@ def featurize_bak2(obs):  # no one-hot
     return np.stack(maps, axis=2)  # 11*11*9
 
 # 11*11*16
-def featurize_bak3(obs):  # no one-hot
+def featurize_bak(obs):  # no one-hot
     maps = []
     board = obs['board']
     maps.append(board)
@@ -625,8 +625,8 @@ def featurize_bak3(obs):  # no one-hot
 
     return np.stack(maps, axis=2)  # 11*11*16
 
-# 11*11*15
-def featurize_bak4(obs):  # no one-hot
+# 11*11*12
+def featurize_bak(obs):  # no one-hot
     maps = []
     board = obs['board']
     # maps.append(board)
@@ -660,9 +660,9 @@ def featurize_bak4(obs):  # no one-hot
     bomb_blast_strength = obs['bomb_blast_strength']
     flame_life = obs['flame_life']
 
-    maps.append(bomb_life)
-    maps.append(bomb_blast_strength)
-    maps.append(flame_life)
+    # maps.append(bomb_life)
+    # maps.append(bomb_blast_strength)
+    # maps.append(flame_life)
 
     # 统一炸弹时间
     for x in range(11):
@@ -792,7 +792,7 @@ def featurize_bak4(obs):  # no one-hot
     maps.append(eboard)
     maps.append(board == train_agent_idx)
 
-    return np.stack(maps, axis=2)  # 11*11*16
+    return np.stack(maps, axis=2)  # 11*11*12
 
 def get_bomb_life(obs):
     board = obs['board']

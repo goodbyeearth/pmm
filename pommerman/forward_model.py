@@ -743,6 +743,107 @@ class ForwardModel(object):
                 # No team has yet won or lost.
                 return [0] * 4
 
+    @staticmethod
+    # 只推送周围有爆炸威胁的画面 --> 不能死
+    def get_rewards1(agents, game_type, step_count, max_steps,train_idx):
+
+        def any_lst_equal(lst, values):
+            '''Checks if list are equal'''
+            return any([lst == v for v in values])
+
+        alive_agents = [num for num, agent in enumerate(agents) \
+                        if agent.is_alive]
+
+        # We are playing a team game.
+        if train_idx not in alive_agents:
+            # If dead
+            return [-1, -1, 1, -1]
+        elif any_lst_equal(alive_agents, [[0, 2], [0]]):
+            # Team [0, 2] wins.
+            return [1, -1, 1, -1]
+        elif any_lst_equal(alive_agents, [[2]]):
+            # Team [0, 2] wins.
+            return [-1, -1, 1, -1]
+        elif any_lst_equal(alive_agents, [[1, 3], [1], [3]]):
+            # Team [1, 3] wins.
+            return [-1, 1, -1, 1]
+        elif step_count >= max_steps:
+            # Game is over by max_steps. All agents tie.
+            return [0] * 4
+        elif len(alive_agents) == 0:
+            # Everyone's dead. All agents tie.
+            return [-1] * 4
+        else:
+            # No team has yet won or lost.
+            return [0] * 4
+
+    @staticmethod
+    # 只推送有敌人出现的情况 --> 必须杀敌
+    def get_rewards2(agents, game_type, step_count, max_steps, train_idx):
+
+        def any_lst_equal(lst, values):
+            '''Checks if list are equal'''
+            return any([lst == v for v in values])
+
+        alive_agents = [num for num, agent in enumerate(agents) \
+                        if agent.is_alive]
+
+        # We are playing a team game.
+        if train_idx not in alive_agents:
+            # 如果死了
+            return [-1, -1, 1, -1]
+        elif any_lst_equal(alive_agents, [[0, 2], [0]]):
+            # 杀死两个敌人
+            return [2, -1, 1, -1]
+        elif any_lst_equal(alive_agents, [[0, 2, 1], [0, 1]]):
+            # 杀死一个敌人
+            return [1, -1, 1, -1]
+        elif any_lst_equal(alive_agents, [[0, 2, 3], [0, 3]]):
+            # 杀死一个敌人
+            return [1, -1, 1, -1]
+        elif any_lst_equal(alive_agents, [[2]]):
+            # 自己死了，队友没死
+            return [-1, -1, 1, -1]
+        elif any_lst_equal(alive_agents, [[1, 3], [1], [3]]):
+            # 敌人胜利
+            return [-1, 1, -1, 1]
+        elif step_count >= max_steps:
+            # 最大步数平局
+            return [-1] * 4
+        elif len(alive_agents) == 0:
+            # 所有人都死了
+            return [-1] * 4
+        else:
+            # 过程中
+            return [0] * 4
+
+    @staticmethod
+    # 只推送周围有powerup的情况 --> 未完成
+    def get_rewards3(agents, game_type, step_count, max_steps, train_idx):
+
+        def any_lst_equal(lst, values):
+            '''Checks if list are equal'''
+            return any([lst == v for v in values])
+
+        alive_agents = [num for num, agent in enumerate(agents) \
+                        if agent.is_alive]
+
+        # We are playing a team game.
+        if any_lst_equal(alive_agents, [[0, 2], [0], [2]]):
+            # Team [0, 2] wins.
+            return [1, -1, 1, -1]
+        elif any_lst_equal(alive_agents, [[1, 3], [1], [3]]):
+            # Team [1, 3] wins.
+            return [-1, 1, -1, 1]
+        elif step_count >= max_steps:
+            # Game is over by max_steps. All agents tie.
+            return [-1] * 4
+        elif len(alive_agents) == 0:
+            # Everyone's dead. All agents tie.
+            return [-1] * 4
+        else:
+            # No team has yet won or lost.
+            return [0] * 4
     # @staticmethod
     # def get_rewards1(agents, game_type, step_count, max_steps, curr_state, old_state, train_idx):
     #
@@ -935,98 +1036,3 @@ class ForwardModel(object):
     #
     #     rewards[0] += extra_reward
     #     return rewards
-    @staticmethod
-    # 只推送周围有爆炸威胁的画面 --> 不能死
-    def get_rewards1(agents, game_type, step_count, max_steps,train_idx):
-
-        def any_lst_equal(lst, values):
-            '''Checks if list are equal'''
-            return any([lst == v for v in values])
-
-        alive_agents = [num for num, agent in enumerate(agents) \
-                        if agent.is_alive]
-
-        # We are playing a team game.
-        if train_idx not in alive_agents:
-            # If dead
-            return [-1, -1, 1, -1]
-        elif any_lst_equal(alive_agents, [[0, 2], [0]]):
-            # Team [0, 2] wins.
-            return [1, -1, 1, -1]
-        elif any_lst_equal(alive_agents, [[2]]):
-            # Team [0, 2] wins.
-            return [-1, -1, 1, -1]
-        elif any_lst_equal(alive_agents, [[1, 3], [1], [3]]):
-            # Team [1, 3] wins.
-            return [-1, 1, -1, 1]
-        elif step_count >= max_steps:
-            # Game is over by max_steps. All agents tie.
-            return [0] * 4
-        elif len(alive_agents) == 0:
-            # Everyone's dead. All agents tie.
-            return [-1] * 4
-        else:
-            # No team has yet won or lost.
-            return [0] * 4
-
-    @staticmethod
-    # 只推送有敌人出现的情况 --> 必须杀敌
-    def get_rewards2(agents, game_type, step_count, max_steps, train_idx):
-
-        def any_lst_equal(lst, values):
-            '''Checks if list are equal'''
-            return any([lst == v for v in values])
-
-        alive_agents = [num for num, agent in enumerate(agents) \
-                        if agent.is_alive]
-
-        # We are playing a team game.
-        if train_idx not in alive_agents:
-            # If dead
-            return [-1, -1, 1, -1]
-        elif any_lst_equal(alive_agents, [[0, 2], [0]]):
-            # Team [0, 2] wins.
-            return [1, -1, 1, -1]
-        elif any_lst_equal(alive_agents, [[2]]):
-            # Team [0, 2] wins.
-            return [-1, -1, 1, -1]
-        elif any_lst_equal(alive_agents, [[1, 3], [1], [3]]):
-            # Team [1, 3] wins.
-            return [-1, 1, -1, 1]
-        elif step_count >= max_steps:
-            # Game is over by max_steps. All agents tie.
-            return [-1] * 4
-        elif len(alive_agents) == 0:
-            # Everyone's dead. All agents tie.
-            return [-1] * 4
-        else:
-            # No team has yet won or lost.
-            return [0] * 4
-
-    @staticmethod
-    # 只推送周围有powerup的情况 --> 未完成
-    def get_rewards3(agents, game_type, step_count, max_steps, train_idx):
-
-        def any_lst_equal(lst, values):
-            '''Checks if list are equal'''
-            return any([lst == v for v in values])
-
-        alive_agents = [num for num, agent in enumerate(agents) \
-                        if agent.is_alive]
-
-        # We are playing a team game.
-        if any_lst_equal(alive_agents, [[0, 2], [0], [2]]):
-            # Team [0, 2] wins.
-            return [1, -1, 1, -1]
-        elif any_lst_equal(alive_agents, [[1, 3], [1], [3]]):
-            # Team [1, 3] wins.
-            return [-1, 1, -1, 1]
-        elif step_count >= max_steps:
-            # Game is over by max_steps. All agents tie.
-            return [-1] * 4
-        elif len(alive_agents) == 0:
-            # Everyone's dead. All agents tie.
-            return [-1] * 4
-        else:
-            # No team has yet won or lost.
-            return [0] * 4
