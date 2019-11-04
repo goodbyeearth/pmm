@@ -794,12 +794,6 @@ class ForwardModel(object):
             return [-1, -1, 1, -1]
         elif any_lst_equal(alive_agents, [[0, 2], [0]]):
             # 杀死两个敌人
-            return [2, -1, 1, -1]
-        elif any_lst_equal(alive_agents, [[0, 2, 1], [0, 1]]):
-            # 杀死一个敌人
-            return [1, -1, 1, -1]
-        elif any_lst_equal(alive_agents, [[0, 2, 3], [0, 3]]):
-            # 杀死一个敌人
             return [1, -1, 1, -1]
         elif any_lst_equal(alive_agents, [[2]]):
             # 自己死了，队友没死
@@ -807,6 +801,9 @@ class ForwardModel(object):
         elif any_lst_equal(alive_agents, [[1, 3], [1], [3]]):
             # 敌人胜利
             return [-1, 1, -1, 1]
+        elif step_count >= max_steps and (any_lst_equal(alive_agents, [[0, 2, 1], [0, 1]]) or any_lst_equal(alive_agents, [[0, 2, 3], [0, 3]])):
+            # 最大步数平局并且杀死了一个敌人
+            return [1] * 4
         elif step_count >= max_steps:
             # 最大步数平局
             return [-1] * 4
