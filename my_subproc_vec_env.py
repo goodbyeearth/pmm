@@ -56,7 +56,7 @@ def _worker(remote, parent_remote, env_fn_wrapper):
                 if data[0] == 5 and ammo > 0:
                     rew += laybomb
                     laybomb_count += 1
-                    print(laybomb_count, "th time laying bomb")
+                    # print(laybomb_count, "th time laying bomb")
                 # if step_count > 0 and step_count % 10 == 0:
                 #     print(step_count)
                 if not is_dead[env.training_agent] and not env._agents[env.training_agent].is_alive:

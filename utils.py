@@ -6,15 +6,6 @@ def featurize(obs):
     maps = []
     board = obs['board']
 
-    # maps.append(obs['bomb_blast_strength']/5)
-    # bomb_life = 11 - obs['bomb_life']
-    # bomb_life =
-    # maps.append(obs['bomb_life']/5)
-    # maps.append(obs['flame_life']/3)
-    # for i in range(1, 4):
-    #     maps.append(obs['flame_life'] == i)
-    # for i in range(1, 10):
-    #     maps.append(obs['bomb_life'] == i)
     '''爆炸one-hot'''
     bomb_life = obs['bomb_life']
     bomb_blast_strength = obs['bomb_blast_strength']
