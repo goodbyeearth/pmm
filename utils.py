@@ -1,13 +1,15 @@
 import numpy as np
 from gym import spaces
 
+
 def get_feature_space():
     return spaces.Box(low=0, high=1, shape=(11, 11, 30))
+    # return spaces.Box(low=0, high=1, shape=(3630, ))
 
 def get_action_space():
     return spaces.Discrete(6)
 
-#11*11*20
+# 11*11*20
 def featurize_bak(obs):
     maps = []
     board = obs['board']
@@ -301,6 +303,8 @@ def featurize(obs):
     maps.append(eboard)
 
     return np.stack(maps, axis=2)  # 11*11*30
+    # return np.reshape(maps, (-1,))
+
 
 # 11*11*9
 def featurize_bak(obs):  # no one-hot
@@ -442,6 +446,7 @@ def featurize_bak(obs):  # no one-hot
     maps.append(board == train_agent_idx)
 
     return np.stack(maps, axis=2)  # 11*11*9
+
 
 # 11*11*16
 def featurize_bak(obs):  # no one-hot
@@ -612,6 +617,7 @@ def featurize_bak(obs):  # no one-hot
 
     return np.stack(maps, axis=2)  # 11*11*16
 
+
 # 11*11*12
 def featurize_bak(obs):  # no one-hot
     maps = []
@@ -781,6 +787,7 @@ def featurize_bak(obs):  # no one-hot
 
     return np.stack(maps, axis=2)  # 11*11*12
 
+
 def get_bomb_life(obs):
     board = obs['board']
     bomb_life = obs['bomb_life']
@@ -877,6 +884,7 @@ def get_bomb_life(obs):
     bomb_life = np.where(flame_life != 15, flame_life, bomb_life)
     return bomb_life
 
+
 def judge_bomb(obs):
     pos = next_pos(obs['position'])
     bomb_life = get_bomb_life(obs)
@@ -885,10 +893,12 @@ def judge_bomb(obs):
             return True
     return False
 
+
 def judge_enemy(obs):
     if (obs['board'] == 11).any() or (obs['board'] == 13).any():
         return True
     return False
+
 
 # def judge_bomb(obs):
 #     bomb_life = get_bomb_life(obs)

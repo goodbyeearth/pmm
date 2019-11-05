@@ -35,6 +35,7 @@ def make_envs(env_id):
 
 def _pretrain():
     expert_path = 'dataset/hako1/agent_0/'
+
     if args.load_path:
         print("Load model from", args.load_path)
         model = PPO2.load(args.load_path, using_PGN=args.using_PGN)
@@ -45,9 +46,9 @@ def _pretrain():
 
     print("In pretrain")
     print()
+
     from my_dataset import ExpertDataset
     # assert args.expert_path is not None
-
     # load dataset
     print("Load dataset from", expert_path)
     print()

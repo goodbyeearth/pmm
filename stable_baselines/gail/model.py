@@ -1,5 +1,5 @@
-from stable_baselines.trpo_mpi import TRPO
-
+# from stable_baselines.trpo_mpi import TRPO
+from my_trpo import TRPO
 
 class GAIL(TRPO):
     """
