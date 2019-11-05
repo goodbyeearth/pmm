@@ -275,24 +275,11 @@ def featurize(obs):
     if not teammate_idx == 9:  # AgentDummy
         maps.append(board == teammate_idx)
 
-    """两个敌人的位置 one-hot"""
+    """两个敌人的位置"""
     enemies_idx = []
     for e in obs['enemies']:
         if not e.value == 9:  # AgentDummy
             enemies_idx.append(e.value)
-            # maps.append(board == e.value)
-
-    """fog的情况"""
-    # e_flag = 0
-    # for e in enemies_idx:
-    #     if e in alive:
-    #         e_flag += 1
-    # if t_flag == 1:
-    #     fog = np.where(fog == 5, 5 + e_flag, 0)
-    # else:
-    #     fog = np.where(fog == 5, 3 + e_flag, 0)
-    # for i in range(4, 8):
-    #     maps.append(fog == i)
 
     """训练智能体的位置 one-hot"""
     for idx in [10, 11, 12, 13]:
@@ -302,6 +289,7 @@ def featurize(obs):
 
     maps.append(board == train_agent_idx)
 
+    """两个敌人位置one-hot"""
     eboard = board
     for ex in range(11):
         for ey in range(11):
@@ -312,8 +300,7 @@ def featurize(obs):
                 eboard[(ex, ey)] = False
     maps.append(eboard)
 
-    return np.stack(maps, axis=2)  # 11*11*31
-    # return np.stack(maps, axis=2),bomb_lifes
+    return np.stack(maps, axis=2)  # 11*11*30
 
 # 11*11*9
 def featurize_bak(obs):  # no one-hot

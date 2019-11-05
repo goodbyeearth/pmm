@@ -34,7 +34,7 @@ def make_envs(env_id):
 
 
 def _pretrain():
-    expert_path = 'dataset/simple/agent_3/'
+    expert_path = 'dataset/hako1/agent_0/'
     if args.load_path:
         print("Load model from", args.load_path)
         model = PPO2.load(args.load_path, using_PGN=args.using_PGN)
@@ -148,7 +148,7 @@ def play1():
         agents.SuperAgent(),
         agents.StopAgent(),
         agents.SuicideAgent(),
-        agents.SuicideAgent(),
+        agents.StopAgent(),
         # agents.PlayerAgent(agent_control="arrows"),
         # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12347),
     ]
@@ -162,18 +162,18 @@ def play1():
         flag = True
         while not done:
             all_actions = env.act(obs)
-            if judge_bomb(obs[0]):
+            if judge_enemy(obs[0]):
                 feature0 = featurize(obs[0])  # model0
                 action0, _states = model0.predict(feature0)
                 all_actions[0] = int(action0)
-            #     if flag:
-            #         print(">>>> model:", action0)
-            #         flag = False
-            #     else:
-            #         flag = True
-            #         print("<<<< model:", action0)
-            # else:
-            #     print("simple")
+                if flag:
+                    print(">>>> model:", action0)
+                    flag = False
+                else:
+                    flag = True
+                    print("<<<< model:", action0)
+            else:
+                print("super")
 
             # feature2 = featurize(obs[2])  # model2
             # action2, _states = model2.predict(feature2)
