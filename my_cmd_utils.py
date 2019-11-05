@@ -12,6 +12,7 @@ def my_arg_parser():
     parser.add_argument('--play', help='跑训练好的算法', type=int, default=-1)
     parser.add_argument('--using_PGN', help='新建网络', default=False, action='store_true')
     parser.add_argument('--evaluate', help='保存这次的训练参数', default=False, action='store_true')
+    parser.add_argument('--save_interval', help='保存间隔', type=float, default=1e5),
 
     parser.add_argument('--env', help='环境名称', type=str, default='PommeRadioCompetition-v2')
     parser.add_argument('--num_env',

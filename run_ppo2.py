@@ -34,7 +34,7 @@ def make_envs(env_id):
 
 
 def _pretrain():
-    expert_path = 'dataset/hako/agent_0/'
+    expert_path = 'dataset/simple/agent_3/'
     if args.load_path:
         print("Load model from", args.load_path)
         model = PPO2.load(args.load_path, using_PGN=args.using_PGN)
@@ -85,26 +85,27 @@ def train():
     print()
 
     model.learn(total_timesteps=total_timesteps,
-                seed=args.seed, env=env)
+                seed=args.seed, env=env, save_path=args.save_path, save_interval=args.save_interval)
 
-    if args.save_path:
-        print("SAVE LEARNED MODEL", args.save_path)
-        model.save(save_path=args.save_path)
+    # if args.save_path:
+    #     print("SAVE LEARNED MODEL", args.save_path)
+    #     model.save(save_path=args.save_path)
 
     env.close()
 
 
 def play0():
-    model0_path = 'models/hako/agent_0/hako_e10.zip'
-    model2_path = 'models/hako/agent_0/hako_e10.zip'
+    model0_path = 'models/simple/agent_0/simple_e40.zip'
     model0 = PPO2.load(model0_path)
-    model2 = PPO2.load(model2_path)
+
+    # model2_path = 'models/hako/agent_0/30hako_e30.zip'
+    # model2 = PPO2.load(model2_path)
 
     agent_list = [
         # agents.SimpleNoBombAgent(),
+        agents.SuicideAgent(),
         agents.SuperAgent(),
-        agents.SuperAgent(),
-        agents.SuperAgent(),
+        agents.SuicideAgent(),
         agents.SuperAgent(),
         # agents.PlayerAgent(agent_control="arrows"),
         # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12347),
@@ -112,7 +113,7 @@ def play0():
     env = pommerman.make(args.env, agent_list)
     env._max_steps = 500
     print('Load model0 from', model0_path)
-    print('Load model2 from', model2_path)
+    # print('Load model2 from', model2_path)
     print("play0 --> train_idx (0,2)")
     for episode in range(100):
         obs = env.reset()
@@ -125,9 +126,9 @@ def play0():
             action0, _states = model0.predict(feature0)
             all_actions[0] = int(action0)
 
-            feature2 = featurize(obs[2])  # model2
-            action2, _states = model2.predict(feature2)
-            all_actions[2] = int(action2)
+            # feature2 = featurize(obs[2])  # model2
+            # action2, _states = model2.predict(feature2)
+            # all_actions[2] = int(action2)
 
             # all_actions[(train_idx + 1) % 4] = 0
             # all_actions[(train_idx + 3) % 4] = 0
@@ -145,14 +146,14 @@ def play1():
     agent_list = [
         # agents.SimpleNoBombAgent(),
         agents.SuperAgent(),
-        agents.SuperAgent(),
+        agents.StopAgent(),
         agents.SuicideAgent(),
         agents.SuicideAgent(),
         # agents.PlayerAgent(agent_control="arrows"),
         # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12347),
     ]
     env = pommerman.make(args.env, agent_list)
-    env._max_steps = 500
+    # env._max_steps = 500
     print('Load model0 from', args.load_path)
     print("play1 --> train_idx 0")
     for episode in range(100):

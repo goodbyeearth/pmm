@@ -767,9 +767,9 @@ class ForwardModel(object):
         elif any_lst_equal(alive_agents, [[1, 3], [1], [3]]):
             # Team [1, 3] wins.
             return [-1, 1, -1, 1]
-        elif step_count >= max_steps:
+        elif step_count >= 100:  # max_steps 课程1 -> 100步
             # Game is over by max_steps. All agents tie.
-            return [0] * 4
+            return [1] * 4
         elif len(alive_agents) == 0:
             # Everyone's dead. All agents tie.
             return [-1] * 4
@@ -794,7 +794,7 @@ class ForwardModel(object):
             return [-1, -1, 1, -1]
         elif any_lst_equal(alive_agents, [[0, 2], [0]]):
             # 杀死两个敌人
-            return [1, -1, 1, -1]
+            return [2, -1, 1, -1]
         elif any_lst_equal(alive_agents, [[2]]):
             # 自己死了，队友没死
             return [-1, -1, 1, -1]

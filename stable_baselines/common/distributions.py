@@ -168,19 +168,7 @@ class CategoricalProbabilityDistributionType(ProbabilityDistributionType):
 
         param = old_params[-1]
         q_values = vf_linear(vf_latent_vector, 'q', self.n_cat, ww=param['q/w'], bb=param['q/b'])
-        # old_q = []
-        # for n in range(len(old_params)):
-        #     param = old_params[n]
-        #     # print('Use old model/1/w & b')
-        #     old_l = my_linear(old_vf_fc[n], 'old_q' + str(n),
-        #                       ww=param['q/w'], bb=param['q/b'])
-        #
-        #     old_q.append(old_l)
-        #     if n == 0:
-        #         sum_q = old_l
-        #     else:
-        #         sum_q = tf.add(sum_q, old_l)
-        # print()
+
         q_values = q_values
 
         return self.proba_distribution_from_flat(pdparam), pdparam, q_values

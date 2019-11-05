@@ -329,10 +329,13 @@ class PPO2(ActorCriticRLModel):
         self.old_params = []
 
     def learn(self, total_timesteps, callback=None, seed=None, log_interval=1, tb_log_name="PPO2",
-              reset_num_timesteps=True, env=None, learning_rate=2.5e-4, n_steps=128, gamma=0.99):
+              reset_num_timesteps=True, env=None, learning_rate=2.5e-4, n_steps=128, gamma=0.99, save_interval=None,save_path=None):
         # temp params
         # learning_rate = 2.5e-3
         # gamma = 0.98
+
+        save_interval_st = save_interval
+        print("save interval = ", save_interval)
 
         self.n_steps = n_steps
         print("n_steps = ", self.n_steps)
@@ -346,9 +349,9 @@ class PPO2(ActorCriticRLModel):
             old_nenvs = 0
         self.init_env(env=env)
         if old_nenvs == 1:
-            print('Old n_batch = ', self.n_batch)
+            print('OLD n_batch = ', self.n_batch)
             self.n_batch = self.n_envs * self.n_steps
-        print('Current n_batch = ', self.n_batch)
+        print('CURRENT n_batch = ', self.n_batch)
         print()
 
         # Transform to callable if needed
@@ -424,6 +427,11 @@ class PPO2(ActorCriticRLModel):
                                                                       true_reward.reshape((self.n_envs, self.n_steps)),
                                                                       masks.reshape((self.n_envs, self.n_steps)),
                                                                       writer, self.num_timesteps)
+                if self.num_timesteps >= save_interval_st:
+                    save_interval_st += save_interval
+                    s_path = save_path+'_'+str(self.num_timesteps)+'.zip'
+                    print("Save learning model", s_path)
+                    self.save(save_path=s_path)
 
                 if self.verbose >= 1 and (update % log_interval == 0 or update == 1):
                     explained_var = explained_variance(values, returns)
