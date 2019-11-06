@@ -11,7 +11,7 @@
 则在读入model的基础上保存旧网络，并创建一个初始化新网络
 
 预训练
-```python continural_run.py --pre_train --log_path=logs/ --num_timesteps=1e4 --save_path=models/v0_hako```  
+```python run_ppo2.py --pre_train --log_path=logs/ --num_timesteps=1e3 --save_path=models/hako/agent_0/hako```  
 预训练会每隔10个episode保存一次模型
 
 训练
