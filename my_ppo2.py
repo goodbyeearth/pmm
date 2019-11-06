@@ -329,10 +329,12 @@ class PPO2(ActorCriticRLModel):
         self.old_params = []
 
     def learn(self, total_timesteps, callback=None, seed=None, log_interval=1, tb_log_name="PPO2",
-              reset_num_timesteps=True, env=None, learning_rate=2.5e-4, n_steps=128, gamma=0.99, save_interval=None,save_path=None):
+              reset_num_timesteps=True, env=None, learning_rate=2.5e-4, n_steps=128, gamma=0.99, save_interval=None,
+              save_path=None):
         # temp params
-        # learning_rate = 2.5e-3
-        # gamma = 0.98
+        learning_rate = 2.5e-4
+        n_steps = 64
+        gamma = 1
 
         save_interval_st = save_interval
         print("save interval = ", save_interval)
@@ -429,7 +431,7 @@ class PPO2(ActorCriticRLModel):
                                                                       writer, self.num_timesteps)
                 if self.num_timesteps >= save_interval_st:
                     save_interval_st += save_interval
-                    s_path = save_path+'_'+str(self.num_timesteps)+'.zip'
+                    s_path = save_path + '_' + str(self.num_timesteps) + '.zip'
                     print("Save learning model", s_path)
                     self.save(save_path=s_path)
 

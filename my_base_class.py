@@ -292,7 +292,7 @@ class BaseRLModel(ABC):
                 train_loss += train_loss_
 
             train_loss /= len(dataset.train_loader)
-            if self.verbose > 0 and (epoch_idx + 1) % 10 == 0:
+            if self.verbose > 0 and (epoch_idx + 1) % 1 == 0:
                 val_loss = 0.0
                 # Full pass on the validation set
                 for _ in range(len(dataset.val_loader)):

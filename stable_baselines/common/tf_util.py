@@ -101,6 +101,7 @@ def make_session(num_cpu=None, make_default=False, graph=None):
         intra_op_parallelism_threads=num_cpu)
     # Prevent tensorflow from taking all the gpu memory
     tf_config.gpu_options.allow_growth = True
+    # tf_config.gpu_options.per_process_gpu_memory_fraction = 0.9
     if make_default:
         return tf.InteractiveSession(config=tf_config, graph=graph)
     else:

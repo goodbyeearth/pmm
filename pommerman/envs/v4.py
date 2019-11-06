@@ -36,6 +36,7 @@ class Pomme(v0.Pomme):
                 constants.Item.Agent2, constants.Item.Agent3
             ]
         }
+        kwargs['agent_view_size'] = 10
         super().__init__(*args, **kwargs)
 
     def _set_action_space(self):
@@ -72,57 +73,41 @@ class Pomme(v0.Pomme):
             np.array(min_obs), np.array(max_obs))
 
     def get_observations(self):
-        self.observations = self.model.get_observations(
-            self._board, self._agents, self._bombs, self._flames,
-            self._is_partially_observable, self._agent_view_size,
-            self._game_type, self._env)
-        for obs in self.observations:
-            obs['step_count'] = self._step_count
-        for obs in self.observations:
+        observations = super().get_observations()
+        for obs in observations:
             obs['message'] = self._radio_from_agent[obs['teammate']]
 
-        return self.observations
+        self.observations = observations
+        return observations
 
-    def get_full_observations(self):
-        self.full_observations = self.model.get_full_observations(
-            self._board, self._agents, self._bombs, self._flames,
-            self._is_partially_observable, self._agent_view_size,
-            self._game_type, self._env)
-        for obs in self.full_observations:
-            obs['step_count'] = self._step_count
-        for obs in self.full_observations:
-            obs['message'] = self._radio_from_agent[obs['teammate']]
-        self.full_observations[0]['my_bomb'] = []
-        return self.full_observations
+    def step1(self, actions):
+        self._intended_actions = actions
 
+        max_blast_strength = self._agent_view_size or 10
+        result = self.model.step(
+            actions,
+            self._board,
+            self._agents,
+            self._bombs,
+            self._items,
+            self._flames,
+            max_blast_strength=max_blast_strength)
+        self._board, self._agents, self._bombs, self._items, self._flames = \
+            result[:5]
 
-    def reset(self):
-        assert (self._agents is not None)
-
-        if self._init_game_state is not None:
-            self.set_json_info()
-        else:
-            self._step_count = 0
-            self.make_board()
-            self.make_items()
-            self._bombs = []
-            self._flames = []
-            self._powerups = []
-            for agent_id, agent in enumerate(self._agents):
-                pos = np.where(self._board == utility.agent_value(agent_id))
-                row = pos[0][0]
-                col = pos[1][0]
-                agent.set_start_position((row, col))
-                agent.reset()
-        full_obs = self.get_full_observations()
+        done = self._get_done()
         obs = self.get_observations()
-        obs[0] = full_obs[0]
-        return obs
+        # reward = self._get_rewards2(train_idx=0)
+        reward = self._get_rewards2(train_idx=0)
+        info = self._get_info(done, reward)
 
-    def act(self, obs):
-        agents = [agent for agent in self._agents \
-                  if agent.agent_id != self.training_agent]
-        return self.model.act(agents, obs, self.action_space)
+        if done:
+            # Callback to let the agents know that the game has ended.
+            for agent in self._agents:
+                agent.episode_end(reward[agent.agent_id])
+
+        self._step_count += 1
+        return obs, reward, done, info
 
     def step(self, actions):
         personal_actions = []
@@ -141,60 +126,9 @@ class Pomme(v0.Pomme):
             self._radio_from_agent[getattr(
                 constants.Item, 'Agent%d' % agent.agent_id)] = radio_actions[-1]
 
-        self._intended_actions = personal_actions
-
-        # get previous state
-        old_state = self.get_observations()
-
-
-        max_blast_strength = self._agent_view_size or 10
-        result = self.model.step(
-            personal_actions,
-            self._board,
-            self._agents,
-            self._bombs,
-            self._items,
-            self._flames,
-            max_blast_strength=max_blast_strength)
-        self._board, self._agents, self._bombs, self._items, self._flames = \
-            result[:5]
-
-        done = self._get_done()
-        obs = self.get_observations()
-        curr_full_obs = self.get_full_observations()
-        # reward = self._get_rewards()
-        reward1 = self._get_rewards1()
-        reward2 = self._get_rewards2()
-        # reward3 = self._get_rewards3(obs,old_state)
-        # reward4 = self._get_rewards4(obs,old_state)
-        reward = reward2
-        # reward = list(np.array(reward1)+np.array(reward2)+np.array(reward3))
-        info = self._get_info(done, reward)
-
-        if done:
-            # Callback to let the agents know that the game has ended.
-            for agent in self._agents:
-                agent.episode_end(reward[agent.agent_id])
-
-        self._step_count += 1
-
-        # change to full obs
-        # obs[0] = curr_full_obs[0]
-        return obs, reward, done, info
         # return super().step(personal_actions)
+        return self.step1(personal_actions)
 
-    # self define reward function
-    # need to modify the return reward
-    # now is for agent0
-    def _get_rewards1(self):
-        return self.model.get_rewards1(self._agents, self._game_type, self._step_count, self._max_steps,0)
-    def _get_rewards2(self):
-        return self.model.get_rewards2(self._agents, self._game_type, self._step_count, self._max_steps,0)
-    # def _get_rewards3(self,curr_state,old_state):
-    #     return self.model.get_rewards3(self._agents, self._game_type, self._step_count, self._max_steps,curr_state,old_state,0)
-    # def _get_rewards4(self,curr_state,old_state,):
-    #     return self.model.get_rewards4(self._agents, self._game_type, self._step_count,
-    #                                    self._max_steps,curr_state,old_state,0)
 
     @staticmethod
     def featurize(obs):

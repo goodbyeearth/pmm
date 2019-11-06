@@ -95,12 +95,21 @@ def train():
     env.close()
 
 
+def modify_act(obs, act):
+    from pommerman.agents.prune import get_filtered_actions
+    import random
+    valid_actions = get_filtered_actions(obs.copy())
+    if act not in valid_actions:
+        act = random.sample(valid_actions, 1)
+    return act
+
+
 def play0():
-    model0_path = 'models/simple/agent_0/simple_e40.zip'
+    model0_path = 'models/hako/agent_0/hako_e10.zip'
     model0 = PPO2.load(model0_path)
 
-    # model2_path = 'models/hako/agent_0/30hako_e30.zip'
-    # model2 = PPO2.load(model2_path)
+    model2_path = 'models/hako/agent_0/hako_e10.zip'
+    model2 = PPO2.load(model2_path)
 
     agent_list = [
         # agents.SimpleNoBombAgent(),
@@ -114,25 +123,24 @@ def play0():
     env = pommerman.make(args.env, agent_list)
     env._max_steps = 500
     print('Load model0 from', model0_path)
-    # print('Load model2 from', model2_path)
+    print('Load model2 from', model2_path)
     print("play0 --> train_idx (0,2)")
+
     for episode in range(100):
         obs = env.reset()
         done = False
         while not done:
             all_actions = env.act(obs)
 
-            # if judge_bomb_4(obs[0]):
             feature0 = featurize(obs[0])  # model0
             action0, _states = model0.predict(feature0)
-            all_actions[0] = int(action0)
+            action0 = int(action0)
+            all_actions[0] = action0
 
-            # feature2 = featurize(obs[2])  # model2
-            # action2, _states = model2.predict(feature2)
-            # all_actions[2] = int(action2)
-
-            # all_actions[(train_idx + 1) % 4] = 0
-            # all_actions[(train_idx + 3) % 4] = 0
+            feature2 = featurize(obs[2])  # model2
+            action2, _states = model2.predict(feature2)
+            action2 = int(action2)
+            all_actions[2] = action2
 
             obs, rewards, done, info = env.step(all_actions)
             env.render()
@@ -146,7 +154,7 @@ def play1():
 
     agent_list = [
         # agents.SimpleNoBombAgent(),
-        agents.SuperAgent(),
+        agents.SimpleAgent(),
         agents.StopAgent(),
         agents.SuicideAgent(),
         agents.StopAgent(),
@@ -167,43 +175,41 @@ def play1():
                 feature0 = featurize(obs[0])  # model0
                 action0, _states = model0.predict(feature0)
                 all_actions[0] = int(action0)
-                if flag:
-                    print(">>>> model:", action0)
-                    flag = False
-                else:
-                    flag = True
-                    print("<<<< model:", action0)
-            else:
-                print("super")
+            #     if flag:
+            #         print(">>>> model:", action0)
+            #         flag = False
+            #     else:
+            #         flag = True
+            #         print("<<<< model:", action0)
+            # else:
+            #     print("super")
 
             # feature2 = featurize(obs[2])  # model2
             # action2, _states = model2.predict(feature2)
             # all_actions[2] = int(action2)
-
-            # all_actions[(train_idx + 1) % 4] = 0
-            # all_actions[(train_idx + 3) % 4] = 0
 
             obs, rewards, done, info = env.step(all_actions)
             env.render()
             if not env._agents[0].is_alive:
                 done = True
                 print("death")
+        print(rewards)
         print(info)
 
 
 def _evaluate(n_episode=10000):
     from pommerman import constants
-    model0_path = 'models/simple/agent0/simple_e10.zip'
-    model2_path = 'models/simple/agent2/simple_e10.zip'
+    model0_path = 'models/simple/agent_0/simple_e40.zip'
+    model2_path = 'models/simple/agent_2/simple_e40.zip'
     model0 = PPO2.load(model0_path)
     model2 = PPO2.load(model2_path)
 
     agent_list = [
         # agents.SimpleNoBombAgent(),
-        agents.SimpleAgent(),
-        agents.SimpleAgent(),
-        agents.SimpleAgent(),
-        agents.SimpleAgent(),
+        agents.SuicideAgent(),
+        agents.SuperAgent(),
+        agents.SuicideAgent(),
+        agents.SuperAgent(),
         # agents.PlayerAgent(agent_control="arrows"),
         # agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12343),
     ]
@@ -224,14 +230,29 @@ def _evaluate(n_episode=10000):
 
             feature0 = featurize(obs[0])  # model0
             action0, _states = model0.predict(feature0)
-            all_actions[0] = int(action0)
+            action0 = int(action0)
+            from pommerman.agents.prune import get_filtered_actions
+            import random
+            valid_actions_0 = get_filtered_actions(obs[0])
+            if action0 not in valid_actions_0:
+                action0 = random.sample(valid_actions_0, 1)
+            all_actions[0] = action0
 
             feature2 = featurize(obs[2])  # model2
             action2, _states = model2.predict(feature2)
-            all_actions[2] = int(action2)
+            action2 = int(action2)
+            valid_actions_2 = get_filtered_actions(obs[2])
+            if action2 not in valid_actions_2:
+                action2 = random.sample(valid_actions_2, 1)
+            all_actions[2] = action2
 
-            # all_actions[(train_idx + 1) % 4] = 0
-            # all_actions[(train_idx + 3) % 4] = 0
+            valid_actions_1 = get_filtered_actions(obs[1])
+            if all_actions[1] not in valid_actions_1:
+                all_actions[1] = random.sample(valid_actions_1, 1)
+
+            valid_actions_3 = get_filtered_actions(obs[3])
+            if all_actions[3] not in valid_actions_3:
+                all_actions[3] = random.sample(valid_actions_3, 1)
 
             obs, rewards, done, info = env.step(all_actions)
             # env.render()
@@ -242,7 +263,7 @@ def _evaluate(n_episode=10000):
         else:
             loss += 1
         end = time.time()
-        if (episode + 1) % 100 == 0:
+        if (episode + 1) % 10 == 0:
             print("win / tie / loss")
             print(
                 " %d  /  %d  /  %d  win rate: %f  use time: %f" % (win, tie, loss, (win / (episode + 1)), end - start))

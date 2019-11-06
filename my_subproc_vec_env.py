@@ -17,6 +17,8 @@ def _worker(remote, parent_remote, env_fn_wrapper):
     train_idx = 0  # 设置训练的 agent 的 index
     while True:
         try:
+            from pommerman.agents.prune import get_filtered_actions
+            import random
             cmd, data = remote.recv()
             if cmd == 'step':
                 whole_obs = env.get_observations()
@@ -39,16 +41,18 @@ def _worker(remote, parent_remote, env_fn_wrapper):
                     info['terminal_observation'] = whole_obs  # 保存终结的 observation，否则 reset 后将丢失
                     whole_obs = env.reset()  # 重新开一把
 
-
                 while not judge_enemy(whole_obs[train_idx]):  # 如果当前画面周围没有敌人
-                    all_actions = env.act(env.get_observations())
+                    all_actions = env.act(whole_obs)
+                    valid_actions = get_filtered_actions(whole_obs[train_idx])
+                    if all_actions[train_idx] not in valid_actions:
+                        all_actions[train_idx] = random.sample(valid_actions, 1)
                     whole_obs, whole_rew, reset_done, info = env.step(all_actions)
                     if not env._agents[train_idx].is_alive or reset_done:  # 如果智能体死亡 or 或者到达下一局
-                        whole_obs = env.reset()  # 重新开一把
-
                         if not done:  # 如果在内部走到上一把结局, 记录上一局游戏的 reward和done
+                            info['terminal_observation'] = whole_obs  # 保存终结的 observation，否则 reset 后将丢失
                             rew = whole_rew[train_idx]
                             done = True
+                        whole_obs = env.reset()  # 重新开一把
 
                 # print("send:",whole_obs[train_idx])
                 obs = featurize(whole_obs[train_idx])
@@ -59,7 +63,7 @@ def _worker(remote, parent_remote, env_fn_wrapper):
                 whole_obs = env.reset()
 
                 while not judge_enemy(whole_obs[train_idx]):  # 如果没有敌人在视野内则
-                    all_actions = env.act(env.get_observations())
+                    all_actions = env.act(whole_obs)
                     whole_obs, whole_rew, done, info = env.step(all_actions)
                     if not env._agents[train_idx].is_alive or done:  # 如果训练智能体死亡 or 游戏结束，重新开始一局
                         whole_obs = env.reset()

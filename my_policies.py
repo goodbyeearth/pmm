@@ -21,6 +21,7 @@ def compute_old_conv(input=None, old_params=None, scop=None, n_fil=None, **kwarg
         old_conv.append(sumc)
     return old_conv, sumc
 
+
 def compute_old_linear(input=None, old_params=None, scop=None):
     activ = tf.nn.relu
     old_linear = []
@@ -35,6 +36,7 @@ def compute_old_linear(input=None, old_params=None, scop=None):
             suml = tf.add(suml, old_l)
         old_linear.append(suml)
     return old_linear, suml
+
 
 def custom_cnn_pgn(scaled_images, old_params=None, **kwargs):
     activ = tf.nn.relu
@@ -105,6 +107,7 @@ def custom_cnn_pgn(scaled_images, old_params=None, **kwargs):
 
     return layer_4, old_linear, suml
 
+
 def custom_cnn(scaled_images, **kwargs):
     activ = tf.nn.relu
     activ1 = tf.nn.tanh
@@ -133,6 +136,55 @@ def custom_cnn(scaled_images, **kwargs):
     layer_32 = conv_to_fc(layer_3)
 
     return activ(linear(layer_32, 'fc1', n_hidden=256, init_scale=np.sqrt(2)))
+
+
+def resnet_cnn(scaled_images, **kwargs):
+    activ = tf.nn.relu
+
+    layer_1 = conv(scaled_images, 'c1', n_filters=256, filter_size=3, stride=1, init_scale=np.sqrt(2), pad='SAME',
+                   **kwargs)
+    bn1 = tf.layers.batch_normalization(layer_1, name='bn1', training=False)
+    res_output = activ(bn1)
+
+    for index, layer_size in enumerate([256] * 20):  # 20层 残差网络
+        res_output = res(res_output, res_scope='r' + str(index), num=layer_size, **kwargs)
+
+    layer_3 = conv_to_fc(res_output)
+
+    return activ(linear(layer_3, 'fc1', n_hidden=256, init_scale=np.sqrt(2)))
+
+
+def reduce_res(input, res_scope=None, num=None, **kwargs):
+    activ = tf.nn.relu
+
+    output_temp = conv(input, res_scope + '_temp', n_filters=num, filter_size=3, stride=2, init_scale=np.sqrt(2),
+                       **kwargs)
+    output_temp = tf.layers.batch_normalization(output_temp, name=res_scope + '_temp_bn', training=False)
+    output_temp = activ(output_temp)
+
+    output = conv(output_temp, res_scope, n_filters=num, filter_size=3, stride=1, init_scale=np.sqrt(2), pad='SAME',
+                  **kwargs)
+    output = tf.layers.batch_normalization(output, name=res_scope + '_bn', training=False)
+    output = activ(output)
+    return output
+
+
+def res(input, res_scope=None, num=None, **kwargs):
+    activ = tf.nn.relu
+
+    output_temp = conv(input, res_scope + '_temp', n_filters=num, filter_size=3, stride=1, init_scale=np.sqrt(2),
+                       pad='SAME',
+                       **kwargs)
+    output_temp = tf.layers.batch_normalization(output_temp, name=res_scope + '_temp_bn', training=False)
+    output_temp = activ(output_temp)
+
+    output = conv(output_temp, res_scope, n_filters=num, filter_size=3, stride=1, init_scale=np.sqrt(2), pad='SAME',
+                  **kwargs)
+    output = tf.layers.batch_normalization(output, name=res_scope + '_bn', training=False)
+    output = tf.add(output, input)
+    output = activ(output)
+    return output
+
 
 class CustomPolicy(ActorCriticPolicy):
     def __init__(self, sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse=False, old_params=None, **kwargs):
@@ -180,10 +232,12 @@ class CustomPolicy(ActorCriticPolicy):
                 value_fn = vf_linear(vf_h, 'vf', n_hidden=1, ww=param['vf/w'], bb=param['vf/b'])
                 self._value_fn = value_fn
                 self._setup_init()
+
             else:
                 print("No old networks")
                 """CNN提取后的特征"""
                 extracted_features = custom_cnn(self.processed_obs, **kwargs)
+                # extracted_features = resnet_cnn(self.processed_obs, **kwargs)
                 extracted_features = tf.layers.flatten(extracted_features)
 
                 pi_h = extracted_features
@@ -199,7 +253,6 @@ class CustomPolicy(ActorCriticPolicy):
                 vf_latent = vf_h
 
                 value_fn = linear(vf_h, 'vf', n_hidden=1)
-
 
                 self._proba_distribution, self._policy, self.q_value = \
                     self.pdtype.proba_distribution_from_latent(pi_latent, vf_latent, init_scale=0.01)
